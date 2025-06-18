@@ -88,19 +88,52 @@
         const activeEvent = document.getElementById('activeEvent');
         const apiPort = document.getElementById('apiPort');
 
+        // Função para atualizar o status do servidor
+        function updateServerStatus(status) {
+            console.log('Atualizando status do servidor para:', status);
+            if (status === 'started') {
+                statusIndicator.classList.remove('status-stopped');
+                statusIndicator.classList.add('status-running');
+                serverStatus.textContent = 'Servidor Rodando';
+                startServerBtn.disabled = true;
+                stopServerBtn.disabled = false;
+            } else if (status === 'stopped') {
+                statusIndicator.classList.remove('status-running');
+                statusIndicator.classList.add('status-stopped');
+                serverStatus.textContent = 'Servidor Parado';
+                startServerBtn.disabled = false;
+                stopServerBtn.disabled = true;
+            }
+        }
+
         // Carregar configurações
         async function loadConfig() {
-            const config = await ipcRenderer.invoke('get-config');
-            dbDriver.textContent = config.database.driver;
-            dbLocation.textContent = config.database.sqlite.path;
-            apiPort.textContent = config.server.port;
-            
-            // Atualizar tamanho do banco
             try {
-                const stats = await ipcRenderer.invoke('get-db-size');
-                dbSize.textContent = `${(stats.size / 1024 / 1024).toFixed(2)} MB`;
+                const config = await ipcRenderer.invoke('get-config');
+                console.log('Configuração carregada:', config);
+                dbDriver.textContent = config.database.driver;
+                dbLocation.textContent = config.database.sqlite.path;
+                apiPort.textContent = config.server.port;
+                
+                // Atualizar status inicial do servidor
+                if (config.server.autostart) {
+                    console.log('Servidor configurado para iniciar automaticamente');
+                    updateServerStatus('started');
+                } else {
+                    console.log('Servidor não configurado para iniciar automaticamente');
+                    updateServerStatus('stopped');
+                }
+                
+                // Atualizar tamanho do banco
+                try {
+                    const stats = await ipcRenderer.invoke('get-db-size');
+                    dbSize.textContent = `${(stats.size / 1024 / 1024).toFixed(2)} MB`;
+                } catch (error) {
+                    console.error('Erro ao obter tamanho do banco:', error);
+                    dbSize.textContent = 'Erro ao obter tamanho';
+                }
             } catch (error) {
-                dbSize.textContent = 'Erro ao obter tamanho';
+                console.error('Erro ao carregar configurações:', error);
             }
         }
 
@@ -110,26 +143,28 @@
             serverDateTime.textContent = now.toLocaleString();
         }
 
+        // Escutar eventos de mudança de status do servidor
+        ipcRenderer.on('server-status-changed', (event, data) => {
+            console.log('Evento server-status-changed recebido:', data);
+            updateServerStatus(data.status);
+        });
+
         // Event Listeners
         startServerBtn.addEventListener('click', async () => {
+            console.log('Botão iniciar servidor clicado');
             const result = await ipcRenderer.invoke('start-server');
+            console.log('Resultado do start-server:', result);
             if (result.status === 'started') {
-                statusIndicator.classList.remove('status-stopped');
-                statusIndicator.classList.add('status-running');
-                serverStatus.textContent = 'Servidor Rodando';
-                startServerBtn.disabled = true;
-                stopServerBtn.disabled = false;
+                updateServerStatus('started');
             }
         });
 
         stopServerBtn.addEventListener('click', async () => {
+            console.log('Botão parar servidor clicado');
             const result = await ipcRenderer.invoke('stop-server');
+            console.log('Resultado do stop-server:', result);
             if (result.status === 'stopped') {
-                statusIndicator.classList.remove('status-running');
-                statusIndicator.classList.add('status-stopped');
-                serverStatus.textContent = 'Servidor Parado';
-                startServerBtn.disabled = false;
-                stopServerBtn.disabled = true;
+                updateServerStatus('stopped');
             }
         });
 

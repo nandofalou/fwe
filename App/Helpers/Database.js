@@ -2,7 +2,7 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
-const Config = require('./Config');
+const Config = require('../config/config');
 const Event = require('./Event');
 
 /**
@@ -11,7 +11,7 @@ const Event = require('./Event');
 const Database = {
     connection: null,
     config: Config,
-    type: Config.get('database.type', 'sqlite'),
+    type: Config.database.type || 'sqlite',
     connections: new Map(),
     event: Event,
 
@@ -147,36 +147,18 @@ const Database = {
 
     /**
      * Insere um registro
-     * @param {string} name Nome da conexão
-     * @param {string} table Nome da tabela
-     * @param {Object} data Dados
+     * @param {string} sql Query SQL
+     * @param {Array} params Valores
      * @returns {Promise<number>} ID do registro
      */
-    insert(name, table, data) {
-        const keys = Object.keys(data);
-        const values = Object.values(data);
-        const placeholders = keys.map(() => '?').join(', ');
-        const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
-
+    async insert(sql, params = []) {
         return new Promise((resolve, reject) => {
-            const db = this.connections.get(name);
-
-            if (!db) {
-                const err = new Error(`Conexão "${name}" não encontrada`);
-                this.event.emit('database:error', err);
-                reject(err);
-                return;
-            }
-
-            db.run(sql, values, function(err) {
+            this.connection.run(sql, params, function(err) {
                 if (err) {
-                    this.event.emit('database:error', err);
                     reject(err);
-                    return;
+                } else {
+                    resolve(this.lastID);
                 }
-
-                this.event.emit('database:inserted', name, table, data, this.lastID);
-                resolve(this.lastID);
             });
         });
     },

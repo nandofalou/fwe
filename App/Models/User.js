@@ -5,7 +5,6 @@ class User extends BaseModel {
     constructor() {
         super();
         this.table = 'users';
-        this.initializeTable();
     }
 
     /**
@@ -23,7 +22,7 @@ class User extends BaseModel {
             )
         `;
 
-        await this.query(query);
+        await this.db.query(query);
 
         // Verifica se existe usuário padrão
         const users = await this.findAll();
@@ -39,7 +38,7 @@ class User extends BaseModel {
         const defaultUser = {
             name: 'Administrador',
             email: 'admin@admin.com',
-            password: await bcrypt.hash('admin123', 10)
+            password: 'admin123'
         };
 
         await this.create(defaultUser);
@@ -51,7 +50,7 @@ class User extends BaseModel {
      * @returns {Promise} Usuário encontrado
      */
     async findByEmail(email) {
-        const results = await this.query(
+        const results = await this.db.query(
             `SELECT * FROM ${this.table} WHERE email = ?`,
             [email]
         );

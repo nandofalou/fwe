@@ -1,0 +1,428 @@
+{
+	"info": {
+		"_postman_id": "fwe-api-collection",
+		"name": "FWE API",
+		"description": "Coleção de rotas da API FWE",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Autenticação",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"seu@email.com\",\n    \"password\": \"sua_senha\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9000/api/auth/login",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Registro",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Seu Nome\",\n    \"email\": \"seu@email.com\",\n    \"password\": \"sua_senha\",\n    \"password_confirmation\": \"sua_senha\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9000/api/auth/register",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "auth", "register"]
+						}
+					}
+				},
+				{
+					"name": "Esqueci a Senha",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"seu@email.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9000/api/auth/forgot-password",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "auth", "forgot-password"]
+						}
+					}
+				},
+				{
+					"name": "Redefinir Senha",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\": \"token_de_redefinicao\",\n    \"email\": \"seu@email.com\",\n    \"password\": \"nova_senha\",\n    \"password_confirmation\": \"nova_senha\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9000/api/auth/reset-password",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "auth", "reset-password"]
+						}
+					}
+				},
+				{
+					"name": "Verificar Email",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\": \"token_de_verificacao\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9000/api/auth/verify-email",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "auth", "verify-email"]
+						}
+					}
+				},
+				{
+					"name": "Reenviar Verificação",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"seu@email.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9000/api/auth/resend-verification",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "auth", "resend-verification"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Usuários",
+			"item": [
+				{
+					"name": "Listar Usuários",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:9000/api/users",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "users"]
+						}
+					}
+				},
+				{
+					"name": "Criar Usuário",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Novo Usuário\",\n    \"email\": \"novo@email.com\",\n    \"password\": \"senha123\",\n    \"password_confirmation\": \"senha123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9000/api/users",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "users"]
+						}
+					}
+				},
+				{
+					"name": "Obter Usuário",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:9000/api/users/:id",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "users", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Atualizar Usuário",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Nome Atualizado\",\n    \"email\": \"atualizado@email.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9000/api/users/:id",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "users", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Excluir Usuário",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:9000/api/users/:id",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "users", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Perfil do Usuário",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:9000/api/users/profile",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "users", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Atualizar Perfil",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Nome Atualizado\",\n    \"email\": \"atualizado@email.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9000/api/users/profile",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "users", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Atualizar Senha",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"current_password\": \"senha_atual\",\n    \"password\": \"nova_senha\",\n    \"password_confirmation\": \"nova_senha\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9000/api/users/password",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "users", "password"]
+						}
+					}
+				},
+				{
+					"name": "Upload Avatar",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "avatar",
+									"type": "file",
+									"src": "/path/to/your/image.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:9000/api/users/avatar",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "users", "avatar"]
+						}
+					}
+				},
+				{
+					"name": "Remover Avatar",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:9000/api/users/avatar",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "users", "avatar"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "token",
+			"value": "seu_token_jwt_aqui"
+		}
+	]
+} 

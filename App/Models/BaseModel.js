@@ -8,12 +8,10 @@ class BaseModel {
         this.db = Database;
         this.validation = Validation;
         this.event = Event;
-        this.connection = 'default';
     }
 
     async find(id) {
         const result = await this.db.query(
-            this.connection,
             `SELECT * FROM ${this.table} WHERE id = ?`,
             [id]
         );
@@ -43,7 +41,7 @@ class BaseModel {
             }
         }
 
-        return await this.db.query(this.connection, sql, params);
+        return await this.db.query(sql, params);
     }
 
     async create(data) {
@@ -52,7 +50,6 @@ class BaseModel {
         const values = Object.values(data);
 
         const result = await this.db.insert(
-            this.connection,
             `INSERT INTO ${this.table} (${columns}) VALUES (${placeholders})`,
             values
         );
@@ -68,7 +65,6 @@ class BaseModel {
         const values = [...Object.values(data), id];
 
         const result = await this.db.update(
-            this.connection,
             `UPDATE ${this.table} SET ${setClause} WHERE id = ?`,
             values
         );
@@ -79,7 +75,6 @@ class BaseModel {
 
     async delete(id) {
         const result = await this.db.delete(
-            this.connection,
             `DELETE FROM ${this.table} WHERE id = ?`,
             [id]
         );

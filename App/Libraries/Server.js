@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const Database = require('../Helpers/Database');
 
 class Server {
     constructor(config) {
@@ -41,9 +42,20 @@ class Server {
     async start() {
         return new Promise((resolve, reject) => {
             try {
-                this.server = this.app.listen(this.config.server.port, () => {
-                    console.log(`Servidor rodando na porta ${this.config.server.port}`);
-                    resolve(this.server);
+                // Inicializa a conexão com o banco de dados antes de iniciar o servidor
+                Database.connect().then(async () => {
+                    // Garante a criação da tabela e do usuário padrão
+                    const User = require('../Models/User');
+                    const userModel = new User();
+                    await userModel.initializeTable();
+                    // Inicia o servidor Express após a conexão estar pronta
+                    this.server = this.app.listen(this.config.server.port, () => {
+                        console.log(`Servidor rodando na porta ${this.config.server.port}`);
+                        resolve(this.server);
+                    });
+                }).catch(err => {
+                    console.error('Erro ao conectar ao banco de dados:', err);
+                    reject(err);
                 });
             } catch (error) {
                 reject(error);

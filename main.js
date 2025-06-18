@@ -26,6 +26,25 @@ function createWindow() {
     if (process.argv.includes('--dev')) {
         mainWindow.webContents.openDevTools();
     }
+
+    // Iniciar servidor automaticamente após a janela estar carregada
+    mainWindow.webContents.on('did-finish-load', () => {
+        if (config.server.autostart) {
+            console.log('Iniciando servidor automaticamente...');
+            const { startServer } = require('./App/Libraries/Server');
+            startServer(config).then(server => {
+                apiServer = server;
+                console.log('Servidor iniciado automaticamente');
+                // Notificar a interface que o servidor foi iniciado
+                console.log('Enviando evento server-status-changed para a interface');
+                mainWindow.webContents.send('server-status-changed', { status: 'started' });
+            }).catch(error => {
+                console.error('Erro ao iniciar servidor automaticamente:', error);
+            });
+        } else {
+            console.log('Servidor não configurado para iniciar automaticamente');
+        }
+    });
 }
 
 // Função para inicializar configurações
@@ -58,7 +77,8 @@ function initializeConfig() {
             },
             server: {
                 port: 3000,
-                cors: true
+                cors: true,
+                autostart: false
             },
             jwt: {
                 secret: 'your-secret-key',
@@ -72,6 +92,12 @@ function initializeConfig() {
     // Carregar configurações
     config = ini.parse(fs.readFileSync(configPath, 'utf-8'));
     return config;
+}
+
+// Função para salvar configurações
+function saveConfig() {
+    const configPath = path.join(os.homedir(), 'fwe', 'config.ini');
+    fs.writeFileSync(configPath, ini.stringify(config));
 }
 
 // Eventos do Electron
@@ -97,6 +123,11 @@ ipcMain.handle('start-server', async () => {
     if (!apiServer) {
         const { startServer } = require('./App/Libraries/Server');
         apiServer = await startServer(config);
+        
+        // Atualizar configuração para autostart
+        config.server.autostart = true;
+        saveConfig();
+        
         return { status: 'started' };
     }
     return { status: 'already-running' };
@@ -106,6 +137,16 @@ ipcMain.handle('stop-server', async () => {
     if (apiServer) {
         await apiServer.close();
         apiServer = null;
+        
+        // Atualizar configuração para não autostart
+        config.server.autostart = false;
+        saveConfig();
+        
+        // Notificar a interface que o servidor foi parado
+        if (mainWindow) {
+            mainWindow.webContents.send('server-status-changed', { status: 'stopped' });
+        }
+        
         return { status: 'stopped' };
     }
     return { status: 'not-running' };

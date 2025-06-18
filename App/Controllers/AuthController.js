@@ -17,7 +17,8 @@ class AuthController {
             }
 
             // Buscar usuário
-            const user = await User.findByEmail(email);
+            const userModel = new User();
+            const user = await userModel.findByEmail(email);
             if (!user) {
                 return res.status(401).json({
                     error: true,
@@ -75,7 +76,8 @@ class AuthController {
             }
 
             // Verificar se email já existe
-            const existingUser = await User.findByEmail(email);
+            const userModel = new User();
+            const existingUser = await userModel.findByEmail(email);
             if (existingUser) {
                 return res.status(400).json({
                     error: true,
@@ -84,7 +86,7 @@ class AuthController {
             }
 
             // Criar usuário
-            const user = await User.create({
+            const user = await userModel.create({
                 name,
                 email,
                 password
@@ -121,7 +123,8 @@ class AuthController {
             }
 
             // Verificar se usuário existe
-            const user = await User.findByEmail(email);
+            const userModel = new User();
+            const user = await userModel.findByEmail(email);
             if (!user) {
                 return res.status(404).json({
                     error: true,
