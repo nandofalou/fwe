@@ -1,6 +1,87 @@
 class BaseController {
-    constructor() {
-        this.model = null;
+    constructor(model) {
+        this.model = model;
+    }
+
+    /**
+     * Listar todos os registros
+     * @param {Object} req - Requisição
+     * @param {Object} res - Resposta
+     */
+    static async index(req, res) {
+        try {
+            const records = await this.model.findAll();
+            return res.json({ error: false, data: records });
+        } catch (error) {
+            return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
+        }
+    }
+
+    /**
+     * Obter um registro específico
+     * @param {Object} req - Requisição
+     * @param {Object} res - Resposta
+     */
+    static async show(req, res) {
+        try {
+            const record = await this.model.findById(req.params.id);
+            if (!record) {
+                return res.status(404).json({ error: true, message: 'Registro não encontrado' });
+            }
+            return res.json({ error: false, data: record });
+        } catch (error) {
+            return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
+        }
+    }
+
+    /**
+     * Criar um novo registro
+     * @param {Object} req - Requisição
+     * @param {Object} res - Resposta
+     */
+    static async store(req, res) {
+        try {
+            const record = await this.model.create(req.body);
+            return res.status(201).json({ error: false, data: record });
+        } catch (error) {
+            return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
+        }
+    }
+
+    /**
+     * Atualizar um registro
+     * @param {Object} req - Requisição
+     * @param {Object} res - Resposta
+     */
+    static async update(req, res) {
+        try {
+            const record = await this.model.findById(req.params.id);
+            if (!record) {
+                return res.status(404).json({ error: true, message: 'Registro não encontrado' });
+            }
+            const updatedRecord = await this.model.update(req.params.id, req.body);
+            return res.json({ error: false, data: updatedRecord });
+        } catch (error) {
+            return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
+        }
+    }
+
+    /**
+     * Excluir um registro
+     * @param {Object} req - Requisição
+     * @param {Object} res - Resposta
+     */
+    static async destroy(req, res) {
+        try {
+            const record = await this.model.findById(req.params.id);
+            if (!record) {
+                return res.status(404).json({ error: true, message: 'Registro não encontrado' });
+            }
+            await this.model.delete(req.params.id);
+            return res.json({ error: false, message: 'Registro excluído com sucesso' });
+        } catch (error) {
+            return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
+        }
     }
 
     /**

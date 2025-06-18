@@ -1,43 +1,119 @@
-const mysql = require('mysql2/promise');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const os = require('os');
+const fs = require('fs');
 const Config = require('./Config');
 const Event = require('./Event');
 
 /**
  * Classe para manipulação de banco de dados
  */
-class Database {
-    constructor() {
-        this.config = Config;
-        this.connection = null;
-        this.type = this.config.get('database.type', 'sqlite');
-        this.connections = new Map();
-        this.event = Event;
-    }
+const Database = {
+    connection: null,
+    config: Config,
+    type: Config.get('database.type', 'sqlite'),
+    connections: new Map(),
+    event: Event,
 
-    /**
-     * Conecta a um banco de dados
-     * @param {string} name Nome da conexão
-     * @param {string} file Caminho do arquivo
-     * @returns {Promise<void>}
-     */
-    connect(name, file) {
+    async connect() {
         return new Promise((resolve, reject) => {
-            const db = new sqlite3.Database(file, (err) => {
-                if (err) {
-                    this.event.emit('database:error', err);
-                    reject(err);
-                    return;
+            try {
+                // Criar diretório se não existir
+                const dbDir = path.join(os.homedir(), 'fwe');
+                if (!fs.existsSync(dbDir)) {
+                    fs.mkdirSync(dbDir, { recursive: true });
                 }
 
-                this.connections.set(name, db);
-                this.event.emit('database:connected', name, file);
+                const dbPath = this.config.database.sqlite.path;
+                this.connection = new sqlite3.Database(dbPath, (err) => {
+                    if (err) {
+                        console.error('Erro ao conectar ao banco de dados:', err);
+                        reject(err);
+                    } else {
+                        console.log('Conectado ao banco de dados SQLite');
+                        this.createTables().then(resolve).catch(reject);
+                    }
+                });
+            } catch (error) {
+                console.error('Erro ao inicializar banco de dados:', error);
+                reject(error);
+            }
+        });
+    },
+
+    async createTables() {
+        return new Promise((resolve, reject) => {
+            this.connection.serialize(() => {
+                // Tabela de usuários
+                this.connection.run(`
+                    CREATE TABLE IF NOT EXISTS users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name TEXT NOT NULL,
+                        email TEXT UNIQUE NOT NULL,
+                        password TEXT NOT NULL,
+                        avatar TEXT,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                `);
+
+                // Tabela de tokens
+                this.connection.run(`
+                    CREATE TABLE IF NOT EXISTS tokens (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER NOT NULL,
+                        token TEXT NOT NULL,
+                        type TEXT NOT NULL,
+                        expires_at DATETIME NOT NULL,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users (id)
+                    )
+                `);
+
                 resolve();
             });
         });
-    }
+    },
+
+    async query(sql, params = []) {
+        return new Promise((resolve, reject) => {
+            this.connection.all(sql, params, (err, rows) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows);
+                }
+            });
+        });
+    },
+
+    async execute(sql, params = []) {
+        return new Promise((resolve, reject) => {
+            this.connection.run(sql, params, function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ id: this.lastID, changes: this.changes });
+                }
+            });
+        });
+    },
+
+    async close() {
+        return new Promise((resolve, reject) => {
+            if (this.connection) {
+                this.connection.close((err) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve();
+                    }
+                });
+            } else {
+                resolve();
+            }
+        });
+    },
 
     /**
      * Desconecta de um banco de dados
@@ -67,38 +143,7 @@ class Database {
                 resolve();
             });
         });
-    }
-
-    /**
-     * Executa uma consulta SQL
-     * @param {string} name Nome da conexão
-     * @param {string} sql Consulta SQL
-     * @param {Array} params Parâmetros (opcional)
-     * @returns {Promise<Array>} Resultados
-     */
-    query(name, sql, params = []) {
-        return new Promise((resolve, reject) => {
-            const db = this.connections.get(name);
-
-            if (!db) {
-                const err = new Error(`Conexão "${name}" não encontrada`);
-                this.event.emit('database:error', err);
-                reject(err);
-                return;
-            }
-
-            db.all(sql, params, (err, rows) => {
-                if (err) {
-                    this.event.emit('database:error', err);
-                    reject(err);
-                    return;
-                }
-
-                this.event.emit('database:query', name, sql, params, rows);
-                resolve(rows);
-            });
-        });
-    }
+    },
 
     /**
      * Insere um registro
@@ -134,7 +179,7 @@ class Database {
                 resolve(this.lastID);
             });
         });
-    }
+    },
 
     /**
      * Atualiza registros
@@ -171,7 +216,7 @@ class Database {
                 resolve(this.changes);
             });
         });
-    }
+    },
 
     /**
      * Remove registros
@@ -205,7 +250,7 @@ class Database {
                 resolve(this.changes);
             });
         });
-    }
+    },
 
     /**
      * Inicia uma transação
@@ -214,7 +259,7 @@ class Database {
      */
     beginTransaction(name) {
         return this.query(name, 'BEGIN TRANSACTION');
-    }
+    },
 
     /**
      * Confirma uma transação
@@ -223,7 +268,7 @@ class Database {
      */
     commit(name) {
         return this.query(name, 'COMMIT');
-    }
+    },
 
     /**
      * Desfaz uma transação
@@ -232,7 +277,7 @@ class Database {
      */
     rollback(name) {
         return this.query(name, 'ROLLBACK');
-    }
+    },
 
     /**
      * Executa uma transação
@@ -251,7 +296,7 @@ class Database {
             await this.rollback(name);
             throw err;
         }
-    }
+    },
 
     /**
      * Verifica se uma conexão existe
@@ -260,7 +305,7 @@ class Database {
      */
     hasConnection(name) {
         return this.connections.has(name);
-    }
+    },
 
     /**
      * Obtém uma conexão
@@ -269,7 +314,7 @@ class Database {
      */
     getConnection(name) {
         return this.connections.get(name) || null;
-    }
+    },
 
     /**
      * Obtém todas as conexões
@@ -277,7 +322,7 @@ class Database {
      */
     getConnections() {
         return this.connections;
-    }
+    },
 
     /**
      * Fecha todas as conexões
@@ -291,7 +336,7 @@ class Database {
         }
 
         await Promise.all(promises);
-    }
+    },
 
     /**
      * Executa uma query de seleção
@@ -328,7 +373,7 @@ class Database {
         }
 
         return this.query(name, sql, params);
-    }
+    },
 
     /**
      * Executa uma query de inserção
@@ -344,7 +389,7 @@ class Database {
 
         const sql = `INSERT INTO ${table} (${columns}) VALUES (${placeholders})`;
         return this.insert(name, sql, values);
-    }
+    },
 
     /**
      * Executa uma query de atualização
@@ -366,7 +411,7 @@ class Database {
         const params = [...Object.values(data), ...Object.values(conditions)];
 
         return this.update(name, sql, params);
-    }
+    },
 
     /**
      * Executa uma query de exclusão
@@ -384,7 +429,7 @@ class Database {
         const params = Object.values(conditions);
 
         return this.delete(name, sql, params);
-    }
+    },
 
     /**
      * Executa uma query de contagem
@@ -408,7 +453,7 @@ class Database {
         }
 
         return this.query(name, sql, params).then(rows => rows[0].count);
-    }
+    },
 
     /**
      * Executa uma query de existência
@@ -420,6 +465,6 @@ class Database {
     exists(name, table, conditions) {
         return this.count(name, table, conditions).then(count => count > 0);
     }
-}
+};
 
-module.exports = new Database(); 
+module.exports = Database; 
