@@ -222,6 +222,73 @@ class UserController extends BaseController {
             });
         }
     }
+
+    // Método de listagem de usuários como método estático
+    static async index(req, res) {
+        try {
+            const userModel = new User();
+            const users = await userModel.findAll();
+            return res.json({ error: false, data: users });
+        } catch (error) {
+            console.error('Erro ao listar usuários:', error);
+            return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
+        }
+    }
+
+    static async show(req, res) {
+        try {
+            const userModel = new User();
+            const user = await userModel.find(req.params.id);
+            if (!user) {
+                return res.status(404).json({ error: true, message: 'Usuário não encontrado' });
+            }
+            return res.json({ error: false, data: user });
+        } catch (error) {
+            console.error('Erro ao buscar usuário:', error);
+            return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
+        }
+    }
+
+    static async store(req, res) {
+        try {
+            const userModel = new User();
+            const user = await userModel.create(req.body);
+            return res.status(201).json({ error: false, data: user });
+        } catch (error) {
+            console.error('Erro ao criar usuário:', error);
+            return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
+        }
+    }
+
+    static async update(req, res) {
+        try {
+            const userModel = new User();
+            const user = await userModel.find(req.params.id);
+            if (!user) {
+                return res.status(404).json({ error: true, message: 'Usuário não encontrado' });
+            }
+            const updatedUser = await userModel.update(req.params.id, req.body);
+            return res.json({ error: false, data: updatedUser });
+        } catch (error) {
+            console.error('Erro ao atualizar usuário:', error);
+            return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
+        }
+    }
+
+    static async destroy(req, res) {
+        try {
+            const userModel = new User();
+            const user = await userModel.find(req.params.id);
+            if (!user) {
+                return res.status(404).json({ error: true, message: 'Usuário não encontrado' });
+            }
+            await userModel.delete(req.params.id);
+            return res.json({ error: false, message: 'Usuário excluído com sucesso' });
+        } catch (error) {
+            console.error('Erro ao excluir usuário:', error);
+            return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
+        }
+    }
 }
 
 module.exports = UserController; 
