@@ -19,19 +19,19 @@ class AuthController {
             // Buscar usuário
             const userModel = new User();
             const user = await userModel.findByEmail(email);
-            if (!user) {
+            if (!user || !user.active) {
                 return res.status(401).json({
                     error: true,
-                    message: 'Usuário não encontrado'
+                    message: 'E-mail ou senha inválidos'
                 });
             }
 
             // Verificar senha
-            const isValidPassword = await bcrypt.compare(password, user.password);
+            const isValidPassword = await bcrypt.compare(password, user.pass);
             if (!isValidPassword) {
                 return res.status(401).json({
                     error: true,
-                    message: 'Senha inválida'
+                    message: 'E-mail ou senha inválidos'
                 });
             }
 
@@ -89,7 +89,7 @@ class AuthController {
             const user = await userModel.create({
                 name,
                 email,
-                password
+                pass
             });
 
             return res.status(201).json({
@@ -225,6 +225,27 @@ class AuthController {
                 error: true,
                 message: 'Erro interno do servidor'
             });
+        }
+    }
+
+    static async update(req, res) {
+        try {
+            const userModel = new User();
+            const user = await userModel.find(req.params.id);
+            if (!user) {
+                return res.status(404).json({ error: true, message: 'Usuário não encontrado' });
+            }
+            const updateData = {};
+            [
+                'name', 'email', 'pass', 'permission_id', 'active', 'hash', 'hash_date_validate', 'deleted_at'
+            ].forEach(field => {
+                if (req.body[field] !== undefined) updateData[field] = req.body[field];
+            });
+            const updatedUser = await userModel.update(req.params.id, updateData);
+            return res.json({ error: false, data: updatedUser });
+        } catch (error) {
+            console.error('Erro ao atualizar usuário:', error);
+            return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
         }
     }
 }

@@ -52,7 +52,7 @@ class Auth extends BaseController {
             }
 
             // Verifica senha
-            const isValidPassword = await bcrypt.compare(password, user.password);
+            const isValidPassword = await bcrypt.compare(password, user.pass);
             if (!isValidPassword) {
                 return this.errorResponse(res, 401, 'Credenciais inválidas');
             }

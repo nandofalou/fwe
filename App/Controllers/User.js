@@ -74,7 +74,7 @@ class User extends BaseController {
                 return this.errorResponse(res, 400, 'Email já cadastrado');
             }
 
-            const user = await this.model.create({ name, email, password });
+            const user = await this.model.create({ name, email, pass });
             return this.successResponse(res, { user }, 'Usuário criado com sucesso', 201);
         } catch (error) {
             console.error('Erro ao criar usuário:', error);
@@ -161,7 +161,7 @@ class User extends BaseController {
 
             if (name) updateData.name = name;
             if (email) updateData.email = email;
-            if (password) updateData.password = password;
+            if (password) updateData.pass = password;
 
             const updatedUser = await this.model.update(req.params.id, updateData);
             return this.successResponse(res, { user: updatedUser }, 'Usuário atualizado com sucesso');

@@ -118,7 +118,7 @@ class UserController extends BaseController {
             }
 
             // Verificar senha atual
-            const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+            const isValidPassword = await bcrypt.compare(currentPassword, user.pass);
             if (!isValidPassword) {
                 return res.status(401).json({
                     error: true,
@@ -228,7 +228,9 @@ class UserController extends BaseController {
         try {
             const userModel = new User();
             const users = await userModel.findAll();
-            return res.json({ error: false, data: users });
+            // Remover o campo 'pass' de cada usuário
+            const usersSafe = users.map(({ pass, ...rest }) => rest);
+            return res.json({ error: false, data: usersSafe });
         } catch (error) {
             console.error('Erro ao listar usuários:', error);
             return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
@@ -242,7 +244,9 @@ class UserController extends BaseController {
             if (!user) {
                 return res.status(404).json({ error: true, message: 'Usuário não encontrado' });
             }
-            return res.json({ error: false, data: user });
+            // Retornar todos os campos relevantes, exceto o hash da senha
+            const { pass, ...userData } = user;
+            return res.json({ error: false, data: userData });
         } catch (error) {
             console.error('Erro ao buscar usuário:', error);
             return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
@@ -252,7 +256,18 @@ class UserController extends BaseController {
     static async store(req, res) {
         try {
             const userModel = new User();
-            const user = await userModel.create(req.body);
+            // Espera-se: name, email, pass, permission_id, active
+            const { name, email, pass, permission_id, active } = req.body;
+            if (!name || !email || !pass || !permission_id) {
+                return res.status(400).json({ error: true, message: 'Campos obrigatórios: name, email, pass, permission_id' });
+            }
+            const user = await userModel.create({
+                name,
+                email,
+                pass,
+                permission_id,
+                active: active !== undefined ? active : 1
+            });
             return res.status(201).json({ error: false, data: user });
         } catch (error) {
             console.error('Erro ao criar usuário:', error);
@@ -267,7 +282,14 @@ class UserController extends BaseController {
             if (!user) {
                 return res.status(404).json({ error: true, message: 'Usuário não encontrado' });
             }
-            const updatedUser = await userModel.update(req.params.id, req.body);
+            // Permitir atualização dos campos: name, email, pass, permission_id, active, hash, hash_date_validate, deleted_at
+            const updateData = {};
+            [
+                'name', 'email', 'pass', 'permission_id', 'active', 'hash', 'hash_date_validate', 'deleted_at'
+            ].forEach(field => {
+                if (req.body[field] !== undefined) updateData[field] = req.body[field];
+            });
+            const updatedUser = await userModel.update(req.params.id, updateData);
             return res.json({ error: false, data: updatedUser });
         } catch (error) {
             console.error('Erro ao atualizar usuário:', error);

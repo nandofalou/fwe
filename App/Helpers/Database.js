@@ -42,36 +42,53 @@ const Database = {
     },
 
     async createTables() {
-        return new Promise((resolve, reject) => {
-            this.connection.serialize(() => {
-                // Tabela de usuários
-                this.connection.run(`
-                    CREATE TABLE IF NOT EXISTS users (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        name TEXT NOT NULL,
-                        email TEXT UNIQUE NOT NULL,
-                        password TEXT NOT NULL,
-                        avatar TEXT,
-                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                    )
-                `);
+        // Criação das tabelas com await para garantir ordem e conclusão
+        await new Promise((resolve, reject) => {
+            this.connection.run(`
+                CREATE TABLE IF NOT EXISTS permission (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name VARCHAR(20) NOT NULL,
+                    description VARCHAR(255) DEFAULT NULL
+                )
+            `, err => err ? reject(err) : resolve());
+        });
 
-                // Tabela de tokens
-                this.connection.run(`
-                    CREATE TABLE IF NOT EXISTS tokens (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        user_id INTEGER NOT NULL,
-                        token TEXT NOT NULL,
-                        type TEXT NOT NULL,
-                        expires_at DATETIME NOT NULL,
-                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY (user_id) REFERENCES users (id)
-                    )
-                `);
-
-                resolve();
+        // Seed de permissões
+        const permissions = [
+            { name: 'MASTER', description: 'Permissão total' },
+            { name: 'EDITOR', description: 'Permite edição de cadastro e visualização' },
+            { name: 'VIEW', description: 'Permite visualização' }
+        ];
+        for (const perm of permissions) {
+            await new Promise((resolve, reject) => {
+                this.connection.get('SELECT id FROM permission WHERE name = ?', [perm.name], (err, row) => {
+                    if (err) return reject(err);
+                    if (!row) {
+                        this.connection.run('INSERT INTO permission (name, description) VALUES (?, ?)', [perm.name, perm.description], err2 => err2 ? reject(err2) : resolve());
+                    } else {
+                        resolve();
+                    }
+                });
             });
+        }
+
+        await new Promise((resolve, reject) => {
+            this.connection.run(`
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    email VARCHAR(100) NOT NULL UNIQUE,
+                    name VARCHAR(50) NOT NULL,
+                    pass TEXT DEFAULT NULL,
+                    active TINYINT(1) NOT NULL DEFAULT 0,
+                    permission_id INTEGER NOT NULL,
+                    hash TEXT DEFAULT NULL,
+                    hash_date_validate DATETIME DEFAULT NULL,
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    deleted_at DATETIME DEFAULT NULL,
+                    FOREIGN KEY (permission_id) REFERENCES permission(id) ON DELETE CASCADE ON UPDATE CASCADE
+                )
+            `, err => err ? reject(err) : resolve());
         });
     },
 

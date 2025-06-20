@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const Database = require('../Helpers/Database');
+const bcrypt = require('bcrypt');
 
 class Server {
     constructor(config) {
@@ -44,10 +45,13 @@ class Server {
             try {
                 // Inicializa a conexão com o banco de dados antes de iniciar o servidor
                 Database.connect().then(async () => {
-                    // Garante a criação da tabela e do usuário padrão
+                    // Garante a criação do usuário padrão se não existir
                     const User = require('../Models/User');
                     const userModel = new User();
-                    await userModel.initializeTable();
+                    const users = await userModel.findAll();
+                    if (users.length === 0) {
+                        await userModel.createDefaultUser();
+                    }
                     // Inicia o servidor Express após a conexão estar pronta
                     this.server = this.app.listen(this.config.server.port, () => {
                         console.log(`Servidor rodando na porta ${this.config.server.port}`);
