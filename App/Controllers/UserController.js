@@ -271,7 +271,7 @@ class UserController extends BaseController {
             return res.status(201).json({ error: false, data: user });
         } catch (error) {
             console.error('Erro ao criar usuário:', error);
-            return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
+            return res.status(500).json({ error: true, message: error.message });
         }
     }
 
