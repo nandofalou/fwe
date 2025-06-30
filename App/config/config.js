@@ -21,23 +21,35 @@ class Config {
         // Criar arquivo de configuração padrão se não existir
         if (!fs.existsSync(configPath)) {
             const defaultConfig = {
-                'database.driver': 'sqlite',
-                'database.sqlite.path': path.join(configDir, 'database.sqlite'),
-                'database.sqlite.charset': 'utf8',
-                'database.mysql.host': 'localhost',
-                'database.mysql.user': 'root',
-                'database.mysql.password': '',
-                'database.mysql.database': 'fwe',
-                'database.mysql.charset': 'utf8mb4',
-                'server.port': 9000,
-                'server.cors': true,
-                'server.autostart': false,
-                'jwt.secret': 'your-secret-key',
-                'jwt.expiresIn': '24h',
-                'logging.console': true,
-                'logging.file': true,
-                'logging.path': path.join(configDir, 'logs'),
-                'logging.maxline': 1024
+                database: {
+                    driver: 'sqlite',
+                    sqlite: {
+                        path: path.join(configDir, 'database.sqlite'),
+                        charset: 'utf8'
+                    },
+                    mysql: {
+                        host: 'localhost',
+                        user: 'root',
+                        password: '',
+                        database: 'fwe',
+                        charset: 'utf8mb4'
+                    }
+                },
+                server: {
+                    port: 9000,
+                    cors: true,
+                    autostart: false
+                },
+                jwt: {
+                    secret: 'your-secret-key',
+                    expiresIn: '24h'
+                },
+                logging: {
+                    console: true,
+                    file: true,
+                    path: path.join(configDir, 'logs'),
+                    maxline: 1024
+                }
             };
             fs.writeFileSync(configPath, ini.stringify(defaultConfig));
         }
