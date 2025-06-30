@@ -1,7 +1,19 @@
+const Log = require('../Helpers/Log');
+
 class BaseController {
     constructor(model) {
         this.model = model;
     }
+
+    /**
+     * Métodos estáticos de logging para uso em controllers
+     */
+    static log = {
+        info: (message, data = null) => Log.info(message, data),
+        error: (message, data = null) => Log.error(message, data),
+        warning: (message, data = null) => Log.warning(message, data),
+        debug: (message, data = null) => Log.debug(message, data)
+    };
 
     /**
      * Listar todos os registros
@@ -11,8 +23,16 @@ class BaseController {
     static async index(req, res) {
         try {
             const records = await this.model.findAll();
+            this.log.info('Listagem de registros realizada', { 
+                model: this.model.name || 'Unknown',
+                count: records.length 
+            });
             return res.json({ error: false, data: records });
         } catch (error) {
+            this.log.error('Erro ao listar registros', { 
+                model: this.model.name || 'Unknown',
+                error: error.message 
+            });
             return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
         }
     }
@@ -26,10 +46,23 @@ class BaseController {
         try {
             const record = await this.model.findById(req.params.id);
             if (!record) {
+                this.log.warning('Registro não encontrado', { 
+                    model: this.model.name || 'Unknown',
+                    id: req.params.id 
+                });
                 return res.status(404).json({ error: true, message: 'Registro não encontrado' });
             }
+            this.log.info('Registro consultado', { 
+                model: this.model.name || 'Unknown',
+                id: req.params.id 
+            });
             return res.json({ error: false, data: record });
         } catch (error) {
+            this.log.error('Erro ao buscar registro', { 
+                model: this.model.name || 'Unknown',
+                id: req.params.id,
+                error: error.message 
+            });
             return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
         }
     }
@@ -42,8 +75,18 @@ class BaseController {
     static async store(req, res) {
         try {
             const record = await this.model.create(req.body);
+            this.log.info('Novo registro criado', { 
+                model: this.model.name || 'Unknown',
+                id: record.id,
+                data: req.body 
+            });
             return res.status(201).json({ error: false, data: record });
         } catch (error) {
+            this.log.error('Erro ao criar registro', { 
+                model: this.model.name || 'Unknown',
+                data: req.body,
+                error: error.message 
+            });
             return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
         }
     }
@@ -57,11 +100,25 @@ class BaseController {
         try {
             const record = await this.model.findById(req.params.id);
             if (!record) {
+                this.log.warning('Registro não encontrado para atualização', { 
+                    model: this.model.name || 'Unknown',
+                    id: req.params.id 
+                });
                 return res.status(404).json({ error: true, message: 'Registro não encontrado' });
             }
             const updatedRecord = await this.model.update(req.params.id, req.body);
+            this.log.info('Registro atualizado', { 
+                model: this.model.name || 'Unknown',
+                id: req.params.id,
+                updatedFields: Object.keys(req.body) 
+            });
             return res.json({ error: false, data: updatedRecord });
         } catch (error) {
+            this.log.error('Erro ao atualizar registro', { 
+                model: this.model.name || 'Unknown',
+                id: req.params.id,
+                error: error.message 
+            });
             return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
         }
     }
@@ -75,11 +132,24 @@ class BaseController {
         try {
             const record = await this.model.findById(req.params.id);
             if (!record) {
+                this.log.warning('Registro não encontrado para exclusão', { 
+                    model: this.model.name || 'Unknown',
+                    id: req.params.id 
+                });
                 return res.status(404).json({ error: true, message: 'Registro não encontrado' });
             }
             await this.model.delete(req.params.id);
+            this.log.info('Registro excluído', { 
+                model: this.model.name || 'Unknown',
+                id: req.params.id 
+            });
             return res.json({ error: false, message: 'Registro excluído com sucesso' });
         } catch (error) {
+            this.log.error('Erro ao excluir registro', { 
+                model: this.model.name || 'Unknown',
+                id: req.params.id,
+                error: error.message 
+            });
             return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
         }
     }

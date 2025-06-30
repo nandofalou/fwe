@@ -2,7 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpecs = require('./App/Config/swagger');
-const routes = require('./App/Config/Routes/Routes');
+const routes = require('./App/config/Routes/Routes');
+const Log = require('./App/Helpers/Log');
 
 const app = express();
 
@@ -24,7 +25,12 @@ app.use(routes);
 
 // Tratamento de erros
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    Log.error('Erro interno do servidor', { 
+        error: err.message, 
+        stack: err.stack,
+        url: req.url,
+        method: req.method
+    });
     res.status(500).json({
         error: true,
         message: 'Erro interno do servidor'
@@ -33,6 +39,8 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 9000;
 app.listen(PORT, () => {
-    console.log(`Servidor Express rodando na porta ${PORT}`);
-    console.log(`Documentação Swagger disponível em: http://localhost:${PORT}/api-docs`);
+    Log.info('Servidor Express iniciado', { 
+        port: PORT,
+        swaggerUrl: `http://localhost:${PORT}/api-docs`
+    });
 }); 

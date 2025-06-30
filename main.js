@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const ini = require('ini');
 const os = require('os');
+const Log = require('./App/Helpers/Log');
 
 // Configurações globais
 let mainWindow;
@@ -30,19 +31,19 @@ function createWindow() {
     // Iniciar servidor automaticamente após a janela estar carregada
     mainWindow.webContents.on('did-finish-load', () => {
         if (config.server.autostart) {
-            console.log('Iniciando servidor automaticamente...');
+            Log.info('Iniciando servidor automaticamente...');
             const { startServer } = require('./App/Libraries/Server');
             startServer(config).then(server => {
                 apiServer = server;
-                console.log('Servidor iniciado automaticamente');
+                Log.info('Servidor iniciado automaticamente');
                 // Notificar a interface que o servidor foi iniciado
-                console.log('Enviando evento server-status-changed para a interface');
+                Log.info('Enviando evento server-status-changed para a interface');
                 mainWindow.webContents.send('server-status-changed', { status: 'started' });
             }).catch(error => {
-                console.error('Erro ao iniciar servidor automaticamente:', error);
+                Log.error('Erro ao iniciar servidor automaticamente', { error: error.message });
             });
         } else {
-            console.log('Servidor não configurado para iniciar automaticamente');
+            Log.info('Servidor não configurado para iniciar automaticamente');
         }
     });
 }
@@ -83,14 +84,21 @@ function initializeConfig() {
             jwt: {
                 secret: 'your-secret-key',
                 expiresIn: '24h'
+            },
+            logging: {
+                console: true,
+                file: true,
+                path: path.join(configDir, 'logs')
             }
         };
 
         fs.writeFileSync(configPath, ini.stringify(defaultConfig));
+        Log.info('Arquivo de configuração padrão criado', { path: configPath });
     }
 
     // Carregar configurações
     config = ini.parse(fs.readFileSync(configPath, 'utf-8'));
+    Log.info('Configurações carregadas', { configPath });
     return config;
 }
 
@@ -98,12 +106,14 @@ function initializeConfig() {
 function saveConfig() {
     const configPath = path.join(os.homedir(), 'fwe', 'config.ini');
     fs.writeFileSync(configPath, ini.stringify(config));
+    Log.info('Configurações salvas', { configPath });
 }
 
 // Eventos do Electron
 app.whenReady().then(() => {
     initializeConfig();
     createWindow();
+    Log.info('Aplicação Electron iniciada');
 
     app.on('activate', function () {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -111,7 +121,10 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', function () {
-    if (process.platform !== 'darwin') app.quit();
+    if (process.platform !== 'darwin') {
+        Log.info('Aplicação Electron finalizada');
+        app.quit();
+    }
 });
 
 // IPC Handlers
@@ -121,50 +134,69 @@ ipcMain.handle('get-config', () => {
 
 ipcMain.handle('start-server', async () => {
     if (!apiServer) {
-        const { startServer } = require('./App/Libraries/Server');
-        apiServer = await startServer(config);
-        
-        // Atualizar configuração para autostart
-        config.server.autostart = true;
-        saveConfig();
-        
-        return { status: 'started' };
+        try {
+            const { startServer } = require('./App/Libraries/Server');
+            apiServer = await startServer(config);
+            
+            // Atualizar configuração para autostart
+            config.server.autostart = true;
+            saveConfig();
+            
+            Log.info('Servidor iniciado via interface', { port: config.server.port });
+            return { status: 'started' };
+        } catch (error) {
+            Log.error('Erro ao iniciar servidor via interface', { error: error.message });
+            throw error;
+        }
     }
     return { status: 'already-running' };
 });
 
 ipcMain.handle('stop-server', async () => {
     if (apiServer) {
-        await apiServer.close();
-        apiServer = null;
-        
-        // Atualizar configuração para não autostart
-        config.server.autostart = false;
-        saveConfig();
-        
-        // Notificar a interface que o servidor foi parado
-        if (mainWindow) {
-            mainWindow.webContents.send('server-status-changed', { status: 'stopped' });
+        try {
+            await apiServer.close();
+            apiServer = null;
+            
+            // Atualizar configuração para não autostart
+            config.server.autostart = false;
+            saveConfig();
+            
+            // Notificar a interface que o servidor foi parado
+            if (mainWindow) {
+                mainWindow.webContents.send('server-status-changed', { status: 'stopped' });
+            }
+            
+            Log.info('Servidor parado via interface');
+            return { status: 'stopped' };
+        } catch (error) {
+            Log.error('Erro ao parar servidor via interface', { error: error.message });
+            throw error;
         }
-        
-        return { status: 'stopped' };
     }
     return { status: 'not-running' };
 });
 
 ipcMain.handle('backup-database', async () => {
-    const backupDir = path.join(os.homedir(), 'fwe', 'backups');
-    if (!fs.existsSync(backupDir)) {
-        fs.mkdirSync(backupDir, { recursive: true });
-    }
+    try {
+        const backupDir = path.join(os.homedir(), 'fwe', 'backups');
+        if (!fs.existsSync(backupDir)) {
+            fs.mkdirSync(backupDir, { recursive: true });
+        }
 
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const backupPath = path.join(backupDir, `backup-${timestamp}.sqlite`);
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const backupPath = path.join(backupDir, `backup-${timestamp}.sqlite`);
 
-    if (config.database.driver === 'sqlite') {
-        fs.copyFileSync(config.database.sqlite.path, backupPath);
-        return { status: 'success', path: backupPath };
+        if (config.database.driver === 'sqlite') {
+            fs.copyFileSync(config.database.sqlite.path, backupPath);
+            Log.info('Backup do banco de dados criado', { backupPath });
+            return { status: 'success', path: backupPath };
+        }
+        
+        Log.warning('Backup solicitado para driver não suportado', { driver: config.database.driver });
+        return { status: 'error', message: 'Backup only supported for SQLite' };
+    } catch (error) {
+        Log.error('Erro ao criar backup do banco de dados', { error: error.message });
+        return { status: 'error', message: error.message };
     }
-    
-    return { status: 'error', message: 'Backup only supported for SQLite' };
 }); 

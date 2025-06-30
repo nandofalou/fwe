@@ -24,7 +24,12 @@ const Database = {
                     fs.mkdirSync(dbDir, { recursive: true });
                 }
 
-                const dbPath = this.config.database.sqlite.path;
+                // Acessar configuração usando notação com ponto
+                const dbPath = this.config.database['sqlite.path'];
+                if (!dbPath) {
+                    throw new Error('Caminho do banco de dados não configurado');
+                }
+
                 this.connection = new sqlite3.Database(dbPath, (err) => {
                     if (err) {
                         console.error('Erro ao conectar ao banco de dados:', err);

@@ -37,11 +37,18 @@ class Config {
                 },
                 server: {
                     port: 9000,
-                    cors: true
+                    cors: true,
+                    autostart: false
                 },
                 jwt: {
                     secret: 'your-secret-key',
                     expiresIn: '24h'
+                },
+                logging: {
+                    console: true,
+                    file: true,
+                    path: './logs',
+                    maxline: 1024
                 }
             };
 
@@ -62,6 +69,10 @@ class Config {
 
     get jwt() {
         return this.config.jwt;
+    }
+
+    get logging() {
+        return this.config.logging;
     }
 
     get all() {

@@ -31,7 +31,7 @@ class UserController extends BaseController {
                 }
             });
         } catch (error) {
-            console.error('Erro ao obter perfil:', error);
+            UserController.log.error('Erro ao obter perfil do usuário', { userId: req.user.id, error: error.message });
             return res.status(500).json({
                 error: true,
                 message: 'Erro interno do servidor'
@@ -73,6 +73,8 @@ class UserController extends BaseController {
                 email: email || user.email
             });
 
+            UserController.log.info('Perfil de usuário atualizado', { userId: req.user.id, email: updatedUser.email });
+
             return res.json({
                 error: false,
                 message: 'Perfil atualizado com sucesso',
@@ -84,7 +86,7 @@ class UserController extends BaseController {
                 }
             });
         } catch (error) {
-            console.error('Erro ao atualizar perfil:', error);
+            UserController.log.error('Erro ao atualizar perfil do usuário', { userId: req.user.id, error: error.message });
             return res.status(500).json({
                 error: true,
                 message: 'Erro interno do servidor'
@@ -131,12 +133,14 @@ class UserController extends BaseController {
                 password: newPassword
             });
 
+            UserController.log.info('Senha de usuário atualizada', { userId: req.user.id });
+
             return res.json({
                 error: false,
                 message: 'Senha atualizada com sucesso'
             });
         } catch (error) {
-            console.error('Erro ao atualizar senha:', error);
+            UserController.log.error('Erro ao atualizar senha do usuário', { userId: req.user.id, error: error.message });
             return res.status(500).json({
                 error: true,
                 message: 'Erro interno do servidor'
@@ -171,6 +175,8 @@ class UserController extends BaseController {
                 avatar: req.file.filename
             });
 
+            UserController.log.info('Avatar de usuário atualizado', { userId: req.user.id, filename: req.file.filename });
+
             return res.json({
                 error: false,
                 message: 'Avatar atualizado com sucesso',
@@ -179,7 +185,7 @@ class UserController extends BaseController {
                 }
             });
         } catch (error) {
-            console.error('Erro ao fazer upload do avatar:', error);
+            UserController.log.error('Erro ao fazer upload do avatar', { userId: req.user.id, error: error.message });
             return res.status(500).json({
                 error: true,
                 message: 'Erro interno do servidor'
@@ -207,6 +213,8 @@ class UserController extends BaseController {
                 avatar: null
             });
 
+            UserController.log.info('Avatar de usuário removido', { userId: req.user.id });
+
             return res.json({
                 error: false,
                 message: 'Avatar removido com sucesso',
@@ -215,7 +223,7 @@ class UserController extends BaseController {
                 }
             });
         } catch (error) {
-            console.error('Erro ao remover avatar:', error);
+            UserController.log.error('Erro ao remover avatar do usuário', { userId: req.user.id, error: error.message });
             return res.status(500).json({
                 error: true,
                 message: 'Erro interno do servidor'
@@ -230,9 +238,12 @@ class UserController extends BaseController {
             const users = await userModel.findAll();
             // Remover o campo 'pass' de cada usuário
             const usersSafe = users.map(({ pass, ...rest }) => rest);
+            
+            UserController.log.info('Listagem de usuários realizada', { count: usersSafe.length });
+            
             return res.json({ error: false, data: usersSafe });
         } catch (error) {
-            console.error('Erro ao listar usuários:', error);
+            UserController.log.error('Erro ao listar usuários', { error: error.message });
             return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
         }
     }
@@ -246,9 +257,12 @@ class UserController extends BaseController {
             }
             // Retornar todos os campos relevantes, exceto o hash da senha
             const { pass, ...userData } = user;
+            
+            UserController.log.info('Usuário consultado', { userId: req.params.id });
+            
             return res.json({ error: false, data: userData });
         } catch (error) {
-            console.error('Erro ao buscar usuário:', error);
+            UserController.log.error('Erro ao buscar usuário', { userId: req.params.id, error: error.message });
             return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
         }
     }
@@ -268,9 +282,12 @@ class UserController extends BaseController {
                 permission_id,
                 active: active !== undefined ? active : 1
             });
+            
+            UserController.log.info('Novo usuário criado', { userId: user.id, email: user.email, permissionId: user.permission_id });
+            
             return res.status(201).json({ error: false, data: user });
         } catch (error) {
-            console.error('Erro ao criar usuário:', error);
+            UserController.log.error('Erro ao criar usuário', { error: error.message, data: req.body });
             return res.status(500).json({ error: true, message: error.message });
         }
     }
@@ -290,9 +307,12 @@ class UserController extends BaseController {
                 if (req.body[field] !== undefined) updateData[field] = req.body[field];
             });
             const updatedUser = await userModel.update(req.params.id, updateData);
+            
+            UserController.log.info('Usuário atualizado', { userId: req.params.id, updatedFields: Object.keys(updateData) });
+            
             return res.json({ error: false, data: updatedUser });
         } catch (error) {
-            console.error('Erro ao atualizar usuário:', error);
+            UserController.log.error('Erro ao atualizar usuário', { userId: req.params.id, error: error.message });
             return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
         }
     }
@@ -305,9 +325,12 @@ class UserController extends BaseController {
                 return res.status(404).json({ error: true, message: 'Usuário não encontrado' });
             }
             await userModel.delete(req.params.id);
+            
+            UserController.log.info('Usuário excluído', { userId: req.params.id, email: user.email });
+            
             return res.json({ error: false, message: 'Usuário excluído com sucesso' });
         } catch (error) {
-            console.error('Erro ao excluir usuário:', error);
+            UserController.log.error('Erro ao excluir usuário', { userId: req.params.id, error: error.message });
             return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
         }
     }
