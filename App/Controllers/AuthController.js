@@ -18,8 +18,7 @@ class AuthController extends BaseController {
             }
 
             // Buscar usuário
-            const userModel = new User();
-            const user = await userModel.findByEmail(email);
+            const user = await User.findByEmail(email);
             if (!user || !user.active) {
                 AuthController.log.warning('Tentativa de login com credenciais inválidas', { email });
                 return res.status(401).json({
@@ -81,8 +80,7 @@ class AuthController extends BaseController {
             }
 
             // Verificar se email já existe
-            const userModel = new User();
-            const existingUser = await userModel.findByEmail(email);
+            const existingUser = await User.findByEmail(email);
             if (existingUser) {
                 AuthController.log.warning('Tentativa de registro com email já existente', { email });
                 return res.status(400).json({
@@ -92,11 +90,12 @@ class AuthController extends BaseController {
             }
 
             // Criar usuário
-            const user = await userModel.create({
+            const userId = await User.insert({
                 name,
                 email,
                 pass: password
             });
+            const user = await User.find(userId);
 
             AuthController.log.info('Novo usuário registrado', { userId: user.id, email: user.email });
 
@@ -131,8 +130,7 @@ class AuthController extends BaseController {
             }
 
             // Verificar se usuário existe
-            const userModel = new User();
-            const user = await userModel.findByEmail(email);
+            const user = await User.findByEmail(email);
             if (!user) {
                 AuthController.log.warning('Tentativa de recuperação de senha para email inexistente', { email });
                 return res.status(404).json({
@@ -226,8 +224,7 @@ class AuthController extends BaseController {
             }
 
             // Verificar se usuário existe
-            const userModel = new User();
-            const user = await userModel.findByEmail(email);
+            const user = await User.findByEmail(email);
             if (!user) {
                 AuthController.log.warning('Tentativa de reenvio de verificação para email inexistente', { email });
                 return res.status(404).json({
@@ -265,8 +262,7 @@ class AuthController extends BaseController {
             }
 
             // Verificar se email já existe
-            const userModel = new User();
-            const existingUser = await userModel.findByEmail(email);
+            const existingUser = await User.findByEmail(email);
             if (existingUser && existingUser.id !== req.user.id) {
                 AuthController.log.warning('Tentativa de atualização com email já existente', { email, userId: req.user.id });
                 return res.status(400).json({
@@ -276,11 +272,12 @@ class AuthController extends BaseController {
             }
 
             // Atualizar usuário
-            const user = await userModel.update(req.user.id, {
+            await User.update(req.user.id, {
                 name,
                 email,
                 pass: password
             });
+            const user = await User.find(req.user.id);
 
             AuthController.log.info('Dados de usuário atualizados', { userId: req.user.id, email: user.email });
 

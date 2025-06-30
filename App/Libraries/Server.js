@@ -3,6 +3,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const Database = require('../Helpers/Database');
 const bcrypt = require('bcrypt');
+const User = require('../Models/User');
 
 class Server {
     constructor(config) {
@@ -47,10 +48,9 @@ class Server {
                 Database.connect().then(async () => {
                     // Garante a criação do usuário padrão se não existir
                     const User = require('../Models/User');
-                    const userModel = new User();
-                    const users = await userModel.findAll();
+                    const users = await User.findAll();
                     if (users.length === 0) {
-                        await userModel.createDefaultUser();
+                        await User.createDefaultUser();
                     }
                     // Inicia o servidor Express após a conexão estar pronta
                     this.server = this.app.listen(this.config.server.port, () => {

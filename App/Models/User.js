@@ -5,12 +5,14 @@ class User extends BaseModel {
     constructor() {
         super();
         this.table = 'users';
+        this.primaryKey = 'id';
+        this.allowedFields = ['name', 'email', 'pass', 'active', 'permission_id'];
     }
 
     /**
      * Cria o usuário padrão
      */
-    async createDefaultUser() {
+    static async createDefaultUser() {
         const pass = await bcrypt.hash('1234', 10);
         const defaultUser = {
             name: 'Administrador',
@@ -19,7 +21,7 @@ class User extends BaseModel {
             permission_id: 1,
             active: 1
         };
-        await this.create(defaultUser);
+        return await this.insert(defaultUser);
     }
 
     /**
@@ -27,12 +29,8 @@ class User extends BaseModel {
      * @param {string} email Email do usuário
      * @returns {Promise} Usuário encontrado
      */
-    async findByEmail(email) {
-        const results = await this.db.query(
-            `SELECT * FROM ${this.table} WHERE email = ?`,
-            [email]
-        );
-        return results[0];
+    static async findByEmail(email) {
+        return await this.where({ email }).first();
     }
 
     /**
@@ -40,11 +38,11 @@ class User extends BaseModel {
      * @param {Object} data Dados do usuário
      * @returns {Promise} Usuário criado
      */
-    async create(data) {
+    static async insert(data) {
         if (data.pass && !data.pass.startsWith('$2')) {
             data.pass = await bcrypt.hash(data.pass, 10);
         }
-        return super.create(data);
+        return await super.insert(data);
     }
 
     /**
@@ -53,11 +51,11 @@ class User extends BaseModel {
      * @param {Object} data Dados do usuário
      * @returns {Promise} Usuário atualizado
      */
-    async update(id, data) {
-        if (data.pass) {
+    static async update(id, data) {
+        if (data.pass && !data.pass.startsWith('$2')) {
             data.pass = await bcrypt.hash(data.pass, 10);
         }
-        return super.update(id, data);
+        return await super.update(id, data);
     }
 }
 

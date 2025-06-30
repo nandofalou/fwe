@@ -21,42 +21,50 @@ class Config {
         // Criar arquivo de configuração padrão se não existir
         if (!fs.existsSync(configPath)) {
             const defaultConfig = {
-                database: {
-                    driver: 'sqlite',
-                    sqlite: {
-                        path: './database.sqlite',
-                        charset: 'utf8'
-                    },
-                    mysql: {
-                        host: 'localhost',
-                        user: 'root',
-                        password: '',
-                        database: 'fwe',
-                        charset: 'utf8mb4'
-                    }
-                },
-                server: {
-                    port: 9000,
-                    cors: true,
-                    autostart: false
-                },
-                jwt: {
-                    secret: 'your-secret-key',
-                    expiresIn: '24h'
-                },
-                logging: {
-                    console: true,
-                    file: true,
-                    path: './logs',
-                    maxline: 1024
-                }
+                'database.driver': 'sqlite',
+                'database.sqlite.path': path.join(configDir, 'database.sqlite'),
+                'database.sqlite.charset': 'utf8',
+                'database.mysql.host': 'localhost',
+                'database.mysql.user': 'root',
+                'database.mysql.password': '',
+                'database.mysql.database': 'fwe',
+                'database.mysql.charset': 'utf8mb4',
+                'server.port': 9000,
+                'server.cors': true,
+                'server.autostart': false,
+                'jwt.secret': 'your-secret-key',
+                'jwt.expiresIn': '24h',
+                'logging.console': true,
+                'logging.file': true,
+                'logging.path': path.join(configDir, 'logs'),
+                'logging.maxline': 1024
             };
-
             fs.writeFileSync(configPath, ini.stringify(defaultConfig));
         }
 
         // Carregar configurações
-        return ini.parse(fs.readFileSync(configPath, 'utf-8'));
+        const config = ini.parse(fs.readFileSync(configPath, 'utf-8'));
+        return this.parseFlatConfig(config);
+    }
+
+    // Converte um objeto plano com chaves "a.b.c" em objeto aninhado
+    parseFlatConfig(flat) {
+        const result = {};
+        for (const key in flat) {
+            const value = flat[key];
+            const keys = key.split('.');
+            let current = result;
+            for (let i = 0; i < keys.length; i++) {
+                const k = keys[i];
+                if (i === keys.length - 1) {
+                    current[k] = value;
+                } else {
+                    if (!current[k]) current[k] = {};
+                    current = current[k];
+                }
+            }
+        }
+        return result;
     }
 
     get database() {

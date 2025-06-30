@@ -24,11 +24,17 @@ const Database = {
                     fs.mkdirSync(dbDir, { recursive: true });
                 }
 
-                // Acessar configuração usando notação com ponto
-                const dbPath = this.config.database['sqlite.path'];
+                // Acessar configuração usando notação com ponto ou aninhada
+                let dbPath = null;
+                if (this.config.database && this.config.database.sqlite && this.config.database.sqlite.path) {
+                    dbPath = this.config.database.sqlite.path;
+                } else if (this.config.database && this.config.database['sqlite.path']) {
+                    dbPath = this.config.database['sqlite.path'];
+                }
                 if (!dbPath) {
                     throw new Error('Caminho do banco de dados não configurado');
                 }
+                console.log('Usando banco de dados em:', dbPath);
 
                 this.connection = new sqlite3.Database(dbPath, (err) => {
                     if (err) {

@@ -57,22 +57,20 @@ class Log {
      */
     writeToFile(filename, message) {
         if (!this.fileEnabled) return;
-
         const filePath = path.join(this.logPath, filename);
         let lines = [];
         if (fs.existsSync(filePath)) {
             lines = fs.readFileSync(filePath, 'utf8').split(/\r?\n/).filter(Boolean);
         }
-        // Se maxline está definido e já atingiu o limite, remove a linha mais antiga
-        if (this.maxline && lines.length >= this.maxline) {
-            lines = lines.slice(lines.length - this.maxline + 1);
+        // Adiciona a nova linha no início
+        lines.unshift(message);
+        // Se maxline está definido e já atingiu o limite, remove as linhas mais antigas
+        if (this.maxline && lines.length > this.maxline) {
+            lines = lines.slice(0, this.maxline);
         }
-        lines.push(message);
-        
         try {
             fs.writeFileSync(filePath, lines.join('\n') + '\n', 'utf8');
         } catch (error) {
-            // Se falhar ao escrever no arquivo, pelo menos exibe no console
             console.error('Erro ao escrever no arquivo de log:', error);
         }
     }
