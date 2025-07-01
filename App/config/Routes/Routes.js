@@ -3,6 +3,7 @@ const AuthController = require('../../Controllers/AuthController');
 const UserController = require('../../Controllers/UserController');
 const AuthMiddleware = require('../../Middlewares/AuthMiddleware');
 const InstallController = require('../../Controllers/InstallController');
+const EventController = require('../../Controllers/EventController');
 
 class Routes extends BaseRoutes {
     constructor() {
@@ -34,6 +35,8 @@ class Routes extends BaseRoutes {
             router.put('/users/password', UserController.updatePassword);
             router.post('/users/avatar', UserController.uploadAvatar);
             router.delete('/users/avatar', UserController.removeAvatar);
+            // Rotas de eventos
+            router.resource('/events', EventController);
         });
     }
 }
