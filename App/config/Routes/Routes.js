@@ -2,6 +2,7 @@ const BaseRoutes = require('./BaseRoutes');
 const AuthController = require('../../Controllers/AuthController');
 const UserController = require('../../Controllers/UserController');
 const AuthMiddleware = require('../../Middlewares/AuthMiddleware');
+const InstallController = require('../../Controllers/InstallController');
 
 class Routes extends BaseRoutes {
     constructor() {
@@ -12,6 +13,9 @@ class Routes extends BaseRoutes {
     registerRoutes() {
         // Rotas públicas
         this.group('/api', [], router => {
+            // Rota de instalação
+            router.get('/install', InstallController.install);
+
             // Rotas de autenticação
             router.post('/auth/login', AuthController.login);
             router.post('/auth/register', AuthController.register);
