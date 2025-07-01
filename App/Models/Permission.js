@@ -5,6 +5,7 @@ class Permission extends BaseModel {
         super();
         this.table = 'permission';
         this.primaryKey = 'id';
+        this.softDelete = false; 
         this.allowedFields = ['name', 'description'];
     }
 }

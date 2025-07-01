@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(100) NOT NULL UNIQUE,
     name VARCHAR(50) NOT NULL,
     pass TEXT DEFAULT NULL,
-    active TINYINT(1) NOT NULL DEFAULT 0,
+    active TINYINT NOT NULL DEFAULT 0,
     permission_id INTEGER NOT NULL,
     hash TEXT DEFAULT NULL,
     hash_date_validate DATETIME DEFAULT NULL,

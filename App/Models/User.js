@@ -7,22 +7,7 @@ class User extends BaseModel {
         this.table = 'users';
         this.primaryKey = 'id';
         this.allowedFields = ['name', 'email', 'pass', 'active', 'permission_id'];
-        this.softDelete = false; // Ativa soft delete para usuários
-    }
-
-    /**
-     * Cria o usuário padrão
-     */
-    static async createDefaultUser() {
-        const pass = await bcrypt.hash('1234', 10);
-        const defaultUser = {
-            name: 'Administrador',
-            email: 'admin@admin.com',
-            pass: pass,
-            permission_id: 1,
-            active: 1
-        };
-        return await this.insert(defaultUser);
+        this.softDelete = false; // Desativa soft delete para usuários
     }
 
     /**

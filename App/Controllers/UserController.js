@@ -231,11 +231,19 @@ class UserController extends BaseController {
         }
     }
 
+    // Helper para remover o campo 'pass'
+    static hidePassword(user) {
+        if (!user) return user;
+        const { pass, ...safe } = user;
+        return safe;
+    }
+
     // Método de listagem de usuários como método estático
     static async index(req, res) {
         try {
             const users = await User.get();
-            return res.json(Response.success(users));
+            const usersSafe = users.map(UserController.hidePassword);
+            return res.json(Response.success(usersSafe));
         } catch (error) {
             return res.status(500).json(Response.error('Erro ao listar usuários.', null));
         }
@@ -245,7 +253,7 @@ class UserController extends BaseController {
         try {
             const user = await User.find(req.params.id);
             if (!user) return res.status(404).json(Response.error('Usuário não encontrado.'));
-            return res.json(Response.success(user));
+            return res.json(Response.success(UserController.hidePassword(user)));
         } catch (error) {
             return res.status(500).json(Response.error('Erro ao buscar usuário.', null));
         }

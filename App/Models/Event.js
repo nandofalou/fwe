@@ -5,6 +5,7 @@ class Event extends BaseModel {
         super();
         this.table = 'event';
         this.primaryKey = 'id';
+        this.softDelete = false; 
         this.allowedFields = [
             'created_by', 'name', 'startdate', 'enddate', 'active', 'local',
             'created_at', 'updated_at', 'deleted_at'

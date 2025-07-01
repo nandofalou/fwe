@@ -46,12 +46,6 @@ class Server {
             try {
                 // Inicializa a conexão com o banco de dados antes de iniciar o servidor
                 Database.connect().then(async () => {
-                    // Garante a criação do usuário padrão se não existir
-                    const User = require('../Models/User');
-                    const users = await User.findAll();
-                    if (users.length === 0) {
-                        await User.createDefaultUser();
-                    }
                     // Inicia o servidor Express após a conexão estar pronta
                     this.server = this.app.listen(this.config.server.port, () => {
                         console.log(`Servidor rodando na porta ${this.config.server.port}`);
