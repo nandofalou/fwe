@@ -10,6 +10,7 @@ class BaseModel {
         this.event = Event;
         this.primaryKey = 'id';
         this.allowedFields = [];
+        this.softDelete = false; // padrão: hard delete
         this.resetBuilder();
     }
 
@@ -80,6 +81,10 @@ class BaseModel {
     }
 
     static async get() {
+        // Se softDelete, filtra deleted_at IS NULL
+        if (this.instance.softDelete) {
+            this.where({ deleted_at: null });
+        }
         const sql = this.buildSelect();
         const params = this.instance._params;
         const rows = await this.instance.db.query(sql, params);
@@ -114,8 +119,15 @@ class BaseModel {
     }
 
     static async delete(id) {
-        const sql = `DELETE FROM ${this.tableName()} WHERE ${this.instance.primaryKey} = ?`;
-        await this.instance.db.delete(sql, [id]);
+        if (this.instance.softDelete) {
+            // Soft delete: marca deleted_at
+            const sql = `UPDATE ${this.tableName()} SET deleted_at = ? WHERE ${this.instance.primaryKey} = ?`;
+            await this.instance.db.update(sql, [new Date(), id]);
+        } else {
+            // Hard delete: remove do banco
+            const sql = `DELETE FROM ${this.tableName()} WHERE ${this.instance.primaryKey} = ?`;
+            await this.instance.db.delete(sql, [id]);
+        }
         this.instance.event.emit(`${this.tableName()}:deleted`, id);
         return true;
     }

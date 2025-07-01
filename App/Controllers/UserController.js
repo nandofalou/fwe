@@ -1,5 +1,7 @@
 const User = require('../Models/User');
 const BaseController = require('./BaseController');
+const Validator = require('../Helpers/Validator');
+const Response = require('../Helpers/Response');
 
 class UserController extends BaseController {
     constructor() {
@@ -26,8 +28,7 @@ class UserController extends BaseController {
                 data: {
                     id: user.id,
                     name: user.name,
-                    email: user.email,
-                    avatar: user.avatar
+                    email: user.email
                 }
             });
         } catch (error) {
@@ -81,8 +82,7 @@ class UserController extends BaseController {
                 data: {
                     id: updatedUser.id,
                     name: updatedUser.name,
-                    email: updatedUser.email,
-                    avatar: updatedUser.avatar
+                    email: updatedUser.email
                 }
             });
         } catch (error) {
@@ -234,104 +234,72 @@ class UserController extends BaseController {
     // Método de listagem de usuários como método estático
     static async index(req, res) {
         try {
-            const userModel = new User();
-            const users = await userModel.findAll();
-            // Remover o campo 'pass' de cada usuário
-            const usersSafe = users.map(({ pass, ...rest }) => rest);
-            
-            UserController.log.info('Listagem de usuários realizada', { count: usersSafe.length });
-            
-            return res.json({ error: false, data: usersSafe });
+            const users = await User.get();
+            return res.json(Response.success(users));
         } catch (error) {
-            UserController.log.error('Erro ao listar usuários', { error: error.message });
-            return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
+            return res.status(500).json(Response.error('Erro ao listar usuários.', null));
         }
     }
 
     static async show(req, res) {
         try {
-            const userModel = new User();
-            const user = await userModel.find(req.params.id);
-            if (!user) {
-                return res.status(404).json({ error: true, message: 'Usuário não encontrado' });
-            }
-            // Retornar todos os campos relevantes, exceto o hash da senha
-            const { pass, ...userData } = user;
-            
-            UserController.log.info('Usuário consultado', { userId: req.params.id });
-            
-            return res.json({ error: false, data: userData });
+            const user = await User.find(req.params.id);
+            if (!user) return res.status(404).json(Response.error('Usuário não encontrado.'));
+            return res.json(Response.success(user));
         } catch (error) {
-            UserController.log.error('Erro ao buscar usuário', { userId: req.params.id, error: error.message });
-            return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
+            return res.status(500).json(Response.error('Erro ao buscar usuário.', null));
         }
     }
 
     static async store(req, res) {
+        // Exemplo de validação, ajuste conforme suas regras
+        const rules = {
+            name: 'required',
+            email: 'required|email',
+            pass: 'required',
+            permission_id: 'required|numeric',
+            active: 'required|numeric'
+        };
+        const { isValid, errors } = Validator.validate(req.body, rules);
+        if (!isValid) {
+            return res.status(422).json(Response.error('Dados inválidos', errors));
+        }
         try {
-            const userModel = new User();
-            // Espera-se: name, email, pass, permission_id, active
-            const { name, email, pass, permission_id, active } = req.body;
-            if (!name || !email || !pass || !permission_id) {
-                return res.status(400).json({ error: true, message: 'Campos obrigatórios: name, email, pass, permission_id' });
-            }
-            const user = await userModel.create({
-                name,
-                email,
-                pass,
-                permission_id,
-                active: active !== undefined ? active : 1
-            });
-            
-            UserController.log.info('Novo usuário criado', { userId: user.id, email: user.email, permissionId: user.permission_id });
-            
-            return res.status(201).json({ error: false, data: user });
+            const data = req.body;
+            const id = await User.insert(data);
+            return res.status(201).json(Response.success({ id }, 'Usuário criado com sucesso.'));
         } catch (error) {
-            UserController.log.error('Erro ao criar usuário', { error: error.message, data: req.body });
-            return res.status(500).json({ error: true, message: error.message });
+            return res.status(500).json(Response.error('Erro ao criar usuário.', null));
         }
     }
 
     static async update(req, res) {
+        // Exemplo de validação, ajuste conforme suas regras
+        const rules = {
+            name: 'required',
+            email: 'required|email',
+            permission_id: 'required|numeric',
+            active: 'required|numeric'
+        };
+        const { isValid, errors } = Validator.validate(req.body, rules);
+        if (!isValid) {
+            return res.status(422).json(Response.error('Dados inválidos', errors));
+        }
         try {
-            const userModel = new User();
-            const user = await userModel.find(req.params.id);
-            if (!user) {
-                return res.status(404).json({ error: true, message: 'Usuário não encontrado' });
-            }
-            // Permitir atualização dos campos: name, email, pass, permission_id, active, hash, hash_date_validate, deleted_at
-            const updateData = {};
-            [
-                'name', 'email', 'pass', 'permission_id', 'active', 'hash', 'hash_date_validate', 'deleted_at'
-            ].forEach(field => {
-                if (req.body[field] !== undefined) updateData[field] = req.body[field];
-            });
-            const updatedUser = await userModel.update(req.params.id, updateData);
-            
-            UserController.log.info('Usuário atualizado', { userId: req.params.id, updatedFields: Object.keys(updateData) });
-            
-            return res.json({ error: false, data: updatedUser });
+            const data = req.body;
+            await User.update(req.params.id, data);
+            return res.json(Response.success(null, 'Usuário atualizado com sucesso.'));
         } catch (error) {
-            UserController.log.error('Erro ao atualizar usuário', { userId: req.params.id, error: error.message });
-            return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
+            return res.status(500).json(Response.error('Erro ao atualizar usuário.', null));
         }
     }
 
     static async destroy(req, res) {
         try {
-            const userModel = new User();
-            const user = await userModel.find(req.params.id);
-            if (!user) {
-                return res.status(404).json({ error: true, message: 'Usuário não encontrado' });
-            }
-            await userModel.delete(req.params.id);
-            
-            UserController.log.info('Usuário excluído', { userId: req.params.id, email: user.email });
-            
-            return res.json({ error: false, message: 'Usuário excluído com sucesso' });
+            await User.delete(req.params.id);
+            return res.json(Response.success(null, 'Usuário removido com sucesso.'));
         } catch (error) {
-            UserController.log.error('Erro ao excluir usuário', { userId: req.params.id, error: error.message });
-            return res.status(500).json({ error: true, message: 'Erro interno do servidor' });
+            return res.status(500).json(Response.error('Erro ao remover usuário.', null));
         }
     }
 }

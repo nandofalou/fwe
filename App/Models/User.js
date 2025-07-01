@@ -7,6 +7,7 @@ class User extends BaseModel {
         this.table = 'users';
         this.primaryKey = 'id';
         this.allowedFields = ['name', 'email', 'pass', 'active', 'permission_id'];
+        this.softDelete = false; // Ativa soft delete para usuários
     }
 
     /**
