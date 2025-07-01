@@ -1,4 +1,5 @@
 const sqlite3 = require('sqlite3').verbose();
+const mysql = require('mysql2/promise');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
@@ -11,11 +12,26 @@ const Event = require('./Event');
 const Database = {
     connection: null,
     config: Config,
-    type: Config.database.type || 'sqlite',
+    type: Config.database.type || Config.database.driver || 'sqlite',
     connections: new Map(),
     event: Event,
 
     async connect() {
+        if ((this.config.database.driver || this.config.database.type) === 'mysql') {
+            // MySQL
+            const mysqlConfig = this.config.database.mysql;
+            this.connection = await mysql.createConnection({
+                host: mysqlConfig.host,
+                user: mysqlConfig.user,
+                password: mysqlConfig.password,
+                database: mysqlConfig.database,
+                port: mysqlConfig.port || 3306,
+                charset: mysqlConfig.charset || 'utf8mb4'
+            });
+            console.log('Conectado ao banco de dados MySQL');
+            return;
+        }
+        // SQLite (padrão)
         return new Promise((resolve, reject) => {
             try {
                 // Criar diretório se não existir
@@ -53,6 +69,11 @@ const Database = {
     },
 
     async query(sql, params = []) {
+        if ((this.config.database.driver || this.config.database.type) === 'mysql') {
+            const [rows] = await this.connection.execute(sql, params);
+            return rows;
+        }
+        // SQLite
         return new Promise((resolve, reject) => {
             this.connection.all(sql, params, (err, rows) => {
                 if (err) {
@@ -65,6 +86,11 @@ const Database = {
     },
 
     async execute(sql, params = []) {
+        if ((this.config.database.driver || this.config.database.type) === 'mysql') {
+            const [result] = await this.connection.execute(sql, params);
+            return result;
+        }
+        // SQLite
         return new Promise((resolve, reject) => {
             this.connection.run(sql, params, function(err) {
                 if (err) {
@@ -129,6 +155,11 @@ const Database = {
      * @returns {Promise<number>} ID do registro
      */
     async insert(sql, params = []) {
+        if ((this.config.database.driver || this.config.database.type) === 'mysql') {
+            const [result] = await this.connection.execute(sql, params);
+            return result.insertId;
+        }
+        // SQLite
         return new Promise((resolve, reject) => {
             this.connection.run(sql, params, function(err) {
                 if (err) {
@@ -142,100 +173,73 @@ const Database = {
 
     /**
      * Atualiza registros
-     * @param {string} name Nome da conexão
-     * @param {string} table Nome da tabela
-     * @param {Object} data Dados
-     * @param {string} where Condição WHERE
-     * @param {Array} params Parâmetros (opcional)
+     * @param {string} sql Query SQL
+     * @param {Array} params Valores
      * @returns {Promise<number>} Número de registros afetados
      */
-    update(name, table, data, where, params = []) {
-        const sets = Object.keys(data).map(key => `${key} = ?`).join(', ');
-        const values = [...Object.values(data), ...params];
-        const sql = `UPDATE ${table} SET ${sets} WHERE ${where}`;
-
+    async update(sql, params = []) {
+        if ((this.config.database.driver || this.config.database.type) === 'mysql') {
+            const [result] = await this.connection.execute(sql, params);
+            return result.affectedRows;
+        }
+        // SQLite
         return new Promise((resolve, reject) => {
-            const db = this.connections.get(name);
-
-            if (!db) {
-                const err = new Error(`Conexão "${name}" não encontrada`);
-                this.event.emit('database:error', err);
-                reject(err);
-                return;
-            }
-
-            db.run(sql, values, function(err) {
+            this.connection.run(sql, params, function(err) {
                 if (err) {
-                    this.event.emit('database:error', err);
                     reject(err);
-                    return;
+                } else {
+                    resolve(this.changes);
                 }
-
-                this.event.emit('database:updated', name, table, data, where, this.changes);
-                resolve(this.changes);
             });
         });
     },
 
     /**
      * Remove registros
-     * @param {string} name Nome da conexão
-     * @param {string} table Nome da tabela
-     * @param {string} where Condição WHERE
-     * @param {Array} params Parâmetros (opcional)
+     * @param {string} sql Query SQL
+     * @param {Array} params Valores
      * @returns {Promise<number>} Número de registros afetados
      */
-    delete(name, table, where, params = []) {
-        const sql = `DELETE FROM ${table} WHERE ${where}`;
-
+    async delete(sql, params = []) {
+        if ((this.config.database.driver || this.config.database.type) === 'mysql') {
+            const [result] = await this.connection.execute(sql, params);
+            return result.affectedRows;
+        }
+        // SQLite
         return new Promise((resolve, reject) => {
-            const db = this.connections.get(name);
-
-            if (!db) {
-                const err = new Error(`Conexão "${name}" não encontrada`);
-                this.event.emit('database:error', err);
-                reject(err);
-                return;
-            }
-
-            db.run(sql, params, function(err) {
+            this.connection.run(sql, params, function(err) {
                 if (err) {
-                    this.event.emit('database:error', err);
                     reject(err);
-                    return;
+                } else {
+                    resolve(this.changes);
                 }
-
-                this.event.emit('database:deleted', name, table, where, this.changes);
-                resolve(this.changes);
             });
         });
     },
 
     /**
      * Inicia uma transação
-     * @param {string} name Nome da conexão
-     * @returns {Promise<void>}
      */
-    beginTransaction(name) {
-        return this.query(name, 'BEGIN TRANSACTION');
+    async beginTransaction() {
+        if ((this.config.database.driver || this.config.database.type) === 'mysql') {
+            await this.connection.beginTransaction();
+        } else {
+            await this.query('BEGIN TRANSACTION');
+        }
     },
-
-    /**
-     * Confirma uma transação
-     * @param {string} name Nome da conexão
-     * @returns {Promise<void>}
-     */
-    commit(name) {
-        return this.query(name, 'COMMIT');
+    async commit() {
+        if ((this.config.database.driver || this.config.database.type) === 'mysql') {
+            await this.connection.commit();
+        } else {
+            await this.query('COMMIT');
+        }
     },
-
-    /**
-     * Desfaz uma transação
-     * @param {string} name Nome da conexão
-     * @returns {Promise<void>}
-     */
-    rollback(name) {
-        return this.query(name, 'ROLLBACK');
+    async rollback() {
+        if ((this.config.database.driver || this.config.database.type) === 'mysql') {
+            await this.connection.rollback();
+        } else {
+            await this.query('ROLLBACK');
+        }
     },
 
     /**
@@ -433,31 +437,54 @@ const Database = {
         if (!fs.existsSync(migrationsDir)) {
             fs.mkdirSync(migrationsDir, { recursive: true });
         }
+        const isMySQL = (this.config.database.driver || this.config.database.type) === 'mysql';
         // Cria tabela de controle
-        await new Promise((resolve, reject) => {
-            this.connection.run(`CREATE TABLE IF NOT EXISTS migrations (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
+        if (isMySQL) {
+            await this.connection.execute(`CREATE TABLE IF NOT EXISTS migrations (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
                 run_on DATETIME DEFAULT CURRENT_TIMESTAMP
-            )`, err => err ? reject(err) : resolve());
-        });
+            )`);
+        } else {
+            await new Promise((resolve, reject) => {
+                this.connection.run(`CREATE TABLE IF NOT EXISTS migrations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    run_on DATETIME DEFAULT CURRENT_TIMESTAMP
+                )`, err => err ? reject(err) : resolve());
+            });
+        }
         // Lê arquivos .sql
         const files = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort();
         for (const file of files) {
-            const already = await new Promise((resolve, reject) => {
-                this.connection.get('SELECT 1 FROM migrations WHERE name = ?', [file], (err, row) => {
-                    if (err) return reject(err);
-                    resolve(row);
+            let already;
+            if (isMySQL) {
+                const [rows] = await this.connection.execute('SELECT 1 FROM migrations WHERE name = ?', [file]);
+                already = rows.length > 0;
+            } else {
+                already = await new Promise((resolve, reject) => {
+                    this.connection.get('SELECT 1 FROM migrations WHERE name = ?', [file], (err, row) => {
+                        if (err) return reject(err);
+                        resolve(row);
+                    });
                 });
-            });
+            }
             if (!already) {
                 const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
-                await new Promise((resolve, reject) => {
-                    this.connection.exec(sql, err => err ? reject(err) : resolve());
-                });
-                await new Promise((resolve, reject) => {
-                    this.connection.run('INSERT INTO migrations (name) VALUES (?)', [file], err => err ? reject(err) : resolve());
-                });
+                if (isMySQL) {
+                    // Executa múltiplos comandos se houver (split por ';')
+                    for (const statement of sql.split(';').map(s => s.trim()).filter(Boolean)) {
+                        await this.connection.execute(statement);
+                    }
+                    await this.connection.execute('INSERT INTO migrations (name) VALUES (?)', [file]);
+                } else {
+                    await new Promise((resolve, reject) => {
+                        this.connection.exec(sql, err => err ? reject(err) : resolve());
+                    });
+                    await new Promise((resolve, reject) => {
+                        this.connection.run('INSERT INTO migrations (name) VALUES (?)', [file], err => err ? reject(err) : resolve());
+                    });
+                }
                 console.log(`Migration ${file} aplicada.`);
             }
         }

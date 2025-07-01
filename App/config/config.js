@@ -45,7 +45,7 @@ class Config {
                     expiresIn: '24h'
                 },
                 logging: {
-                    console: true,
+                    console: false,
                     file: true,
                     path: path.join(configDir, 'logs'),
                     maxline: 1024

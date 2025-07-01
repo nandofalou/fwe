@@ -90,7 +90,7 @@ class BaseModel {
     static async count() {
         this.instance._select = `COUNT(${this.instance.primaryKey}) as count`;
         const rows = await this.get();
-        return rows[0]?.count || 0;
+        return Number(rows[0]?.count || 0);
     }
 
     static async insert(data) {

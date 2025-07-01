@@ -56,3 +56,20 @@ O sistema criará automaticamente um arquivo `config.ini` no diretório do usuá
 ## Licença
 
 MIT 
+
+# Configuração do Banco de Dados
+
+Para usar MySQL, adicione no seu config.ini:
+
+[database]
+driver = mysql
+
+[database.mysql]
+host = localhost
+user = seu_usuario
+password = sua_senha
+database = seu_banco
+port = 3306 ; (opcional, padrão 3306)
+charset = utf8mb4
+
+O sistema detecta automaticamente se deve usar SQLite ou MySQL. 
