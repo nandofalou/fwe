@@ -42,64 +42,13 @@ const Database = {
                         reject(err);
                     } else {
                         console.log('Conectado ao banco de dados SQLite');
-                        this.createTables().then(resolve).catch(reject);
+                        resolve();
                     }
                 });
             } catch (error) {
                 console.error('Erro ao inicializar banco de dados:', error);
                 reject(error);
             }
-        });
-    },
-
-    async createTables() {
-        // Criação das tabelas com await para garantir ordem e conclusão
-        await new Promise((resolve, reject) => {
-            this.connection.run(`
-                CREATE TABLE IF NOT EXISTS permission (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name VARCHAR(20) NOT NULL,
-                    description VARCHAR(255) DEFAULT NULL
-                )
-            `, err => err ? reject(err) : resolve());
-        });
-
-        // Seed de permissões
-        const permissions = [
-            { name: 'MASTER', description: 'Permissão total' },
-            { name: 'EDITOR', description: 'Permite edição de cadastro e visualização' },
-            { name: 'VIEW', description: 'Permite visualização' }
-        ];
-        for (const perm of permissions) {
-            await new Promise((resolve, reject) => {
-                this.connection.get('SELECT id FROM permission WHERE name = ?', [perm.name], (err, row) => {
-                    if (err) return reject(err);
-                    if (!row) {
-                        this.connection.run('INSERT INTO permission (name, description) VALUES (?, ?)', [perm.name, perm.description], err2 => err2 ? reject(err2) : resolve());
-                    } else {
-                        resolve();
-                    }
-                });
-            });
-        }
-
-        await new Promise((resolve, reject) => {
-            this.connection.run(`
-                CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    email VARCHAR(100) NOT NULL UNIQUE,
-                    name VARCHAR(50) NOT NULL,
-                    pass TEXT DEFAULT NULL,
-                    active TINYINT(1) NOT NULL DEFAULT 0,
-                    permission_id INTEGER NOT NULL,
-                    hash TEXT DEFAULT NULL,
-                    hash_date_validate DATETIME DEFAULT NULL,
-                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    deleted_at DATETIME DEFAULT NULL,
-                    FOREIGN KEY (permission_id) REFERENCES permission(id) ON DELETE CASCADE ON UPDATE CASCADE
-                )
-            `, err => err ? reject(err) : resolve());
         });
     },
 
@@ -474,6 +423,45 @@ const Database = {
      */
     exists(name, table, conditions) {
         return this.count(name, table, conditions).then(count => count > 0);
+    },
+
+    /**
+     * Executa as migrations localizadas em App/Migrations
+     */
+    async runMigrations() {
+        const migrationsDir = path.join(__dirname, '../Migrations');
+        if (!fs.existsSync(migrationsDir)) {
+            fs.mkdirSync(migrationsDir, { recursive: true });
+        }
+        // Cria tabela de controle
+        await new Promise((resolve, reject) => {
+            this.connection.run(`CREATE TABLE IF NOT EXISTS migrations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                run_on DATETIME DEFAULT CURRENT_TIMESTAMP
+            )`, err => err ? reject(err) : resolve());
+        });
+        // Lê arquivos .sql
+        const files = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort();
+        for (const file of files) {
+            const already = await new Promise((resolve, reject) => {
+                this.connection.get('SELECT 1 FROM migrations WHERE name = ?', [file], (err, row) => {
+                    if (err) return reject(err);
+                    resolve(row);
+                });
+            });
+            if (!already) {
+                const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
+                await new Promise((resolve, reject) => {
+                    this.connection.exec(sql, err => err ? reject(err) : resolve());
+                });
+                await new Promise((resolve, reject) => {
+                    this.connection.run('INSERT INTO migrations (name) VALUES (?)', [file], err => err ? reject(err) : resolve());
+                });
+                console.log(`Migration ${file} aplicada.`);
+            }
+        }
+        console.log('Todas as migrations estão atualizadas.');
     }
 };
 

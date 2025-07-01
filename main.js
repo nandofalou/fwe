@@ -99,6 +99,7 @@ function initializeConfig() {
     // Carregar configurações
     config = ini.parse(fs.readFileSync(configPath, 'utf-8'));
     Log.info('Configurações carregadas', { configPath });
+
     return config;
 }
 
@@ -109,12 +110,19 @@ function saveConfig() {
     Log.info('Configurações salvas', { configPath });
 }
 
-// Eventos do Electron
-app.whenReady().then(() => {
+// Função para inicializar toda a aplicação
+async function initializeApp() {
     initializeConfig();
+    const Database = require('./App/Helpers/Database');
+    await Database.connect();
+    await Database.runMigrations();
     createWindow();
     Log.info('Aplicação Electron iniciada');
+}
 
+// Eventos do Electron
+app.whenReady().then(() => {
+    initializeApp();
     app.on('activate', function () {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
