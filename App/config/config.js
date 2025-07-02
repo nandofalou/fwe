@@ -5,7 +5,7 @@ const ini = require('ini');
 
 class Config {
     constructor() {
-        this.config = this.loadConfig();
+        this.Config = this.loadConfig();
     }
 
     loadConfig() {
@@ -80,24 +80,50 @@ class Config {
     }
 
     get database() {
-        return this.config.database;
+        return this.Config && this.Config.database ? this.Config.database : {};
     }
 
     get server() {
-        return this.config.server;
+        return this.Config.server;
     }
 
     get jwt() {
-        return this.config.jwt;
+        return this.Config.jwt;
     }
 
     get logging() {
-        return this.config.logging;
+        return this.Config.logging;
     }
 
     get all() {
-        return this.config;
+        return this.Config;
     }
 }
 
-module.exports = new Config(); 
+let baseURL = '';
+try {
+    const configPath = path.join(__dirname, '../../config.ini');
+    let iniConfig = {};
+    if (fs.existsSync(configPath)) {
+        iniConfig = ini.parse(fs.readFileSync(configPath, 'utf-8'));
+        baseURL = iniConfig.app && iniConfig.app.baseURL ? iniConfig.app.baseURL : '';
+    }
+    if (!baseURL) {
+        // Gerar valor padrão
+        let port = 9000;
+        if (iniConfig.server && iniConfig.server.port) {
+            port = iniConfig.server.port;
+        }
+        baseURL = `http://localhost:${port}`;
+        // Gravar no config.ini
+        if (!iniConfig.app) iniConfig.app = {};
+        iniConfig.app.baseURL = baseURL;
+        fs.writeFileSync(configPath, ini.stringify(iniConfig));
+    }
+} catch (e) {
+    baseURL = '';
+}
+
+const configInstance = new Config();
+configInstance.baseURL = baseURL;
+module.exports = configInstance; 

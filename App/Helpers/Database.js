@@ -12,12 +12,12 @@ const Event = require('./Event');
 const Database = {
     connection: null,
     config: Config,
-    type: Config.database.type || Config.database.driver || 'sqlite',
+    driver: (Config.database && Config.database.driver) ? Config.database.driver : 'sqlite',
     connections: new Map(),
     event: Event,
 
     async connect() {
-        if ((this.config.database.driver || this.config.database.type) === 'mysql') {
+        if (this.config.database.driver === 'mysql') {
             // MySQL
             const mysqlConfig = this.config.database.mysql;
             this.connection = await mysql.createConnection({
@@ -69,7 +69,7 @@ const Database = {
     },
 
     async query(sql, params = []) {
-        if ((this.config.database.driver || this.config.database.type) === 'mysql') {
+        if (this.config.database.driver === 'mysql') {
             const [rows] = await this.connection.execute(sql, params);
             return rows;
         }
@@ -86,7 +86,7 @@ const Database = {
     },
 
     async execute(sql, params = []) {
-        if ((this.config.database.driver || this.config.database.type) === 'mysql') {
+        if (this.config.database.driver === 'mysql') {
             const [result] = await this.connection.execute(sql, params);
             return result;
         }
@@ -155,7 +155,7 @@ const Database = {
      * @returns {Promise<number>} ID do registro
      */
     async insert(sql, params = []) {
-        if ((this.config.database.driver || this.config.database.type) === 'mysql') {
+        if (this.config.database.driver === 'mysql') {
             const [result] = await this.connection.execute(sql, params);
             return result.insertId;
         }
@@ -178,7 +178,7 @@ const Database = {
      * @returns {Promise<number>} Número de registros afetados
      */
     async update(sql, params = []) {
-        if ((this.config.database.driver || this.config.database.type) === 'mysql') {
+        if (this.config.database.driver === 'mysql') {
             const [result] = await this.connection.execute(sql, params);
             return result.affectedRows;
         }
@@ -201,7 +201,7 @@ const Database = {
      * @returns {Promise<number>} Número de registros afetados
      */
     async delete(sql, params = []) {
-        if ((this.config.database.driver || this.config.database.type) === 'mysql') {
+        if (this.config.database.driver === 'mysql') {
             const [result] = await this.connection.execute(sql, params);
             return result.affectedRows;
         }
@@ -221,21 +221,21 @@ const Database = {
      * Inicia uma transação
      */
     async beginTransaction() {
-        if ((this.config.database.driver || this.config.database.type) === 'mysql') {
+        if (this.config.database.driver === 'mysql') {
             await this.connection.beginTransaction();
         } else {
             await this.query('BEGIN TRANSACTION');
         }
     },
     async commit() {
-        if ((this.config.database.driver || this.config.database.type) === 'mysql') {
+        if (this.config.database.driver === 'mysql') {
             await this.connection.commit();
         } else {
             await this.query('COMMIT');
         }
     },
     async rollback() {
-        if ((this.config.database.driver || this.config.database.type) === 'mysql') {
+        if (this.config.database.driver === 'mysql') {
             await this.connection.rollback();
         } else {
             await this.query('ROLLBACK');
@@ -437,7 +437,7 @@ const Database = {
         if (!fs.existsSync(migrationsDir)) {
             fs.mkdirSync(migrationsDir, { recursive: true });
         }
-        const isMySQL = (this.config.database.driver || this.config.database.type) === 'mysql';
+        const isMySQL = this.config.database.driver === 'mysql';
         // Cria tabela de controle
         if (isMySQL) {
             await this.connection.execute(`CREATE TABLE IF NOT EXISTS migrations (

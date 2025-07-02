@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const Config = require('../Config/Config');
 
 class Common {
     static generateId() {
@@ -95,4 +96,21 @@ class Common {
     }
 }
 
-module.exports = Common;
+function base_url(path = '') {
+    let url = Config.baseURL;
+    if (!url) {
+        // fallback defensivo
+        const port = Config.server && Config.server.port ? Config.server.port : 9000;
+        url = `http://localhost:${port}`;
+    }
+    if (path) {
+        if (!url.endsWith('/') && !path.startsWith('/')) url += '/';
+        url += path;
+    }
+    return url;
+}
+
+module.exports = {
+    base_url,
+    ...Common
+};

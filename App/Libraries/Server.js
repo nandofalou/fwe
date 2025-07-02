@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 const User = require('../Models/User');
 const path = require('path');
 const ejs = require('ejs');
+const { base_url } = require('../Helpers/Common');
 
 class Server {
     constructor(config) {
@@ -13,6 +14,7 @@ class Server {
         this.config = config;
         this.setupMiddleware();
         this.setupRoutes();
+        this.app.locals.base_url = base_url;
     }
 
     setupMiddleware() {

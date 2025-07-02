@@ -211,4 +211,26 @@ Inclua arquivos da pasta `Public` normalmente:
 - O método `renderCell(cell, data)` permite renderizar qualquer cell EJS de forma assíncrona.
 - O sistema é compatível com partials e includes do EJS.
 
+---
+
+### base_url() — Helper global para URL base
+
+A função `base_url()` está disponível automaticamente em todas as views EJS e pode ser importada nos controllers.
+
+- Usa o valor de `baseURL` do `config.ini` se existir.
+- Se não existir, gera automaticamente `http://localhost:{porta}` (porta do servidor) e grava no `config.ini`.
+- Sempre retorna a URL base da aplicação, concatenando o path se informado.
+
+**Exemplo de uso em controller:**
+```js
+const { base_url } = require('../Helpers/Common');
+console.log(base_url()); // http://localhost:9000
+console.log(base_url('assets/img/logo.png'));
+```
+
+**Exemplo de uso em view EJS:**
+```ejs
+<img src="<%= base_url('css/style.css') %>">
+```
+
 --- 
