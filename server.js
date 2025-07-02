@@ -1,7 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const swaggerUi = require('swagger-ui-express');
-const swaggerSpecs = require('./App/Config/swagger');
 const routes = require('./App/Config/Routes/Routes');
 const Log = require('./App/Helpers/Log');
 
@@ -11,14 +9,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Swagger
-app.use('/api-docs', swaggerUi.serve);
-app.get('/api-docs', swaggerUi.setup(swaggerSpecs, {
-    explorer: true,
-    customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: "API Documentation"
-}));
 
 // Rotas
 app.use(routes);
@@ -40,7 +30,6 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 9000;
 app.listen(PORT, () => {
     Log.info('Servidor Express iniciado', { 
-        port: PORT,
-        swaggerUrl: `http://localhost:${PORT}/api-docs`
+        port: PORT
     });
 }); 
