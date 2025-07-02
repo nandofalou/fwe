@@ -12,14 +12,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Rota raiz
-app.get('/', (req, res) => {
-    res.json({
-        message: "FWE API",
-        version: "1.0.0",
-        documentation: "/api-docs"
-    });
-});
 
 // Swagger
 app.use('/api-docs', swaggerUi.serve);
