@@ -21,7 +21,7 @@ function createWindow() {
         }
     });
 
-    mainWindow.loadFile('Public/index.html');
+    mainWindow.loadFile('Public/config.html');
     
     // Em desenvolvimento, abrir DevTools
     if (process.argv.includes('--dev')) {

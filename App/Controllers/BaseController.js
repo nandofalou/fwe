@@ -248,13 +248,15 @@ class BaseController {
      * @param {string} viewName Nome da view (sem .ejs)
      * @param {Object} data Dados para o template
      * @param {Object} res (opcional) Express response
+     * @param {Object} req (opcional) Express request
      * @returns {Promise<string>|void} HTML ou envia resposta
      */
-    static async view(viewName, data = {}, res = null) {
+    static async view(viewName, data = {}, res = null, req = null) {
         const viewPath = path.join(process.cwd(), 'App', 'Views', `${viewName}.ejs`);
+        const { base_url } = require('../Helpers/Common');
         const templateData = {
             ...data,
-            base_url,
+            base_url: (path = '') => base_url(path, req),
             BaseController: this
         };
         try {

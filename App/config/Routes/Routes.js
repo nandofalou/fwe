@@ -6,6 +6,7 @@ const AuthMiddleware = require('../../Middlewares/AuthMiddleware');
 const InstallController = require('../../Controllers/InstallController');
 const EventController = require('../../Controllers/EventController');
 const ExampleController = require('../../Controllers/ExampleController');
+const HomeController = require('../../Controllers/HomeController');
 
 class Routes extends BaseRoutes {
     constructor() {
@@ -14,6 +15,8 @@ class Routes extends BaseRoutes {
     }
 
     registerRoutes() {
+        // Rota inicial
+        this.router.get('/', HomeController.index);
         // Rotas públicas
         this.group('/api', [], router => {
             // Rota de instalação
@@ -49,6 +52,8 @@ class Routes extends BaseRoutes {
             // router.get('/categories/code/:code', CategoryController.findByCode);
             // router.get('/categories/name/:name', CategoryController.findByName);
         });
+
+        
     }
 }
 

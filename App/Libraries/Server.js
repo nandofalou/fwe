@@ -43,13 +43,6 @@ class Server {
     }
 
     setupRoutes() {
-        this.app.get('/', (req, res) => {
-            res.json({
-                message: "FWE API",
-                version: "1.0.0"
-            });
-        });
-
         try {
             const routes = require('../Config/Routes/Routes');
             this.app.use(routes);

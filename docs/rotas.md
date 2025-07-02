@@ -234,4 +234,28 @@ console.log(base_url('assets/img/logo.png'));
 <img src="<%= base_url('css/style.css') %>">
 ```
 
+---
+
+### Exemplo de uso de base_url(req) em views EJS
+
+Se você quiser que a base da URL seja dinâmica conforme o request (por exemplo, para refletir o IP/host de acesso), basta passar o objeto `req` para a view:
+
+**No controller:**
+```js
+const { base_url } = require('../Helpers/Common');
+// ...
+BaseController.view('example', {
+    // ...outros dados...
+    base_url: (path = '') => base_url(path, req)
+}, res);
+```
+
+**Na view EJS:**
+```ejs
+<div>Base URL dinâmica: <%= base_url() %></div>
+<img src="<%= base_url('css/style.css') %>">
+```
+
+Assim, se o `baseUrl` do config.ini estiver em branco, a URL base refletirá o endereço de acesso do usuário.
+
 --- 

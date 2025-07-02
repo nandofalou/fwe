@@ -41,6 +41,12 @@ path = ./logs
 
 [autostart]
 enabled = false
+
+[server]
+baseUrl = http://localhost:9000
+port = 9000
+cors = true
+autostart = true
 ```
 
 ---
@@ -68,6 +74,26 @@ enabled = false
 
 ### `[autostart]`
 - **enabled**: `true` ou `false` — Inicia o servidor automaticamente ao abrir o app
+
+### `[server]`
+- **baseUrl**: URL base da aplicação. Se não definido ou estiver em branco, o sistema monta dinamicamente a URL base a partir do endereço do request (ex: http://192.168.1.1:9000). Se definido, sempre será usado o valor do config.ini.
+- **port**: Porta do servidor (padrão: 9000)
+- **cors**: Habilita CORS
+- **autostart**: Inicia o servidor automaticamente
+
+#### Exemplo:
+```ini
+[server]
+baseUrl = http://localhost:9000
+port = 9000
+cors = true
+autostart = true
+```
+
+#### Comportamento do base_url()
+- Se `baseUrl` estiver preenchido no config.ini, será usado esse valor.
+- Se estiver em branco ou não existir, a função `base_url(path, req)` monta a URL base dinamicamente a partir do request (ex: `http://192.168.1.1:9000`).
+- Se não houver request disponível, usa `http://localhost:{porta}` como fallback.
 
 ---
 
@@ -113,12 +139,17 @@ file = true
 path = ./logs
 ```
 
+**Configuração de servidor:**
+```ini
+[server]
+baseUrl = http://localhost:9000
+port = 9000
+cors = true
+autostart = true
+```
+
 ---
 
 ## Resumo
 
-- O `config.ini` é essencial para o funcionamento do sistema.
-- Permite configurar banco de dados, logging, autostart e outros recursos.
-- Fica salvo no diretório do usuário e pode ser editado manualmente.
-
-Mantenha sempre um backup do seu `config.ini` para evitar perda de configurações importantes! 
+- O `

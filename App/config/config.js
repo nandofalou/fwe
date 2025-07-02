@@ -38,7 +38,8 @@ class Config {
                 server: {
                     port: 9000,
                     cors: true,
-                    autostart: false
+                    autostart: false,
+                    baseUrl: 'http://localhost:9000'
                 },
                 jwt: {
                     secret: 'your-secret-key',

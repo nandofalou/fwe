@@ -96,10 +96,17 @@ class Common {
     }
 }
 
-function base_url(path = '') {
-    let url = Config.baseURL;
-    if (!url) {
-        // fallback defensivo
+function base_url(path = '', req = null) {
+    let url = '';
+    if (Config.server && Config.server.baseUrl && Config.server.baseUrl.trim() !== '') {
+        url = Config.server.baseUrl;
+    } else if (req) {
+        // Monta dinamicamente a partir do request
+        const protocol = req.protocol;
+        const host = req.get('host');
+        url = `${protocol}://${host}`;
+    } else {
+        // Fallback
         const port = Config.server && Config.server.port ? Config.server.port : 9000;
         url = `http://localhost:${port}`;
     }
