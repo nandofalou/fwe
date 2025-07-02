@@ -152,4 +152,11 @@ autostart = true
 
 ## Resumo
 
-- O `
+- O `config.ini` centraliza todas as configurações essenciais do sistema.
+- Sempre revise e mantenha seguro este arquivo, especialmente em produção.
+- Utilize as seções e exemplos deste manual para configurar corretamente seu ambiente.
+- Em caso de dúvidas, consulte também os outros manuais em `/docs`.
+
+---
+
+Mantenha o padrão e consulte este guia sempre que precisar ajustar configurações!

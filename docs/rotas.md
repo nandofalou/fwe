@@ -160,20 +160,23 @@ O framework suporta renderização de views utilizando EJS, inspirado no funcion
 - Para componentes reutilizáveis (cells), utilize a pasta `App/Views/Cells`.
 - Para assets públicos (js, css, imagens), utilize a pasta `Public`.
 
-### Exemplo de Controller Renderizando uma View
+### Exemplo de Controller Renderizando uma View (padrão atual)
 ```js
+const path = require('path');
 const BaseController = require('./BaseController');
+const { base_url } = require('../Helpers/Common');
 
 class ExampleController {
     static async index(req, res) {
         const now = new Date();
-        res.render('example', {
+        const logo = base_url('assets/image/logo.png', req);
+        return BaseController.view('example', {
             data: now.toLocaleDateString('pt-BR'),
             hora: now.toLocaleTimeString('pt-BR'),
-            versao: '1.0.0',
+            versao: require(path.join(process.cwd(), 'package.json')).version,
             linhas: [1,2,3,4,5],
-            BaseController // Necessário para uso de cells
-        });
+            logo
+        }, res, req);
     }
 }
 ```
@@ -253,6 +256,7 @@ BaseController.view('example', {
 **Na view EJS:**
 ```ejs
 <div>Base URL dinâmica: <%= base_url() %></div>
+<div>Logo (controller): <%= logo %></div>
 <img src="<%= base_url('css/style.css') %>">
 ```
 
