@@ -1,6 +1,7 @@
 const BaseRoutes = require('./BaseRoutes');
 const AuthController = require('../../Controllers/AuthController');
 const UserController = require('../../Controllers/UserController');
+const CategoryController = require('../../Controllers/CategoryController');
 const AuthMiddleware = require('../../Middlewares/AuthMiddleware');
 const InstallController = require('../../Controllers/InstallController');
 const EventController = require('../../Controllers/EventController');
@@ -37,6 +38,12 @@ class Routes extends BaseRoutes {
             router.delete('/users/avatar', UserController.removeAvatar);
             // Rotas de eventos
             router.resource('/events', EventController);
+            
+            // Rotas de categorias
+            router.resource('/categories', CategoryController);
+            // router.get('/categories/type/:type', CategoryController.findByType);
+            // router.get('/categories/code/:code', CategoryController.findByCode);
+            // router.get('/categories/name/:name', CategoryController.findByName);
         });
     }
 }

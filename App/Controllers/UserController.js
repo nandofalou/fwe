@@ -1,6 +1,6 @@
 const User = require('../Models/User');
 const BaseController = require('./BaseController');
-const Validator = require('../Helpers/Validator');
+const UserValidator = require('../Validations/UserValidator');
 const Response = require('../Helpers/Response');
 
 class UserController extends BaseController {
@@ -260,17 +260,13 @@ class UserController extends BaseController {
     }
 
     static async store(req, res) {
-        // Exemplo de validação, ajuste conforme suas regras
-        const rules = {
-            name: 'required',
-            email: 'required|email',
-            pass: 'required',
-            permission_id: 'required|numeric',
-            active: 'required|numeric'
-        };
-        const { isValid, errors } = Validator.validate(req.body, rules);
-        if (!isValid) {
-            return res.status(422).json(Response.error('Dados inválidos', errors));
+        const validation = UserValidator.validateCreate(req.body);
+        if (!validation.isValid) {
+            return res.status(422).json({
+                error: true,
+                message: 'Dados inválidos',
+                errors: validation.errors
+            });
         }
         try {
             const data = req.body;
@@ -282,16 +278,13 @@ class UserController extends BaseController {
     }
 
     static async update(req, res) {
-        // Exemplo de validação, ajuste conforme suas regras
-        const rules = {
-            name: 'required',
-            email: 'required|email',
-            permission_id: 'required|numeric',
-            active: 'required|numeric'
-        };
-        const { isValid, errors } = Validator.validate(req.body, rules);
-        if (!isValid) {
-            return res.status(422).json(Response.error('Dados inválidos', errors));
+        const validation = UserValidator.validateUpdate(req.body);
+        if (!validation.isValid) {
+            return res.status(422).json({
+                error: true,
+                message: 'Dados inválidos',
+                errors: validation.errors
+            });
         }
         try {
             const data = req.body;

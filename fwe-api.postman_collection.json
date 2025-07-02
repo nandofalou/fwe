@@ -417,6 +417,225 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "Categorias",
+			"item": [
+				{
+					"name": "Listar Categorias",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:9000/api/categories",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "categories"]
+						}
+					}
+				},
+				{
+					"name": "Buscar Categoria por ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:9000/api/categories/:id",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "categories", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Criar Categoria",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": 1,\n    \"name\": \"Categoria Teste\",\n    \"multiplo\": 1,\n    \"fluxo\": 0,\n    \"external_id\": null,\n    \"type\": \"CREDENCIADO\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9000/api/categories",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "categories"]
+						}
+					}
+				},
+				{
+					"name": "Atualizar Categoria",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Categoria Atualizada\",\n    \"multiplo\": 0,\n    \"type\": \"TICKET\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9000/api/categories/:id",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "categories", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Excluir Categoria",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:9000/api/categories/:id",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "categories", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Buscar por Tipo",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:9000/api/categories/type/:type",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "categories", "type", ":type"],
+							"variable": [
+								{
+									"key": "type",
+									"value": "CREDENCIADO"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Buscar por Código",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:9000/api/categories/code/:code",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "categories", "code", ":code"],
+							"variable": [
+								{
+									"key": "code",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Buscar por Nome",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:9000/api/categories/name/:name",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "9000",
+							"path": ["api", "categories", "name", ":name"],
+							"variable": [
+								{
+									"key": "name",
+									"value": "teste"
+								}
+							]
+						}
+					}
+				}
+			]
 		}
 	],
 	"variable": [

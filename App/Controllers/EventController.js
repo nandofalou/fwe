@@ -1,5 +1,5 @@
 const Event = require('../Models/Event');
-const Validator = require('../Helpers/Validator');
+const EventValidator = require('../Validations/EventValidator');
 const Response = require('../Helpers/Response');
 
 const EventController = {
@@ -13,6 +13,10 @@ const EventController = {
     },
     async show(req, res) {
         try {
+            const validation = EventValidator.validateId(req.params.id);
+            if (!validation.isValid) {
+                return res.status(422).json(Response.error('ID inválido', validation.errors));
+            }
             const event = await Event.find(req.params.id);
             if (!event) return res.status(404).json(Response.error('Evento não encontrado.'));
             return res.json(Response.success(event));
@@ -21,15 +25,10 @@ const EventController = {
         }
     },
     async store(req, res) {
-        const rules = {
-            name: 'required',
-            startdate: 'required|date',
-            enddate: 'required|date',
-            active: 'required|numeric'
-        };
-        const { isValid, errors } = Validator.validate(req.body, rules);
-        if (!isValid) {
-            return res.status(422).json(Response.error('Dados inválidos', errors));
+        const validation = EventValidator.validateCreate(req.body);
+        if (!validation.isValid) {
+            
+            return res.status(422).json(Response.error('Dados inválidos', validation.errors));
         }
         try {
             const data = req.body;
@@ -41,15 +40,9 @@ const EventController = {
         }
     },
     async update(req, res) {
-        const rules = {
-            name: 'required',
-            startdate: 'required|date',
-            enddate: 'required|date',
-            active: 'required|numeric'
-        };
-        const { isValid, errors } = Validator.validate(req.body, rules);
-        if (!isValid) {
-            return res.status(422).json(Response.error('Dados inválidos', errors));
+        const validation = EventValidator.validateUpdate(req.body);
+        if (!validation.isValid) {
+            return res.status(422).json(Response.error('Dados inválidos', validation.errors));
         }
         try {
             const data = req.body;
