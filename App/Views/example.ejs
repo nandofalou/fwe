@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Exemplo de View</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <h1>Teste Simples</h1>
+    <p>Data: <%= data %></p>
+    <p>Hora: <%= hora %></p>
+    <p>Versão do app: <%= versao %></p>
+    <h2>Exemplo de For</h2>
+    <% for(let i = 0; i < linhas.length; i++) { %>
+        <div>Linha <%= linhas[i] %></div>
+    <% } %>
+    <h2>Exemplo de Cell</h2>
+    <%~ await BaseController.renderCell('info', { titulo: 'Data Renderizada via Cell', valor: data }) %>
+</body>
+</html> 

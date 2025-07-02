@@ -221,6 +221,24 @@ class BaseController {
             this.errorResponse(res, 404, 'View não encontrada');
         }
     }
+
+    /**
+     * Renderiza uma cell (view parcial reutilizável)
+     * @param {string} cell Nome da cell (view parcial)
+     * @param {Object} data Dados para a cell
+     * @returns {Promise<string>} HTML renderizado
+     */
+    static async renderCell(cell, data = {}) {
+        const ejs = require('ejs');
+        const path = require('path');
+        const fs = require('fs');
+        const cellPath = path.join(__dirname, '..', 'Views', 'Cells', `${cell}.ejs`);
+        if (fs.existsSync(cellPath)) {
+            return await ejs.renderFile(cellPath, data);
+        } else {
+            return `<!-- Cell ${cell} não encontrada -->`;
+        }
+    }
 }
 
 module.exports = BaseController; 

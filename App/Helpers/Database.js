@@ -3,7 +3,7 @@ const mysql = require('mysql2/promise');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
-const Config = require('../config/config');
+const Config = require('../Config/Config');
 const Event = require('./Event');
 
 /**

@@ -5,6 +5,7 @@ const CategoryController = require('../../Controllers/CategoryController');
 const AuthMiddleware = require('../../Middlewares/AuthMiddleware');
 const InstallController = require('../../Controllers/InstallController');
 const EventController = require('../../Controllers/EventController');
+const ExampleController = require('../../Controllers/ExampleController');
 
 class Routes extends BaseRoutes {
     constructor() {
@@ -27,6 +28,9 @@ class Routes extends BaseRoutes {
             router.post('/auth/resend-verification', AuthController.resendVerification);
         });
 
+        // Rota pública para exemplo (fora do /api)
+        this.router.get('/example', ExampleController.index);
+
         // Rotas protegidas
         this.group('/api', [AuthMiddleware.handle], router => {
             // Rotas de usuário
@@ -48,4 +52,5 @@ class Routes extends BaseRoutes {
     }
 }
 
-module.exports = new Routes().register(); 
+const routesInstance = new Routes();
+module.exports = routesInstance.register(); 

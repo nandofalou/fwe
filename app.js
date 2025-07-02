@@ -3,6 +3,7 @@ const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpecs = require('./App/Config/swagger');
 const routes = require('./App/Config/Routes/Routes');
+const path = require('path');
 
 const app = express();
 
@@ -53,6 +54,10 @@ app.use((err, req, res, next) => {
         message: 'Erro interno do servidor'
     });
 });
+
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'App', 'Views'));
+app.use(express.static(path.join(__dirname, 'Public')));
 
 const PORT = process.env.PORT || 9000;
 app.listen(PORT, () => {

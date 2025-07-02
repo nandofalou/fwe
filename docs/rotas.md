@@ -148,4 +148,67 @@ async destroy(req, res) {
 
 ---
 
-Mantenha o padrão e consulte este manual sempre que for criar ou alterar rotas! 
+Mantenha o padrão e consulte este manual sempre que for criar ou alterar rotas!
+
+---
+
+## Sistema de Views (EJS)
+
+O framework suporta renderização de views utilizando EJS, inspirado no funcionamento do CodeIgniter.
+
+- As views ficam em `App/Views`.
+- Para componentes reutilizáveis (cells), utilize a pasta `App/Views/Cells`.
+- Para assets públicos (js, css, imagens), utilize a pasta `Public`.
+
+### Exemplo de Controller Renderizando uma View
+```js
+const BaseController = require('./BaseController');
+
+class ExampleController {
+    static async index(req, res) {
+        const now = new Date();
+        res.render('example', {
+            data: now.toLocaleDateString('pt-BR'),
+            hora: now.toLocaleTimeString('pt-BR'),
+            versao: '1.0.0',
+            linhas: [1,2,3,4,5],
+            BaseController // Necessário para uso de cells
+        });
+    }
+}
+```
+
+### Exemplo de View EJS (`App/Views/example.ejs`)
+```ejs
+<h1>Exemplo de View EJS</h1>
+<p>Data: <%= data %></p>
+<p>Hora: <%= hora %></p>
+<p>Versão do app: <%= versao %></p>
+<h2>Exemplo de For</h2>
+<% for(let i = 0; i < linhas.length; i++) { %>
+    <div>Linha <%= linhas[i] %></div>
+<% } %>
+<h2>Exemplo de Cell</h2>
+<%~ await BaseController.renderCell('info', { titulo: 'Data Renderizada via Cell', valor: data }) %>
+```
+
+### Exemplo de Cell (`App/Views/Cells/info.ejs`)
+```ejs
+<div class="cell-info">
+    <strong><%= titulo %>:</strong> <%= valor %>
+</div>
+```
+
+### Como usar assets
+Inclua arquivos da pasta `Public` normalmente:
+```html
+<link rel="stylesheet" href="/css/style.css">
+<img src="/img/logo.png">
+```
+
+### Observações
+- Para usar cells dentro de uma view, passe o `BaseController` no objeto de dados do render.
+- O método `renderCell(cell, data)` permite renderizar qualquer cell EJS de forma assíncrona.
+- O sistema é compatível com partials e includes do EJS.
+
+--- 

@@ -1,9 +1,8 @@
 const express = require('express');
-const router = express.Router();
 
 class BaseRoutes {
     constructor() {
-        this.router = router;
+        this.router = express.Router();
         this.routes = [];
     }
 
@@ -131,7 +130,8 @@ class BaseRoutes {
         this.routes.forEach(route => {
             this.router[route.method](
                 route.path,
-                [...route.middlewares, route.handler]
+                ...route.middlewares,
+                route.handler
             );
         });
         return this.router;

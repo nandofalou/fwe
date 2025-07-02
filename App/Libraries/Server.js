@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const Database = require('../Helpers/Database');
 const bcrypt = require('bcrypt');
 const User = require('../Models/User');
+const path = require('path');
+const ejs = require('ejs');
 
 class Server {
     constructor(config) {
@@ -17,6 +19,25 @@ class Server {
         this.app.use(cors());
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
+        // Configura EJS como view engine (async: true para permitir await nas views)
+        this.app.engine('ejs', (filePath, options, callback) => {
+            ejs.renderFile(filePath, options, { async: true }, callback);
+        });
+        this.app.set('view engine', 'ejs');
+        const viewsPath = path.join(process.cwd(), 'App', 'Views');
+        console.log('Caminho absoluto das views:', viewsPath);
+        this.app.set('views', viewsPath);
+        // Expor pasta Public como estática
+        this.app.use(express.static(path.join(process.cwd(), 'Public')));
+        // Middleware para garantir content-type correto em renderizações de views
+        this.app.use((req, res, next) => {
+            const originalRender = res.render;
+            res.render = function(view, options, callback) {
+                res.set('Content-Type', 'text/html; charset=utf-8');
+                return originalRender.call(this, view, options, callback);
+            };
+            next();
+        });
     }
 
     setupRoutes() {

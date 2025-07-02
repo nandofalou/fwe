@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const Config = require('../config/config');
+const Config = require('../Config/Config');
 
 class Log {
     constructor() {
