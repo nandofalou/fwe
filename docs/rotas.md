@@ -230,6 +230,7 @@ console.log(base_url('assets/img/logo.png'));
 
 **Exemplo de uso em view EJS:**
 ```ejs
+<div>Base URL: <%= base_url() %></div>
 <img src="<%= base_url('css/style.css') %>">
 ```
 

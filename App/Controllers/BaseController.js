@@ -1,4 +1,7 @@
 const Log = require('../Helpers/Log');
+const path = require('path');
+const ejs = require('ejs');
+const { base_url } = require('../Helpers/Common');
 
 class BaseController {
     constructor(model) {
@@ -237,6 +240,35 @@ class BaseController {
             return await ejs.renderFile(cellPath, data);
         } else {
             return `<!-- Cell ${cell} não encontrada -->`;
+        }
+    }
+
+    /**
+     * Renderiza uma view EJS com helpers globais
+     * @param {string} viewName Nome da view (sem .ejs)
+     * @param {Object} data Dados para o template
+     * @param {Object} res (opcional) Express response
+     * @returns {Promise<string>|void} HTML ou envia resposta
+     */
+    static async view(viewName, data = {}, res = null) {
+        const viewPath = path.join(process.cwd(), 'App', 'Views', `${viewName}.ejs`);
+        const templateData = {
+            ...data,
+            base_url,
+            BaseController: this
+        };
+        try {
+            const html = await ejs.renderFile(viewPath, templateData, { async: true });
+            if (res) {
+                res.set('Content-Type', 'text/html; charset=utf-8');
+                return res.send(html);
+            }
+            return html;
+        } catch (err) {
+            if (res) {
+                return res.status(500).send('Erro ao renderizar view: ' + err.message);
+            }
+            throw err;
         }
     }
 }
