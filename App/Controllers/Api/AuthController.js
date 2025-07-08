@@ -1,0 +1,303 @@
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const config = require('../../Config/Config');
+const User = require('../../Models/User');
+const BaseController = require('../BaseController');
+
+class AuthController extends BaseController {
+    static async login(req, res) {
+        try {
+            const { email, password } = req.body;
+
+            // Validar dados
+            if (!email || !password) {
+                return res.status(400).json({
+                    error: true,
+                    message: 'Email e senha são obrigatórios'
+                });
+            }
+
+            // Buscar usuário
+            const user = await User.findByEmail(email);
+            if (!user || !user.active) {
+                AuthController.log.warning('Tentativa de login com credenciais inválidas', { email });
+                return res.status(401).json({
+                    error: true,
+                    message: 'E-mail ou senha inválidos'
+                });
+            }
+
+            // Verificar senha
+            const isValidPassword = await bcrypt.compare(password, user.pass);
+            if (!isValidPassword) {
+                AuthController.log.warning('Tentativa de login com senha incorreta', { email, userId: user.id });
+                return res.status(401).json({
+                    error: true,
+                    message: 'E-mail ou senha inválidos'
+                });
+            }
+
+            // Gerar token
+            const token = jwt.sign(
+                { id: user.id, email: user.email },
+                config.jwt.secret,
+                { expiresIn: config.jwt.expiresIn }
+            );
+
+            AuthController.log.info('Login realizado com sucesso', { userId: user.id, email: user.email });
+
+            return res.json({
+                error: false,
+                message: 'Login realizado com sucesso',
+                data: {
+                    token,
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email
+                    }
+                }
+            });
+        } catch (error) {
+            AuthController.log.error('Erro ao fazer login', { email: req.body.email, error: error.message });
+            return res.status(500).json({
+                error: true,
+                message: 'Erro interno do servidor'
+            });
+        }
+    }
+
+    static async register(req, res) {
+        try {
+            const { name, email, password } = req.body;
+
+            // Validar dados
+            if (!name || !email || !password) {
+                return res.status(400).json({
+                    error: true,
+                    message: 'Nome, email e senha são obrigatórios'
+                });
+            }
+
+            // Verificar se email já existe
+            const existingUser = await User.findByEmail(email);
+            if (existingUser) {
+                AuthController.log.warning('Tentativa de registro com email já existente', { email });
+                return res.status(400).json({
+                    error: true,
+                    message: 'Email já cadastrado'
+                });
+            }
+
+            // Criar usuário
+            const userId = await User.insert({
+                name,
+                email,
+                pass: password
+            });
+            const user = await User.find(userId);
+
+            AuthController.log.info('Novo usuário registrado', { userId: user.id, email: user.email });
+
+            return res.status(201).json({
+                error: false,
+                message: 'Usuário criado com sucesso',
+                data: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email
+                }
+            });
+        } catch (error) {
+            AuthController.log.error('Erro ao registrar usuário', { email: req.body.email, error: error.message });
+            return res.status(500).json({
+                error: true,
+                message: 'Erro interno do servidor'
+            });
+        }
+    }
+
+    static async forgotPassword(req, res) {
+        try {
+            const { email } = req.body;
+
+            // Validar email
+            if (!email) {
+                return res.status(400).json({
+                    error: true,
+                    message: 'Email é obrigatório'
+                });
+            }
+
+            // Verificar se usuário existe
+            const user = await User.findByEmail(email);
+            if (!user) {
+                AuthController.log.warning('Tentativa de recuperação de senha para email inexistente', { email });
+                return res.status(404).json({
+                    error: true,
+                    message: 'Usuário não encontrado'
+                });
+            }
+
+            // TODO: Implementar envio de email com token de recuperação
+            AuthController.log.info('Solicitação de recuperação de senha', { userId: user.id, email: user.email });
+
+            return res.json({
+                error: false,
+                message: 'Email de recuperação enviado com sucesso'
+            });
+        } catch (error) {
+            AuthController.log.error('Erro ao solicitar recuperação de senha', { email: req.body.email, error: error.message });
+            return res.status(500).json({
+                error: true,
+                message: 'Erro interno do servidor'
+            });
+        }
+    }
+
+    static async resetPassword(req, res) {
+        try {
+            const { token, password } = req.body;
+
+            // Validar dados
+            if (!token || !password) {
+                return res.status(400).json({
+                    error: true,
+                    message: 'Token e nova senha são obrigatórios'
+                });
+            }
+
+            // TODO: Implementar validação do token e atualização da senha
+            AuthController.log.info('Tentativa de redefinição de senha', { token: token.substring(0, 10) + '...' });
+
+            return res.json({
+                error: false,
+                message: 'Senha redefinida com sucesso'
+            });
+        } catch (error) {
+            AuthController.log.error('Erro ao redefinir senha', { error: error.message });
+            return res.status(500).json({
+                error: true,
+                message: 'Erro interno do servidor'
+            });
+        }
+    }
+
+    static async verifyEmail(req, res) {
+        try {
+            const { token } = req.body;
+
+            // Validar token
+            if (!token) {
+                return res.status(400).json({
+                    error: true,
+                    message: 'Token é obrigatório'
+                });
+            }
+
+            // TODO: Implementar verificação do email
+            AuthController.log.info('Tentativa de verificação de email', { token: token.substring(0, 10) + '...' });
+
+            return res.json({
+                error: false,
+                message: 'Email verificado com sucesso'
+            });
+        } catch (error) {
+            AuthController.log.error('Erro ao verificar email', { error: error.message });
+            return res.status(500).json({
+                error: true,
+                message: 'Erro interno do servidor'
+            });
+        }
+    }
+
+    static async resendVerification(req, res) {
+        try {
+            const { email } = req.body;
+
+            // Validar email
+            if (!email) {
+                return res.status(400).json({
+                    error: true,
+                    message: 'Email é obrigatório'
+                });
+            }
+
+            // Verificar se usuário existe
+            const user = await User.findByEmail(email);
+            if (!user) {
+                AuthController.log.warning('Tentativa de reenvio de verificação para email inexistente', { email });
+                return res.status(404).json({
+                    error: true,
+                    message: 'Usuário não encontrado'
+                });
+            }
+
+            // TODO: Implementar reenvio de email de verificação
+            AuthController.log.info('Reenvio de verificação de email solicitado', { userId: user.id, email: user.email });
+
+            return res.json({
+                error: false,
+                message: 'Email de verificação reenviado com sucesso'
+            });
+        } catch (error) {
+            AuthController.log.error('Erro ao reenviar verificação de email', { email: req.body.email, error: error.message });
+            return res.status(500).json({
+                error: true,
+                message: 'Erro interno do servidor'
+            });
+        }
+    }
+
+    static async update(req, res) {
+        try {
+            const { name, email, password } = req.body;
+
+            // Validar dados
+            if (!name || !email || !password) {
+                return res.status(400).json({
+                    error: true,
+                    message: 'Nome, email e senha são obrigatórios'
+                });
+            }
+
+            // Verificar se email já existe
+            const existingUser = await User.findByEmail(email);
+            if (existingUser && existingUser.id !== req.user.id) {
+                AuthController.log.warning('Tentativa de atualização com email já existente', { email, userId: req.user.id });
+                return res.status(400).json({
+                    error: true,
+                    message: 'Email já cadastrado'
+                });
+            }
+
+            // Atualizar usuário
+            await User.update(req.user.id, {
+                name,
+                email,
+                pass: password
+            });
+            const user = await User.find(req.user.id);
+
+            AuthController.log.info('Dados de usuário atualizados', { userId: req.user.id, email: user.email });
+
+            return res.json({
+                error: false,
+                message: 'Usuário atualizado com sucesso',
+                data: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email
+                }
+            });
+        } catch (error) {
+            AuthController.log.error('Erro ao atualizar usuário', { userId: req.user.id, error: error.message });
+            return res.status(500).json({
+                error: true,
+                message: 'Erro interno do servidor'
+            });
+        }
+    }
+}
+
+module.exports = AuthController; 

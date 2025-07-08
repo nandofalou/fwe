@@ -1,7 +1,7 @@
 const path = require('path');
 const BaseController = require('./BaseController');
 
-class HomeController {
+class HomeController extends BaseController {
     static async index(req, res) {
         const now = new Date();
         return BaseController.view('home', {

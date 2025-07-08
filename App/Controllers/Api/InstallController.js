@@ -1,8 +1,9 @@
-const User = require('../Models/User');
-const Permission = require('../Models/Permission');
+const User = require('../../Models/User');
+const Permission = require('../../Models/Permission');
+const BaseController = require('../BaseController');
 
-const InstallController = {
-    async install(req, res) {
+class InstallController extends BaseController {
+    static async install(req, res) {
         try {
             // Verifica se a tabela users está vazia
             const total = await User.count();
@@ -24,9 +25,10 @@ const InstallController = {
             });
             return res.json({ message: 'Usuário admin criado com sucesso.' });
         } catch (error) {
+            InstallController.log.error('Erro ao criar usuário admin', { error: error.message });
             return res.status(500).json({ message: 'Erro ao criar usuário admin.', error: error.message });
         }
     }
-};
+}
 
 module.exports = InstallController; 

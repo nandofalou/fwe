@@ -1,7 +1,7 @@
-const User = require('../Models/User');
-const BaseController = require('./BaseController');
-const UserValidator = require('../Validations/UserValidator');
-const Response = require('../Helpers/Response');
+const User = require('../../Models/User');
+const BaseController = require('../BaseController');
+const UserValidator = require('../../Validations/UserValidator');
+const Response = require('../../Helpers/Response');
 
 class UserController extends BaseController {
     constructor() {
