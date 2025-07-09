@@ -1,4 +1,4 @@
-# Guia para Criação de Novo Recurso (CRUD)
+# Recursos API
 
 ## 1. Criar o Model
 

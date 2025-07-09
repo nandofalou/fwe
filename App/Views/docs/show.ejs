@@ -216,31 +216,29 @@
         </div>
         
         <div class="content">
-            <div class="docs-layout">
-                <div class="docs-sidebar">
-                    <h3>📚 Documentos</h3>
-                    <ul class="docs-nav">
-                        <% documents.forEach(function(doc) { %>
-                            <li>
-                                <a href="/docs/<%= doc.name %>" class="<%= doc.active ? 'active' : '' %>">
-                                    <%= doc.name.replace(/_/g, ' ') %>
-                                </a>
-                            </li>
-                        <% }); %>
-                    </ul>
-                </div>
-                
-                <div class="docs-content">
-                    <%- content %>
-                    
-                    <div class="docs-footer">
-                        <p>
-                            <a href="/docs">← Voltar para lista</a> | 
-                            <a href="/">← Voltar para Home</a>
-                        </p>
-                    </div>
+            <div style="margin-bottom: 30px;">
+                <label for="doc-select" style="font-weight: bold; margin-right: 10px;">📚 Documentos:</label>
+                <select id="doc-select" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem;">
+                    <% documents.forEach(function(doc) { %>
+                        <option value="/docs/<%= doc.name %>" <%= doc.active ? 'selected' : '' %>><%= doc.name.replace(/_/g, ' ') %></option>
+                    <% }); %>
+                </select>
+            </div>
+            <div class="docs-content">
+                <%- content %>
+                <div class="docs-footer">
+                    <p>
+                        <a href="/docs">← Voltar para lista</a> | 
+                        <a href="/">← Voltar para Home</a>
+                    </p>
                 </div>
             </div>
+            
+            <script>
+                document.getElementById('doc-select').addEventListener('change', function() {
+                    window.location.href = this.value;
+                });
+            </script>
         </div>
     </div>
     
