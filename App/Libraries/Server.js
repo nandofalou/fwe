@@ -1,9 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const jwt = require('jsonwebtoken');
 const Database = require('../Helpers/Database');
-const bcrypt = require('bcrypt');
-const User = require('../Models/User');
 const path = require('path');
 const ejs = require('ejs');
 const { base_url } = require('../Helpers/Common');
