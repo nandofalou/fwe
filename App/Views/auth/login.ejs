@@ -5,29 +5,109 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - FWE Framework</title>
     <link rel="stylesheet" href="/css/auth.css">
+    <link rel="stylesheet" href="/css/flash.css">
+    <style>
+        .flash-message {
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .flash-message.success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .flash-message.error {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .flash-message.warning {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .flash-message.info {
+            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .flash-message .icon {
+            font-size: 1.2rem;
+        }
+        
+        .flash-message .close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+        
+        .flash-message .close:hover {
+            opacity: 1;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>FWE Framework</h1>
-            <p>Sistema de Autenticação</p>
-        </div>
-        
-        <div class="content">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>🔐 Login</h1>
+                <p>Entre com suas credenciais</p>
+            </div>
+            
+            <!-- Flash Messages -->
+            <% if (flash && Object.keys(flash).length > 0) { %>
+                <% Object.keys(flash).forEach(function(key) { %>
+                    <% const message = flash[key]; %>
+                    <div class="flash-message <%= message.type %>" id="flash-<%= key %>">
+                        <span class="icon">
+                            <% if (message.type === 'success') { %>✅<% } %>
+                            <% if (message.type === 'error') { %>❌<% } %>
+                            <% if (message.type === 'warning') { %>⚠️<% } %>
+                            <% if (message.type === 'info') { %>ℹ️<% } %>
+                        </span>
+                        <span><%= message.message %></span>
+                        <button class="close" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                <% }); %>
+            <% } %>
+            
             <form method="POST" action="/auth" class="login-form">
                 <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required autocomplete="email" />
+                    <label for="email">📧 Email</label>
+                    <input type="email" id="email" name="email" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="password">Senha</label>
-                    <input type="password" id="password" name="password" required autocomplete="current-password" />
+                    <label for="password">🔒 Senha</label>
+                    <input type="password" id="password" name="password" required>
                 </div>
                 
-                <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+                <button type="submit" class="login-btn">
+                    <span>🚀 Entrar</span>
+                </button>
             </form>
+            
+            <div class="login-footer">
+                <p>Não tem uma conta? <a href="/register">Registre-se</a></p>
+                <p><a href="/">← Voltar para Home</a></p>
+            </div>
         </div>
     </div>
+    
+    <script src="/js/flash.js"></script>
 </body>
 </html> 

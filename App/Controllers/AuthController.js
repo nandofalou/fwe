@@ -2,76 +2,91 @@ const path = require('path');
 const BaseController = require('./BaseController');
 const { base_url } = require('../Helpers/Common');
 const User = require('../Models/User');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const config = require('../Config/Config');
+const bcrypt = require('bcrypt');
 
 class AuthController extends BaseController {
+    /**
+     * Exibe a página de login
+     */
     static async index(req, res) {
-        const now = new Date();
-        const logo = base_url('assets/image/logo.png', req);
         return BaseController.view('auth/login', {}, res, req);
     }
-    
+
+    /**
+     * Processa o login do usuário
+     */
     static async login(req, res) {
         try {
             const { email, password } = req.body;
 
-            // Validar se ambos os campos foram preenchidos
+            // Validação básica
             if (!email || !password) {
+                await BaseController.flashError(req, 'login', 'Email e senha são obrigatórios');
                 return res.redirect('/auth');
             }
 
-            // Buscar usuário e validar credenciais em uma única verificação
+            // Busca o usuário pelo email
             const user = await User.findByEmail(email);
-            let isValidCredentials = false;
-
-            if (user && user.active) {
-                // Verificar senha apenas se o usuário existir e estiver ativo
-                const isValidPassword = await bcrypt.compare(password, user.pass);
-                isValidCredentials = isValidPassword;
-            }
-
-            // Se as credenciais não são válidas, log e redireciona com mensagem genérica
-            if (!isValidCredentials) {
-                AuthController.log.warning('Tentativa de login com credenciais inválidas', { email });
+            if (!user) {
+                await BaseController.flashError(req, 'login', 'Credenciais inválidas');
                 return res.redirect('/auth');
             }
 
-            // Login bem-sucedido
-            AuthController.log.info('Login realizado com sucesso', { userId: user.id, email: user.email });
+            // Verifica se o usuário tem senha definida
+            if (!user.pass) {
+                await BaseController.flashError(req, 'login', 'Usuário sem senha cadastrada.');
+                return res.redirect('/auth');
+            }
 
-            // Salva dados do usuário na sessão persistente
-            const Session = require('../Helpers/Session');
-            await Session.setValue(req.sessionId, 'user', {
+            // Verifica a senha
+            const isValidPassword = await bcrypt.compare(password, user.pass);
+            if (!isValidPassword) {
+                await BaseController.flashError(req, 'login', 'Credenciais inválidas');
+                return res.redirect('/auth');
+            }
+
+            // Cria a sessão
+            const userSession = {
                 id: user.id,
                 name: user.name,
-                email: user.email
-            });
+                email: user.email,
+                role: user.role,
+                loginTime: new Date().toISOString()
+            };
+            try {
+                await BaseController.setSessionData(req, 'user', userSession);
+            } catch (e) {
+                await BaseController.flashError(req, 'login', 'Erro ao salvar sessão');
+                return res.redirect('/auth');
+            }
 
+            await BaseController.flashSuccess(req, 'login', `Bem-vindo, ${user.name}!`);
             return res.redirect('/dashboard');
+
         } catch (error) {
-            AuthController.log.error('Erro ao fazer login', { email: req.body.email, error: error.message });
+            await BaseController.flashError(req, 'login', 'Erro interno do servidor');
             return res.redirect('/auth');
         }
     }
 
+    /**
+     * Processa o logout do usuário
+     */
     static async logout(req, res) {
         try {
-            // Destrói a sessão
-            const Session = require('../Helpers/Session');
-            if (req.sessionId) {
-                await Session.destroy(req.sessionId);
-            }
+            // Remove a sessão do banco
+            await BaseController.clearSessionData(req, 'user_data');
 
-            // Limpa o cookie de sessão
-            res.setHeader('Set-Cookie', 'fwe_session_id=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT');
+            // Limpa o cookie
+            res.clearCookie('fwe_session_id');
 
-            AuthController.log.info('Logout realizado com sucesso');
-            return res.redirect('/');
+            await BaseController.flashSuccess(req, 'logout', 'Logout realizado com sucesso');
+            return res.redirect('/auth');
+
         } catch (error) {
-            AuthController.log.error('Erro ao fazer logout', { error: error.message });
-            return res.redirect('/');
+            AuthController.log.error('Erro no logout', { error: error.message });
+            await BaseController.flashError(req, 'logout', 'Erro ao realizar logout');
+            return res.redirect('/auth');
         }
     }
 }

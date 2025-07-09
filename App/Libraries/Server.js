@@ -29,7 +29,6 @@ class Server {
         });
         this.app.set('view engine', 'ejs');
         const viewsPath = path.join(process.cwd(), 'App', 'Views');
-        console.log('Caminho absoluto das views:', viewsPath);
         this.app.set('views', viewsPath);
         // Expor pasta Public como estática
         this.app.use(express.static(path.join(process.cwd(), 'Public')));

@@ -244,7 +244,7 @@ class BaseController {
     }
 
     /**
-     * Renderiza uma view EJS com helpers globais
+     * Renderiza uma view EJS com helpers globais e dados de sessão (se houver)
      * @param {string} viewName Nome da view (sem .ejs)
      * @param {Object} data Dados para o template
      * @param {Object} res (opcional) Express response
@@ -254,10 +254,30 @@ class BaseController {
     static async view(viewName, data = {}, res = null, req = null) {
         const viewPath = path.join(process.cwd(), 'App', 'Views', `${viewName}.ejs`);
         const { base_url } = require('../Helpers/Common');
+        const Flash = require('../Helpers/Flash');
+        let flashMessages = {};
+        let sessionData = {};
+        if (req && typeof req.sessionId === 'string' && req.sessionId.length > 0) {
+            try {
+                flashMessages = await Flash.getAll(req.sessionId);
+            } catch (error) {
+                console.warn('Erro ao carregar flash messages:', error.message);
+            }
+            // Injeta dados de sessão se existirem
+            sessionData = {
+                session: req.session,
+                sessionId: req.sessionId,
+                user: req.session ? JSON.parse(req.session.data || '{}').user : null
+            };
+        }
         const templateData = {
+            ...sessionData,
             ...data,
             base_url: (path = '') => base_url(path, req),
-            BaseController: this
+            BaseController: this,
+            flash: flashMessages,
+            hasFlash: (key) => flashMessages[key] !== undefined,
+            getFlash: (key) => flashMessages[key] || null
         };
         try {
             const html = await ejs.renderFile(viewPath, templateData, { async: true });
@@ -289,16 +309,60 @@ class BaseController {
     }
 
     /**
-     * Renderiza uma view com dados da sessão automaticamente carregados
-     * @param {string} viewName - Nome da view
-     * @param {Object} data - Dados adicionais
-     * @param {Object} res - Resposta
-     * @param {Object} req - Requisição
+     * Métodos utilitários para flash messages
      */
-    static async viewWithSession(viewName, data = {}, res, req) {
-        const sessionData = this.loadSession(req);
-        const mergedData = { ...sessionData, ...data };
-        return this.view(viewName, mergedData, res, req);
+    static async flashSuccess(req, key, message) {
+        if (req && req.sessionId) {
+            const Flash = require('../Helpers/Flash');
+            await Flash.setSuccess(req.sessionId, key, message);
+        }
+    }
+    static async flashError(req, key, message) {
+        if (req && req.sessionId) {
+            const Flash = require('../Helpers/Flash');
+            await Flash.setError(req.sessionId, key, message);
+        }
+    }
+    static async flashWarning(req, key, message) {
+        if (req && req.sessionId) {
+            const Flash = require('../Helpers/Flash');
+            await Flash.setWarning(req.sessionId, key, message);
+        }
+    }
+    static async flashInfo(req, key, message) {
+        if (req && req.sessionId) {
+            const Flash = require('../Helpers/Flash');
+            await Flash.setInfo(req.sessionId, key, message);
+        }
+    }
+    static async flash(req, key, message, type = 'info') {
+        if (req && req.sessionId) {
+            const Flash = require('../Helpers/Flash');
+            await Flash.set(req.sessionId, key, message, type);
+        }
+    }
+
+    /**
+     * Métodos utilitários para manipulação de dados de sessão
+     */
+    static async setSessionData(req, key, value) {
+        if (req && typeof req.sessionId === 'string' && req.sessionId.length > 0) {
+            const Session = require('../Helpers/Session');
+            await Session.setValue(req.sessionId, key, value);
+        }
+    }
+    static async getSessionData(req, key, defaultValue = null) {
+        if (req && typeof req.sessionId === 'string' && req.sessionId.length > 0) {
+            const Session = require('../Helpers/Session');
+            return await Session.getValue(req.sessionId, key, defaultValue);
+        }
+        return defaultValue;
+    }
+    static async clearSessionData(req, key) {
+        if (req && typeof req.sessionId === 'string' && req.sessionId.length > 0) {
+            const Session = require('../Helpers/Session');
+            await Session.removeValue(req.sessionId, key);
+        }
     }
 }
 

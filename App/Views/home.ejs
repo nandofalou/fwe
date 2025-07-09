@@ -3,231 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= nome %> - Framework Web Electron</title>
+    <title><%= title %> - Framework</title>
     <link rel="stylesheet" href="/css/auth.css">
+    <link rel="stylesheet" href="/css/flash.css">
     <style>
-        .hero-section {
-            text-align: center;
-            padding: 40px 0;
+        .flash-message {
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
-        .hero-section h1 {
-            font-size: 3.5rem;
-            font-weight: 700;
+        .flash-message.success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .flash-message.error {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .flash-message.warning {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .flash-message.info {
+            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .flash-message .icon {
+            font-size: 1.2rem;
+        }
+        
+        .flash-message .close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+        
+        .flash-message .close:hover {
+            opacity: 1;
+        }
+        
+        .hero-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .hero-title {
+            font-size: 3rem;
+            color: #333;
+            margin-bottom: 10px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-bottom: 20px;
         }
         
-        .hero-section p {
-            font-size: 1.3rem;
+        .hero-subtitle {
+            font-size: 1.2rem;
             color: #666;
             margin-bottom: 30px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            line-height: 1.6;
         }
         
-        .features-grid {
+        .info-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            margin: 40px 0;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
         }
         
-        .feature-card {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 30px;
+        .info-card {
+            background: white;
+            padding: 25px;
             border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             text-align: center;
-            border-left: 4px solid #667eea;
-            transition: transform 0.3s ease;
         }
         
-        .feature-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            color: #667eea;
-        }
-        
-        .feature-card h3 {
+        .info-card h3 {
             color: #333;
             margin-bottom: 15px;
             font-size: 1.3rem;
         }
         
-        .feature-card p {
+        .info-card p {
             color: #666;
-            line-height: 1.5;
-        }
-        
-        .system-info {
-            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
-            padding: 25px;
-            border-radius: 12px;
-            margin: 30px 0;
-            border-left: 4px solid #6c757d;
-        }
-        
-        .system-info h3 {
-            color: #495057;
-            margin-bottom: 20px;
-            font-size: 1.2rem;
-        }
-        
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-        }
-        
-        .info-item {
-            text-align: center;
-        }
-        
-        .info-label {
-            font-weight: 600;
-            color: #666;
-            font-size: 0.9rem;
-            margin-bottom: 5px;
-        }
-        
-        .info-value {
-            color: #333;
             font-size: 1.1rem;
-            font-weight: 500;
+            margin: 0;
+        }
+        
+        .features-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+        
+        .features-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.8rem;
+        }
+        
+        .features-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            color: #333;
+        }
+        
+        .feature-item::before {
+            content: '✅';
+            font-size: 1.2rem;
         }
         
         .cta-section {
             text-align: center;
-            margin: 40px 0;
         }
         
-        .cta-section h2 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 2rem;
-        }
-        
-        .cta-section p {
-            color: #666;
-            margin-bottom: 30px;
+        .cta-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
             font-size: 1.1rem;
+            transition: all 0.3s ease;
+            display: inline-block;
         }
         
-        .btn-large {
-            padding: 18px 40px;
-            font-size: 1.2rem;
-        }
-        
-        @media (max-width: 768px) {
-            .hero-section h1 {
-                font-size: 2.5rem;
-            }
-            
-            .hero-section p {
-                font-size: 1.1rem;
-            }
-            
-            .features-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1><%= nome %></h1>
-            <p><%= descricao %></p>
-        </div>
-        
         <div class="content">
+            <!-- Flash Messages -->
+            <% if (flash && Object.keys(flash).length > 0) { %>
+                <% Object.keys(flash).forEach(function(key) { %>
+                    <% const message = flash[key]; %>
+                    <div class="flash-message <%= message.type %>" id="flash-<%= key %>">
+                        <span class="icon">
+                            <% if (message.type === 'success') { %>✅<% } %>
+                            <% if (message.type === 'error') { %>❌<% } %>
+                            <% if (message.type === 'warning') { %>⚠️<% } %>
+                            <% if (message.type === 'info') { %>ℹ️<% } %>
+                        </span>
+                        <span><%= message.message %></span>
+                        <button class="close" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                <% }); %>
+            <% } %>
+            
             <div class="hero-section">
-                <h1>Framework Web Electron</h1>
-                <p>Uma solução moderna e robusta para desenvolvimento de aplicações web, inspirada nos melhores frameworks do mercado.</p>
+                <h1 class="hero-title">🚀 <%= title %></h1>
+                <p class="hero-subtitle">Framework Web Express - Versão <%= version %></p>
             </div>
             
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3>Performance</h3>
-                    <p>Arquitetura otimizada para máxima velocidade e eficiência em suas aplicações.</p>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>🕒 Data e Hora</h3>
+                    <p><%= currentTime %></p>
                 </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🔒</div>
-                    <h3>Segurança</h3>
-                    <p>Sistema de autenticação robusto com sessões persistentes e validações avançadas.</p>
+                <div class="info-card">
+                    <h3>📚 Documentação</h3>
+                    <p>Disponível em /docs</p>
                 </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">📱</div>
-                    <h3>Responsivo</h3>
-                    <p>Design adaptável que funciona perfeitamente em qualquer dispositivo.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🛠️</div>
-                    <h3>Flexível</h3>
-                    <p>Estrutura modular que permite personalização total para suas necessidades.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">📚</div>
-                    <h3>Documentação</h3>
-                    <p>Guias completos e referências detalhadas para facilitar o desenvolvimento.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🚀</div>
-                    <h3>Moderno</h3>
-                    <p>Utiliza as melhores práticas e tecnologias atuais do mercado.</p>
+                <div class="info-card">
+                    <h3>🔐 Autenticação</h3>
+                    <p>Sistema completo de login</p>
                 </div>
             </div>
             
-            <div class="system-info">
-                <h3>Informações do Sistema</h3>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label">Nome</div>
-                        <div class="info-value"><%= nome %></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Versão</div>
-                        <div class="info-value"><%= versao %></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Data</div>
-                        <div class="info-value"><%= data %></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Hora</div>
-                        <div class="info-value"><%= hora %></div>
-                    </div>
+            <div class="features-section">
+                <h2>✨ Funcionalidades Principais</h2>
+                <div class="features-list">
+                    <% features.forEach(function(feature) { %>
+                        <div class="feature-item">
+                            <%= feature %>
+                        </div>
+                    <% }); %>
                 </div>
             </div>
             
             <div class="cta-section">
-                <h2>Pronto para começar?</h2>
-                <p>Acesse o painel de controle para gerenciar sua aplicação</p>
-                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                    <a href="/auth" class="btn btn-primary btn-large">Fazer Login</a>
-                    <a href="/docs" class="btn btn-large" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">Ver Documentação</a>
-                </div>
+                <a href="/auth" class="cta-btn">🔐 Fazer Login</a>
             </div>
         </div>
     </div>
+    
+    <script src="/js/flash.js"></script>
 </body>
 </html> 

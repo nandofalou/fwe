@@ -123,7 +123,10 @@ class Session {
         if (!session) return false;
         const data = JSON.parse(session.data || '{}');
         delete data[key];
-        await this.update(id, data);
+        await SessionModel.update(id, {
+            data: JSON.stringify(data),
+            updated_at: new Date()
+        });
         this.event.emit('session:value_removed', id, key);
         return true;
     }

@@ -8,7 +8,7 @@ class DashboardController extends BaseController {
             return res.redirect('/auth');
         }
 
-        return BaseController.viewWithSession('dashboard/index', {
+        return BaseController.view('dashboard/index', {
             title: 'Dashboard - FWE'
         }, res, req);
     }
