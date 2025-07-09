@@ -50,7 +50,6 @@
                     <div class="card-body">
                         <p><strong>Driver:</strong> <span id="dbDriver">-</span></p>
                         <p><strong>Local:</strong> <span id="dbLocation">-</span></p>
-                        <p><strong>Tamanho:</strong> <span id="dbSize">-</span></p>
                         <button id="backupDb" class="btn btn-primary">Fazer Backup</button>
                     </div>
                 </div>
@@ -63,7 +62,6 @@
                     </div>
                     <div class="card-body">
                         <p><strong>Data/Hora do Servidor:</strong> <span id="serverDateTime">-</span></p>
-                        <p><strong>Evento Ativo:</strong> <span id="activeEvent">-</span></p>
                         <p><strong>Porta da API:</strong> <span id="apiPort">-</span></p>
                     </div>
                 </div>
@@ -83,9 +81,7 @@
         const backupDbBtn = document.getElementById('backupDb');
         const dbDriver = document.getElementById('dbDriver');
         const dbLocation = document.getElementById('dbLocation');
-        const dbSize = document.getElementById('dbSize');
         const serverDateTime = document.getElementById('serverDateTime');
-        const activeEvent = document.getElementById('activeEvent');
         const apiPort = document.getElementById('apiPort');
 
         // Função para atualizar o status do servidor
@@ -124,14 +120,7 @@
                     updateServerStatus('stopped');
                 }
                 
-                // Atualizar tamanho do banco
-                try {
-                    const stats = await ipcRenderer.invoke('get-db-size');
-                    dbSize.textContent = `${(stats.size / 1024 / 1024).toFixed(2)} MB`;
-                } catch (error) {
-                    console.error('Erro ao obter tamanho do banco:', error);
-                    dbSize.textContent = 'Erro ao obter tamanho';
-                }
+                // Removido código de obtenção do tamanho do banco
             } catch (error) {
                 console.error('Erro ao carregar configurações:', error);
             }
