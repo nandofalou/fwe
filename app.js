@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const routes = require('./App/Config/Routes/Routes');
 const path = require('path');
+const engine = require('ejs-mate');
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use((err, req, res, next) => {
     });
 });
 
+app.engine('ejs', engine);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'App', 'Views'));
 app.use(express.static(path.join(__dirname, 'Public')));

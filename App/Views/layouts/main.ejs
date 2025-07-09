@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : 'FWE Framework' %></title>
+    <link rel="stylesheet" href="/css/auth.css">
+    <link rel="stylesheet" href="/css/flash.css">
+    <% if (typeof styles !== 'undefined') { %><%- styles %><% } %>
+</head>
+<body>
+    <div class="container">
+        <!-- Flash Messages -->
+        <% if (flash && Object.keys(flash).length > 0) { %>
+            <% Object.keys(flash).forEach(function(key) { %>
+                <% const message = flash[key]; %>
+                <div class="flash-message <%= message.type %>" id="flash-<%= key %>">
+                    <span class="icon">
+                        <% if (message.type === 'success') { %>✅<% } %>
+                        <% if (message.type === 'error') { %>❌<% } %>
+                        <% if (message.type === 'warning') { %>⚠️<% } %>
+                        <% if (message.type === 'info') { %>ℹ️<% } %>
+                    </span>
+                    <span><%= message.message %></span>
+                    <button class="close" onclick="this.parentElement.remove()">×</button>
+                </div>
+            <% }); %>
+        <% } %>
+        <!-- Conteúdo principal -->
+        <%- body %>
+    </div>
+    <script src="/js/flash.js"></script>
+    <% if (typeof scripts !== 'undefined') { %><%- scripts %><% } %>
+</body>
+</html> 

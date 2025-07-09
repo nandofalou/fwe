@@ -1,199 +1,90 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %> - FWE Framework</title>
-    <link rel="stylesheet" href="/css/auth.css">
-    <link rel="stylesheet" href="/css/flash.css">
-    <style>
-        /* Removido CSS de .flash-message, usar apenas o /css/flash.css */
-        .example-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        .example-title {
-            font-size: 2.5rem;
-            color: #333;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .example-description {
-            font-size: 1.1rem;
-            color: #666;
-            margin-bottom: 30px;
-        }
-        .demo-section {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-        .demo-section h2 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-        }
-        .demo-buttons {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .demo-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            text-decoration: none;
-            font-weight: 500;
-            text-align: center;
-            transition: all 0.3s ease;
-            display: inline-block;
-        }
-        .demo-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-        .demo-btn.success {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-        }
-        .demo-btn.error {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-        }
-        .demo-btn.warning {
-            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
-            color: #212529;
-        }
-        .demo-btn.info {
-            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-        }
-        .demo-btn.multiple {
-            background: linear-gradient(135deg, #6f42c1 0%, #5a2d91 100%);
-        }
-        .code-example {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            overflow-x: auto;
-        }
-        .code-example h4 {
-            margin-top: 0;
-            color: #333;
-            margin-bottom: 15px;
-        }
-        .code-example pre {
-            margin: 0;
-            color: #333;
-        }
-        .usage-info {
-            background: #e3f2fd;
-            border: 1px solid #bbdefb;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-        .usage-info h4 {
-            color: #1976d2;
-            margin-top: 0;
-            margin-bottom: 15px;
-        }
-        .usage-info ul {
-            margin: 0;
-            padding-left: 20px;
-        }
-        .usage-info li {
-            margin-bottom: 8px;
-            color: #333;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="content">
-            <!-- Flash Messages -->
-            <% if (flash && Object.keys(flash).length > 0) { %>
-                <% Object.keys(flash).forEach(function(key) { %>
-                    <% const message = flash[key]; %>
-                    <div class="flash-message <%= message.type %>" id="flash-<%= key %>">
-                        <span class="icon">
-                            <% if (message.type === 'success') { %>✅<% } %>
-                            <% if (message.type === 'error') { %>❌<% } %>
-                            <% if (message.type === 'warning') { %>⚠️<% } %>
-                            <% if (message.type === 'info') { %>ℹ️<% } %>
-                        </span>
-                        <span><%= message.message %></span>
-                        <button class="close" onclick="this.parentElement.remove()">×</button>
-                    </div>
-                <% }); %>
-            <% } %>
-            
-            <div class="example-header">
-                <h1 class="example-title">🧪 <%= title %></h1>
-                <p class="example-description"><%= description %></p>
-            </div>
-            
-            <div class="demo-section">
-                <h2>🎯 Teste as Flash Messages</h2>
-                <p>Clique nos botões abaixo para testar diferentes tipos de mensagens flash:</p>
-                
-                <div class="demo-buttons">
-                    <a href="/example?action=success" class="demo-btn success">✅ Sucesso</a>
-                    <a href="/example?action=error" class="demo-btn error">❌ Erro</a>
-                    <a href="/example?action=warning" class="demo-btn warning">⚠️ Aviso</a>
-                    <a href="/example?action=info" class="demo-btn info">ℹ️ Informação</a>
-                    <a href="/example?action=multiple" class="demo-btn multiple">🎨 Múltiplas</a>
-                </div>
-                
-                <div class="code-example">
-                    <h4>📝 Como usar no Controller:</h4>
-                    <pre>// Definir mensagens flash (requer sessionId)
+<%
+// Simula sections: define variáveis com o conteúdo dos blocos
+var styles = `
+<style>
+    .example-header { text-align: center; margin-bottom: 40px; }
+    .example-title {
+        font-size: 2.5rem;
+        color: #333;
+        margin-bottom: 10px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .example-description { font-size: 1.1rem; color: #666; margin-bottom: 30px; }
+    .demo-section { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 30px; }
+    .demo-section h2 { color: #333; margin-bottom: 20px; font-size: 1.5rem; }
+    .demo-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .demo-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; text-decoration: none; font-weight: 500; text-align: center; transition: all 0.3s ease; display: inline-block; }
+    .demo-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); }
+    .demo-btn.success { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); }
+    .demo-btn.error { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); }
+    .demo-btn.warning { background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); color: #212529; }
+    .demo-btn.info { background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); }
+    .demo-btn.multiple { background: linear-gradient(135deg, #6f42c1 0%, #5a2d91 100%); }
+    .code-example { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin-top: 20px; font-family: 'Courier New', monospace; font-size: 0.9rem; overflow-x: auto; }
+    .code-example h4 { margin-top: 0; color: #333; margin-bottom: 15px; }
+    .code-example pre { margin: 0; color: #333; }
+    .usage-info { background: #e3f2fd; border: 1px solid #bbdefb; border-radius: 8px; padding: 20px; margin-top: 20px; }
+    .usage-info h4 { color: #1976d2; margin-top: 0; margin-bottom: 15px; }
+    .usage-info ul { margin: 0; padding-left: 20px; }
+    .usage-info li { margin-bottom: 8px; color: #333; }
+</style>
+`;
+
+var body = `
+<div class="content">
+    <div class="example-header">
+        <h1 class="example-title">🧪 ${title}</h1>
+        <p class="example-description">${description}</p>
+    </div>
+    <div class="demo-section">
+        <h2>🎯 Teste as Flash Messages</h2>
+        <p>Clique nos botões abaixo para testar diferentes tipos de mensagens flash:</p>
+        <div class="demo-buttons">
+            <a href="/example?action=success" class="demo-btn success">✅ Sucesso</a>
+            <a href="/example?action=error" class="demo-btn error">❌ Erro</a>
+            <a href="/example?action=warning" class="demo-btn warning">⚠️ Aviso</a>
+            <a href="/example?action=info" class="demo-btn info">ℹ️ Informação</a>
+            <a href="/example?action=multiple" class="demo-btn multiple">🎨 Múltiplas</a>
+        </div>
+        <div class="code-example">
+            <h4>📝 Como usar no Controller:</h4>
+            <pre>// Definir mensagens flash (requer sessionId)
 if (req.sessionId) {
     await Flash.setSuccess(req.sessionId, 'key', 'Mensagem de sucesso!');
     await Flash.setError(req.sessionId, 'key', 'Mensagem de erro!');
     await Flash.setWarning(req.sessionId, 'key', 'Mensagem de aviso!');
     await Flash.setInfo(req.sessionId, 'key', 'Mensagem informativa!');
-    
     // Ou usar o método genérico
     await Flash.set(req.sessionId, 'key', 'Mensagem', 'success');
 }</pre>
-                </div>
-                
-                <div class="usage-info">
-                    <h4>📚 Como funciona:</h4>
-                    <ul>
-                        <li><strong>Flash.set()</strong> - Define uma mensagem flash na sessão (requer sessionId)</li>
-                        <li><strong>Flash.get()</strong> - Obtém e remove a mensagem da sessão</li>
-                        <li><strong>Flash.has()</strong> - Verifica se existe uma mensagem</li>
-                        <li><strong>Flash.getAll()</strong> - Obtém todas as mensagens (automático nas views)</li>
-                        <li><strong>Flash.clear()</strong> - Remove todas as mensagens</li>
-                        <li><strong>Importante:</strong> Todas as operações requerem sessionId e são assíncronas</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="demo-section">
-                <h2>🔗 Navegação</h2>
-                <div class="demo-buttons">
-                    <a href="/" class="demo-btn">🏠 Home</a>
-                    <a href="/auth" class="demo-btn">🔐 Login</a>
-                    <a href="/docs" class="demo-btn">📚 Documentação</a>
-                    <a href="/dashboard" class="demo-btn">📊 Dashboard</a>
-                </div>
-            </div>
+        </div>
+        <div class="usage-info">
+            <h4>📚 Como funciona:</h4>
+            <ul>
+                <li><strong>Flash.set()</strong> - Define uma mensagem flash na sessão (requer sessionId)</li>
+                <li><strong>Flash.get()</strong> - Obtém e remove a mensagem da sessão</li>
+                <li><strong>Flash.has()</strong> - Verifica se existe uma mensagem</li>
+                <li><strong>Flash.getAll()</strong> - Obtém todas as mensagens (automático nas views)</li>
+                <li><strong>Flash.clear()</strong> - Remove todas as mensagens</li>
+                <li><strong>Importante:</strong> Todas as operações requerem sessionId e são assíncronas</li>
+            </ul>
         </div>
     </div>
-    
-    <script src="/js/flash.js"></script>
-</body>
-</html> 
+    <div class="demo-section">
+        <h2>🔗 Navegação</h2>
+        <div class="demo-buttons">
+            <a href="/" class="demo-btn">🏠 Home</a>
+            <a href="/auth" class="demo-btn">🔐 Login</a>
+            <a href="/docs" class="demo-btn">📚 Documentação</a>
+            <a href="/dashboard" class="demo-btn">📊 Dashboard</a>
+        </div>
+    </div>
+</div>
+`;
+
+var scripts = ``;
+%>
+<%- include('layouts/main', { title, flash, styles, body, scripts }) %> 

@@ -263,3 +263,81 @@ BaseController.view('example', {
 Assim, se o `baseUrl` do config.ini estiver em branco, a URL base refletirá o endereço de acesso do usuário.
 
 --- 
+
+## Layouts e Sections (EJS Puro)
+
+Agora o projeto utiliza um padrão de layout e sections **manual**, sem dependências externas, compatível com qualquer ambiente EJS.
+
+### Como funciona
+- O layout base (`App/Views/layouts/main.ejs`) recebe variáveis como `styles`, `body` e `scripts`:
+
+```ejs
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title><%= typeof title !== 'undefined' ? title : 'FWE Framework' %></title>
+    <link rel="stylesheet" href="/css/auth.css">
+    <link rel="stylesheet" href="/css/flash.css">
+    <% if (typeof styles !== 'undefined') { %><%- styles %><% } %>
+</head>
+<body>
+    <div class="container">
+        <!-- Flash Messages -->
+        <% if (flash && Object.keys(flash).length > 0) { %>
+            <% Object.keys(flash).forEach(function(key) { %>
+                <% const message = flash[key]; %>
+                <div class="flash-message <%= message.type %>" id="flash-<%= key %>">
+                    <span class="icon">
+                        <% if (message.type === 'success') { %>✅<% } %>
+                        <% if (message.type === 'error') { %>❌<% } %>
+                        <% if (message.type === 'warning') { %>⚠️<% } %>
+                        <% if (message.type === 'info') { %>ℹ️<% } %>
+                    </span>
+                    <span><%= message.message %></span>
+                    <button class="close" onclick="this.parentElement.remove()">×</button>
+                </div>
+            <% }); %>
+        <% } %>
+        <!-- Conteúdo principal -->
+        <%- body %>
+    </div>
+    <script src="/js/flash.js"></script>
+    <% if (typeof scripts !== 'undefined') { %><%- scripts %><% } %>
+</body>
+</html>
+```
+
+- Em qualquer view, defina os blocos como variáveis e inclua o layout:
+
+```ejs
+<%
+// Simula sections: define variáveis com o conteúdo dos blocos
+var styles = `
+<style>
+  /* CSS específico da página */
+</style>
+`;
+
+var body = `
+<div class="content">
+  <!-- Conteúdo principal da página -->
+</div>
+`;
+
+var scripts = `
+<script>
+  // JS específico da página
+</script>
+`;
+%>
+<%- include('layouts/main', { title, flash, styles, body, scripts }) %>
+```
+
+- Veja o exemplo completo em `App/Views/example.ejs` e acesse `/example` para ver na prática.
+
+**Vantagens:**
+- Funciona em qualquer ambiente EJS, inclusive dentro do Electron.
+- Permite reaproveitar cabeçalho, rodapé e estrutura base.
+- Cada view pode definir seus próprios blocos de CSS, JS e conteúdo.
+- Muito semelhante ao `extend`/`section`/`endSection` do CodeIgniter, mas sem dependências externas. 

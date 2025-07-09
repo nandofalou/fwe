@@ -252,7 +252,7 @@ class BaseController {
      * @returns {Promise<string>|void} HTML ou envia resposta
      */
     static async view(viewName, data = {}, res = null, req = null) {
-        const viewPath = path.join(process.cwd(), 'App', 'Views', `${viewName}.ejs`);
+        const path = require('path');
         const { base_url } = require('../Helpers/Common');
         const Flash = require('../Helpers/Flash');
         let flashMessages = {};
@@ -279,18 +279,14 @@ class BaseController {
             hasFlash: (key) => flashMessages[key] !== undefined,
             getFlash: (key) => flashMessages[key] || null
         };
-        try {
-            const html = await ejs.renderFile(viewPath, templateData, { async: true });
-            if (res) {
-                res.set('Content-Type', 'text/html; charset=utf-8');
-                return res.send(html);
-            }
-            return html;
-        } catch (err) {
-            if (res) {
-                return res.status(500).send('Erro ao renderizar view: ' + err.message);
-            }
-            throw err;
+        if (res) {
+            // Usa o Express para renderizar, permitindo layouts/sections do ejs-mate
+            return res.render(viewName, templateData);
+        } else {
+            // Renderização manual (string)
+            const ejs = require('ejs');
+            const viewPath = path.join(process.cwd(), 'App', 'Views', `${viewName}.ejs`);
+            return await ejs.renderFile(viewPath, templateData, { async: true });
         }
     }
 
