@@ -1,13 +1,13 @@
 const crypto = require('crypto');
 const Event = require('./Event');
+const SessionModel = require('../Models/Session');
 
 /**
- * Classe para manipulação de sessão
+ * Classe para manipulação de sessão persistente no banco
  */
 class Session {
     constructor() {
         this.event = Event;
-        this.sessions = new Map();
     }
 
     /**
@@ -19,229 +19,113 @@ class Session {
     }
 
     /**
-     * Cria uma nova sessão
-     * @param {string} id ID da sessão (opcional)
-     * @param {number} ttl Tempo de vida em segundos (opcional)
+     * Cria uma nova sessão no banco
+     * @param {Object} options { user_id, ip_address, user_agent, data, ttl }
      * @returns {string} ID da sessão
      */
-    create(id = null, ttl = null) {
-        const sessionId = id || this.generateId();
-        const session = {
+    async create(options = {}) {
+        const sessionId = this.generateId();
+        const now = new Date();
+        const ttl = options.ttl || 60 * 60 * 24; // 1 dia padrão
+        const expiresAt = new Date(now.getTime() + ttl * 1000);
+        const data = options.data ? JSON.stringify(options.data) : '{}';
+        await SessionModel.insert({
             id: sessionId,
-            data: new Map(),
-            created: Date.now(),
-            lastAccessed: Date.now()
-        };
-
-        this.sessions.set(sessionId, session);
-
-        if (ttl) {
-            setTimeout(() => {
-                this.destroy(sessionId);
-            }, ttl * 1000);
-        }
-
+            ip_address: options.ip_address || '',
+            user_agent: options.user_agent || '',
+            user_id: options.user_id || null,
+            data,
+            created_at: now,
+            updated_at: now,
+            expires_at: expiresAt
+        });
         this.event.emit('session:created', sessionId);
         return sessionId;
     }
 
     /**
-     * Obtém uma sessão
+     * Obtém uma sessão do banco
      * @param {string} id ID da sessão
      * @returns {Object|null} Sessão
      */
-    get(id) {
-        const session = this.sessions.get(id);
-
+    async get(id) {
+        const session = await SessionModel.find(id);
         if (!session) {
             this.event.emit('session:not_found', id);
             return null;
         }
-
-        session.lastAccessed = Date.now();
+        // Verifica expiração
+        if (new Date(session.expires_at) < new Date()) {
+            await this.destroy(id);
+            return null;
+        }
         this.event.emit('session:accessed', id);
         return session;
     }
 
     /**
-     * Atualiza uma sessão
+     * Atualiza dados da sessão
      * @param {string} id ID da sessão
      * @param {Object} data Dados
-     * @returns {boolean} true se atualizado
+     * @returns {boolean}
      */
-    update(id, data) {
-        const session = this.get(id);
-
-        if (!session) {
-            return false;
-        }
-
-        for (const [key, value] of Object.entries(data)) {
-            session.data.set(key, value);
-        }
-
+    async update(id, data) {
+        const session = await this.get(id);
+        if (!session) return false;
+        const merged = { ...JSON.parse(session.data || '{}'), ...data };
+        await SessionModel.update(id, {
+            data: JSON.stringify(merged),
+            updated_at: new Date()
+        });
         this.event.emit('session:updated', id, data);
         return true;
     }
 
     /**
-     * Destrói uma sessão
+     * Destroi uma sessão
      * @param {string} id ID da sessão
-     * @returns {boolean} true se destruído
+     * @returns {boolean}
      */
-    destroy(id) {
-        if (!this.sessions.has(id)) {
-            return false;
-        }
-
-        this.sessions.delete(id);
+    async destroy(id) {
+        await SessionModel.delete(id);
         this.event.emit('session:destroyed', id);
         return true;
     }
 
     /**
-     * Limpa todas as sessões
+     * Define um valor na sessão
      */
-    clear() {
-        this.sessions.clear();
-        this.event.emit('session:cleared');
-    }
-
-    /**
-     * Obtém o número de sessões ativas
-     * @returns {number} Número de sessões
-     */
-    count() {
-        return this.sessions.size;
-    }
-
-    /**
-     * Verifica se uma sessão existe
-     * @param {string} id ID da sessão
-     * @returns {boolean} true se existir
-     */
-    exists(id) {
-        return this.sessions.has(id);
-    }
-
-    /**
-     * Obtém a data de criação de uma sessão
-     * @param {string} id ID da sessão
-     * @returns {number|null} Data de criação
-     */
-    getCreatedAt(id) {
-        const session = this.get(id);
-        return session ? session.created : null;
-    }
-
-    /**
-     * Obtém a data do último acesso de uma sessão
-     * @param {string} id ID da sessão
-     * @returns {number|null} Data do último acesso
-     */
-    getLastAccessedAt(id) {
-        const session = this.get(id);
-        return session ? session.lastAccessed : null;
-    }
-
-    /**
-     * Obtém um valor de uma sessão
-     * @param {string} id ID da sessão
-     * @param {string} key Chave
-     * @param {*} defaultValue Valor padrão (opcional)
-     * @returns {*} Valor
-     */
-    getValue(id, key, defaultValue = null) {
-        const session = this.get(id);
-
-        if (!session) {
-            return defaultValue;
-        }
-
-        return session.data.get(key) ?? defaultValue;
-    }
-
-    /**
-     * Define um valor em uma sessão
-     * @param {string} id ID da sessão
-     * @param {string} key Chave
-     * @param {*} value Valor
-     * @returns {boolean} true se definido
-     */
-    setValue(id, key, value) {
-        const session = this.get(id);
-
-        if (!session) {
-            return false;
-        }
-
-        session.data.set(key, value);
+    async setValue(id, key, value) {
+        const session = await this.get(id);
+        if (!session) return false;
+        const data = JSON.parse(session.data || '{}');
+        data[key] = value;
+        await this.update(id, data);
         this.event.emit('session:value_set', id, key, value);
         return true;
     }
 
     /**
-     * Remove um valor de uma sessão
-     * @param {string} id ID da sessão
-     * @param {string} key Chave
-     * @returns {boolean} true se removido
+     * Obtém um valor da sessão
      */
-    removeValue(id, key) {
-        const session = this.get(id);
+    async getValue(id, key, defaultValue = null) {
+        const session = await this.get(id);
+        if (!session) return defaultValue;
+        const data = JSON.parse(session.data || '{}');
+        return data[key] ?? defaultValue;
+    }
 
-        if (!session) {
-            return false;
-        }
-
-        session.data.delete(key);
+    /**
+     * Remove um valor da sessão
+     */
+    async removeValue(id, key) {
+        const session = await this.get(id);
+        if (!session) return false;
+        const data = JSON.parse(session.data || '{}');
+        delete data[key];
+        await this.update(id, data);
         this.event.emit('session:value_removed', id, key);
         return true;
-    }
-
-    /**
-     * Verifica se um valor existe em uma sessão
-     * @param {string} id ID da sessão
-     * @param {string} key Chave
-     * @returns {boolean} true se existir
-     */
-    hasValue(id, key) {
-        const session = this.get(id);
-
-        if (!session) {
-            return false;
-        }
-
-        return session.data.has(key);
-    }
-
-    /**
-     * Obtém todas as chaves de uma sessão
-     * @param {string} id ID da sessão
-     * @returns {Array} Chaves
-     */
-    keys(id) {
-        const session = this.get(id);
-
-        if (!session) {
-            return [];
-        }
-
-        return Array.from(session.data.keys());
-    }
-
-    /**
-     * Obtém todos os valores de uma sessão
-     * @param {string} id ID da sessão
-     * @returns {Object} Valores
-     */
-    values(id) {
-        const session = this.get(id);
-
-        if (!session) {
-            return {};
-        }
-
-        return Object.fromEntries(session.data);
     }
 }
 

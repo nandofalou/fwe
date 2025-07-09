@@ -273,6 +273,33 @@ class BaseController {
             throw err;
         }
     }
+
+    /**
+     * Carrega dados da sessão para uso nos controllers
+     * @param {Object} req - Requisição
+     * @returns {Object} Dados da sessão
+     */
+    static loadSession(req) {
+        const Session = require('../Helpers/Session');
+        return {
+            session: req.session,
+            sessionId: req.sessionId,
+            user: req.session ? JSON.parse(req.session.data || '{}').user : null
+        };
+    }
+
+    /**
+     * Renderiza uma view com dados da sessão automaticamente carregados
+     * @param {string} viewName - Nome da view
+     * @param {Object} data - Dados adicionais
+     * @param {Object} res - Resposta
+     * @param {Object} req - Requisição
+     */
+    static async viewWithSession(viewName, data = {}, res, req) {
+        const sessionData = this.loadSession(req);
+        const mergedData = { ...sessionData, ...data };
+        return this.view(viewName, mergedData, res, req);
+    }
 }
 
 module.exports = BaseController; 

@@ -1,6 +1,7 @@
 const BaseRoutes = require('./BaseRoutes');
 const AuthController = require('../../Controllers/AuthController');
 const DashboardController = require('../../Controllers/DashboardController');
+const DocsController = require('../../Controllers/DocsController');
 const AuthApiController = require('../../Controllers/Api/AuthController');
 const UserController = require('../../Controllers/Api/UserController');
 const CategoryController = require('../../Controllers/Api/CategoryController');
@@ -22,10 +23,14 @@ class Routes extends BaseRoutes {
         
         this.router.get('/dashboard', DashboardController.index);
 
+        // Rotas de documentação
+        this.router.get('/docs', DocsController.index);
+        this.router.get('/docs/:documento', DocsController.show);
+
         this.group('/auth', [], router => {
             router.get('/', AuthController.index);
             router.post('/', AuthController.login);
-
+            router.get('/logout', AuthController.logout);
         });
 
         // Rotas públicas

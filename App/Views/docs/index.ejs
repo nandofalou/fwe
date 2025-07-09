@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/auth.css">
+    <style>
+        .docs-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .docs-header h1 {
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .docs-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .docs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .doc-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 25px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .doc-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .doc-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .doc-card p {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+        
+        .doc-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #888;
+        }
+        
+        .doc-size {
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        
+        .back-link {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .docs-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .docs-header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Documentação</h1>
+            <p>FWE Framework - Guias e Referências</p>
+        </div>
+        
+        <div class="content">
+            <div class="docs-header">
+                <h1>📚 Documentação Completa</h1>
+                <p>Explore os guias e referências do FWE Framework</p>
+            </div>
+            
+            <div class="docs-grid">
+                <% documents.forEach(function(doc) { %>
+                    <a href="/docs/<%= doc.name %>" class="doc-card">
+                        <h3><%= doc.title %></h3>
+                        <p><%= doc.excerpt %></p>
+                        <div class="doc-meta">
+                            <span>📅 <%= doc.modified.toLocaleDateString('pt-BR') %></span>
+                            <span class="doc-size"><%= Math.round(doc.size / 1024) %> KB</span>
+                        </div>
+                    </a>
+                <% }); %>
+            </div>
+            
+            <div class="back-link">
+                <a href="/">← Voltar para Home</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

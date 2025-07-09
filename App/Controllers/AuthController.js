@@ -10,54 +10,68 @@ class AuthController extends BaseController {
     static async index(req, res) {
         const now = new Date();
         const logo = base_url('assets/image/logo.png', req);
-        return BaseController.view('auth/login', {
-            data: now.toLocaleDateString('pt-BR'),
-            hora: now.toLocaleTimeString('pt-BR'),
-            versao: require(path.join(process.cwd(), 'package.json')).version,
-            linhas: [1, 2, 3, 4, 5],
-            logo
-        }, res, req);
+        return BaseController.view('auth/login', {}, res, req);
     }
     
     static async login(req, res) {
         try {
             const { email, password } = req.body;
 
-            // Validar dados
+            // Validar se ambos os campos foram preenchidos
             if (!email || !password) {
                 return res.redirect('/auth');
             }
 
-            // Buscar usuário
+            // Buscar usuário e validar credenciais em uma única verificação
             const user = await User.findByEmail(email);
-            if (!user || !user.active) {
+            let isValidCredentials = false;
+
+            if (user && user.active) {
+                // Verificar senha apenas se o usuário existir e estiver ativo
+                const isValidPassword = await bcrypt.compare(password, user.pass);
+                isValidCredentials = isValidPassword;
+            }
+
+            // Se as credenciais não são válidas, log e redireciona com mensagem genérica
+            if (!isValidCredentials) {
                 AuthController.log.warning('Tentativa de login com credenciais inválidas', { email });
                 return res.redirect('/auth');
             }
 
-            // Verificar senha
-            const isValidPassword = await bcrypt.compare(password, user.pass);
-            if (!isValidPassword) {
-                AuthController.log.warning('Tentativa de login com senha incorreta', { email, userId: user.id });
-                return res.redirect('/auth');
-            }
-
-            // Gerar token (opcional, se for usar sessão)
-            // const token = jwt.sign(
-            //     { id: user.id, email: user.email },
-            //     config.jwt.secret,
-            //     { expiresIn: config.jwt.expiresIn }
-            // );
-
+            // Login bem-sucedido
             AuthController.log.info('Login realizado com sucesso', { userId: user.id, email: user.email });
 
-            // Aqui você pode salvar dados do usuário na sessão, se desejar
-            // req.session.user = { id: user.id, name: user.name, email: user.email };
+            // Salva dados do usuário na sessão persistente
+            const Session = require('../Helpers/Session');
+            await Session.setValue(req.sessionId, 'user', {
+                id: user.id,
+                name: user.name,
+                email: user.email
+            });
 
             return res.redirect('/dashboard');
         } catch (error) {
             AuthController.log.error('Erro ao fazer login', { email: req.body.email, error: error.message });
             return res.redirect('/auth');
+        }
+    }
+
+    static async logout(req, res) {
+        try {
+            // Destrói a sessão
+            const Session = require('../Helpers/Session');
+            if (req.sessionId) {
+                await Session.destroy(req.sessionId);
+            }
+
+            // Limpa o cookie de sessão
+            res.setHeader('Set-Cookie', 'fwe_session_id=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT');
+
+            AuthController.log.info('Logout realizado com sucesso');
+            return res.redirect('/');
+        } catch (error) {
+            AuthController.log.error('Erro ao fazer logout', { error: error.message });
+            return res.redirect('/');
         }
     }
 }

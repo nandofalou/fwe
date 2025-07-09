@@ -7,6 +7,7 @@ const User = require('../Models/User');
 const path = require('path');
 const ejs = require('ejs');
 const { base_url } = require('../Helpers/Common');
+const SessionMiddleware = require('../Middlewares/SessionMiddleware');
 
 class Server {
     constructor(config) {
@@ -18,6 +19,7 @@ class Server {
     }
 
     setupMiddleware() {
+        this.app.use(SessionMiddleware);
         this.app.use(cors());
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));

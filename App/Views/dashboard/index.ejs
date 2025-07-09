@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - FWE Framework</title>
+    <link rel="stylesheet" href="/css/auth.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Dashboard</h1>
+            <p>Bem-vindo ao FWE Framework</p>
+        </div>
+        
+        <div class="content">
+            <div class="dashboard-header">
+                <h1>Painel de Controle</h1>
+                <a href="/auth/logout" class="btn btn-danger">Logout</a>
+            </div>
+
+            <div class="user-info">
+                <h3>Informações do Usuário</h3>
+                <div class="info-row">
+                    <span class="info-label">ID:</span>
+                    <span class="info-value"><%= user.id %></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Nome:</span>
+                    <span class="info-value"><%= user.name %></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value"><%= user.email %></span>
+                </div>
+            </div>
+
+            <div class="session-info">
+                <strong>Informações da Sessão</strong>
+                Session ID: <%= sessionId %><br>
+                Criada em: <%= session.created_at %><br>
+                Expira em: <%= session.expires_at %>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

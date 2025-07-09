@@ -2,11 +2,232 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Home</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= nome %> - Framework Web Electron</title>
+    <link rel="stylesheet" href="/css/auth.css">
+    <style>
+        .hero-section {
+            text-align: center;
+            padding: 40px 0;
+        }
+        
+        .hero-section h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+        }
+        
+        .hero-section p {
+            font-size: 1.3rem;
+            color: #666;
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .feature-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+        
+        .feature-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .feature-card p {
+            color: #666;
+            line-height: 1.5;
+        }
+        
+        .system-info {
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 30px 0;
+            border-left: 4px solid #6c757d;
+        }
+        
+        .system-info h3 {
+            color: #495057;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .info-item {
+            text-align: center;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            color: #333;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        .cta-section {
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .cta-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+        
+        .cta-section p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        
+        .btn-large {
+            padding: 18px 40px;
+            font-size: 1.2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-section h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero-section p {
+                font-size: 1.1rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1><%= mensagem %></h1>
-    <p>Data: <%= data %></p>
-    <p>Hora: <%= hora %></p>
+    <div class="container">
+        <div class="header">
+            <h1><%= nome %></h1>
+            <p><%= descricao %></p>
+        </div>
+        
+        <div class="content">
+            <div class="hero-section">
+                <h1>Framework Web Electron</h1>
+                <p>Uma solução moderna e robusta para desenvolvimento de aplicações web, inspirada nos melhores frameworks do mercado.</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Performance</h3>
+                    <p>Arquitetura otimizada para máxima velocidade e eficiência em suas aplicações.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Segurança</h3>
+                    <p>Sistema de autenticação robusto com sessões persistentes e validações avançadas.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Responsivo</h3>
+                    <p>Design adaptável que funciona perfeitamente em qualquer dispositivo.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🛠️</div>
+                    <h3>Flexível</h3>
+                    <p>Estrutura modular que permite personalização total para suas necessidades.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📚</div>
+                    <h3>Documentação</h3>
+                    <p>Guias completos e referências detalhadas para facilitar o desenvolvimento.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🚀</div>
+                    <h3>Moderno</h3>
+                    <p>Utiliza as melhores práticas e tecnologias atuais do mercado.</p>
+                </div>
+            </div>
+            
+            <div class="system-info">
+                <h3>Informações do Sistema</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Nome</div>
+                        <div class="info-value"><%= nome %></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Versão</div>
+                        <div class="info-value"><%= versao %></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Data</div>
+                        <div class="info-value"><%= data %></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Hora</div>
+                        <div class="info-value"><%= hora %></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="cta-section">
+                <h2>Pronto para começar?</h2>
+                <p>Acesse o painel de controle para gerenciar sua aplicação</p>
+                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                    <a href="/auth" class="btn btn-primary btn-large">Fazer Login</a>
+                    <a href="/docs" class="btn btn-large" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">Ver Documentação</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html> 
