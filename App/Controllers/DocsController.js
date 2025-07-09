@@ -4,6 +4,9 @@ const path = require('path');
 const marked = require('marked');
 
 class DocsController extends BaseController {
+    /**
+     * Lista todos os documentos disponíveis
+     */
     static async index(req, res) {
         try {
             const docsPath = path.join(process.cwd(), 'docs');
@@ -53,25 +56,36 @@ class DocsController extends BaseController {
             const docsPath = path.join(process.cwd(), 'docs');
             const filePath = path.join(docsPath, `${documento}.md`);
             
+            DocsController.log.info('Tentando carregar documento', { documento, filePath });
+            
             // Verifica se o arquivo existe
             try {
                 await fs.access(filePath);
             } catch (error) {
+                DocsController.log.warning('Documento não encontrado', { documento, filePath, error: error.message });
                 return res.status(404).json({ error: 'Documento não encontrado' });
             }
             
             // Lê o conteúdo do arquivo
             const content = await fs.readFile(filePath, 'utf-8');
+            DocsController.log.info('Conteúdo lido com sucesso', { documento, contentLength: content.length });
             
             // Extrai título
             const titleMatch = content.match(/^#\s+(.+)$/m);
             const title = titleMatch ? titleMatch[1] : documento.replace(/_/g, ' ');
             
             // Converte Markdown para HTML
-            const htmlContent = marked(content, {
-                breaks: true,
-                gfm: true
-            });
+            let htmlContent;
+            try {
+                htmlContent = marked.parse(content, {
+                    breaks: true,
+                    gfm: true
+                });
+                DocsController.log.info('Markdown convertido para HTML', { documento, htmlLength: htmlContent.length });
+            } catch (markdownError) {
+                DocsController.log.error('Erro na conversão Markdown', { error: markdownError.message });
+                htmlContent = `<h1>${title}</h1><pre>${content}</pre>`;
+            }
             
             // Lista todos os documentos para navegação
             const files = await fs.readdir(docsPath);
@@ -82,16 +96,20 @@ class DocsController extends BaseController {
                 active: file === `${documento}.md`
             }));
             
-            return BaseController.view('docs/show', {
+            const viewData = {
                 title: title,
                 content: htmlContent,
                 documents,
                 currentDoc: documento,
                 rawContent: content
-            }, res, req);
+            };
+            
+            DocsController.log.info('Renderizando view', { documento, viewDataKeys: Object.keys(viewData) });
+            
+            return BaseController.view('docs/show', viewData, res, req);
         } catch (error) {
-            DocsController.log.error('Erro ao exibir documento', { documento: req.params.documento, error: error.message });
-            return res.status(500).json({ error: 'Erro ao carregar documento' });
+            DocsController.log.error('Erro ao exibir documento', { documento: req.params.documento, error: error.message, stack: error.stack });
+            return res.status(500).json({ error: 'Erro ao carregar documento', details: error.message });
         }
     }
 }
