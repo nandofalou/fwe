@@ -21,12 +21,16 @@ function createWindow() {
         }
     });
 
-    mainWindow.loadFile('Public/config.html');
+    mainWindow.loadFile(path.join(__dirname, 'Public', 'config.html'));
     
     // Em desenvolvimento, abrir DevTools
     if (process.argv.includes('--dev')) {
         mainWindow.webContents.openDevTools();
     }
+
+    mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+        Log.error('Falha ao carregar a janela principal', { errorCode, errorDescription });
+    });
 
     // Iniciar servidor automaticamente após a janela estar carregada
     mainWindow.webContents.on('did-finish-load', () => {
@@ -122,7 +126,11 @@ async function initializeApp() {
 
 // Eventos do Electron
 app.whenReady().then(() => {
-    initializeApp();
+    try {
+        initializeApp();
+    } catch (err) {
+        Log.error('Erro ao inicializar a aplicação Electron', { error: err.message, stack: err.stack });
+    }
     app.on('activate', function () {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });

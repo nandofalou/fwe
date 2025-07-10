@@ -2,6 +2,7 @@ const Log = require('../Helpers/Log');
 const path = require('path');
 const ejs = require('ejs');
 const { base_url } = require('../Helpers/Common');
+const { resolveAppPath } = require('../Helpers/Path');
 
 class BaseController {
     constructor(model) {
@@ -285,7 +286,7 @@ class BaseController {
         } else {
             // Renderização manual (string)
             const ejs = require('ejs');
-            const viewPath = path.join(process.cwd(), 'App', 'Views', `${viewName}.ejs`);
+            const viewPath = resolveAppPath('App', 'Views', `${viewName}.ejs`);
             return await ejs.renderFile(viewPath, templateData, { async: true });
         }
     }
