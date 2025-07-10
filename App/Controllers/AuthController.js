@@ -2,7 +2,7 @@ const path = require('path');
 const BaseController = require('./BaseController');
 const { base_url } = require('../Helpers/Common');
 const User = require('../Models/User');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 class AuthController extends BaseController {
     /**

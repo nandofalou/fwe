@@ -5,6 +5,7 @@ const path = require('path');
 const ejs = require('ejs');
 const { base_url } = require('../Helpers/Common');
 const SessionMiddleware = require('../Middlewares/SessionMiddleware');
+const { resolveAppPath } = require('../Helpers/Path');
 
 class Server {
     constructor(config) {
@@ -23,10 +24,17 @@ class Server {
         this.app.use(express.urlencoded({ extended: true }));
         // Configura EJS como view engine (async: true para permitir await nas views)
         this.app.set('view engine', 'ejs');
-        const viewsPath = path.join(process.cwd(), 'App', 'Views');
+        const isAsar = __dirname.includes('app.asar');
+        const viewsPath = isAsar
+          ? path.join(process.resourcesPath, 'app.asar.unpacked', 'App', 'Views')
+          : resolveAppPath('App', 'Views');
         this.app.set('views', viewsPath);
+        console.log('Caminho das views usado pelo Express:', viewsPath);
         // Expor pasta Public como estática
-        this.app.use(express.static(path.join(process.cwd(), 'Public')));
+        const staticPath = isAsar
+          ? path.join(process.resourcesPath, 'app.asar.unpacked', 'Public')
+          : resolveAppPath('Public');
+        this.app.use('/', express.static(staticPath));
         // Middleware para garantir content-type correto em renderizações de views
         // REMOVIDO: this.app.use((req, res, next) => {
         //     const originalRender = res.render;

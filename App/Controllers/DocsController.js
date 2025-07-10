@@ -2,6 +2,7 @@ const BaseController = require('./BaseController');
 const fs = require('fs').promises;
 const path = require('path');
 const marked = require('marked');
+const { resolveAppPath } = require('../Helpers/Path');
 
 class DocsController extends BaseController {
     /**
@@ -9,7 +10,7 @@ class DocsController extends BaseController {
      */
     static async index(req, res) {
         try {
-            const docsPath = path.join(process.cwd(), 'docs');
+            const docsPath = resolveAppPath('docs');
             const files = await fs.readdir(docsPath);
             
             // Filtra apenas arquivos .md
@@ -53,7 +54,7 @@ class DocsController extends BaseController {
     static async show(req, res) {
         try {
             const { documento } = req.params;
-            const docsPath = path.join(process.cwd(), 'docs');
+            const docsPath = resolveAppPath('docs');
             const filePath = path.join(docsPath, `${documento}.md`);
             
             DocsController.log.info('Tentando carregar documento', { documento, filePath });
