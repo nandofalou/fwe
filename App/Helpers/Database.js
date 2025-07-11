@@ -430,14 +430,14 @@ const Database = {
     },
 
     /**
-     * Executa as migrations localizadas em App/Migrations
+     * Executa as migrations localizadas em App/Migrations/Mysql ou App/Migrations/Sqlite
      */
     async runMigrations() {
-        const migrationsDir = path.join(__dirname, '../Migrations');
+        const isMySQL = this.config.database.driver === 'mysql';
+        const migrationsDir = path.join(__dirname, isMySQL ? '../Migrations/Mysql' : '../Migrations/Sqlite');
         if (!fs.existsSync(migrationsDir)) {
             fs.mkdirSync(migrationsDir, { recursive: true });
         }
-        const isMySQL = this.config.database.driver === 'mysql';
         // Cria tabela de controle
         if (isMySQL) {
             await this.connection.execute(`CREATE TABLE IF NOT EXISTS migrations (
@@ -472,7 +472,6 @@ const Database = {
             if (!already) {
                 const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
                 if (isMySQL) {
-                    // Executa múltiplos comandos se houver (split por ';')
                     for (const statement of sql.split(';').map(s => s.trim()).filter(Boolean)) {
                         await this.connection.execute(statement);
                     }

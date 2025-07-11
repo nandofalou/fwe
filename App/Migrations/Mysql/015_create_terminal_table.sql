@@ -1,0 +1,20 @@
+CREATE TABLE `terminal` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `pin` varchar(4) DEFAULT NULL,
+  `ip` varchar(20) DEFAULT NULL,
+  `model` varchar(50) DEFAULT NULL,
+  `name` varchar(50) DEFAULT NULL,
+  `plataform` varchar(50) DEFAULT NULL,
+  `category_group_id` int(10) unsigned DEFAULT NULL,
+  `active` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `deleted_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `category_group_id` (`category_group_id`),
+  KEY `pin` (`pin`),
+  KEY `ip` (`ip`),
+  KEY `name` (`name`),
+  KEY `plataform` (`plataform`),
+  CONSTRAINT `terminal_category_group_fk1` FOREIGN KEY (`category_group_id`) REFERENCES `category_group` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

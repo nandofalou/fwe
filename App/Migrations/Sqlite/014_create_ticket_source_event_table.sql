@@ -1,0 +1,2 @@
+-- Migration 014: create_ticket_source_event_table
+-- Esta migration está vazia, conforme o arquivo original do MySQL 
