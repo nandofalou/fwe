@@ -27,13 +27,13 @@ class BaseController {
     static async index(req, res) {
         try {
             const records = await this.model.findAll();
-            this.log.info('Listagem de registros realizada', { 
+            BaseController.log.info('Listagem de registros realizada', { 
                 model: this.model.name || 'Unknown',
                 count: records.length 
             });
             return res.json({ error: false, data: records });
         } catch (error) {
-            this.log.error('Erro ao listar registros', { 
+            BaseController.log.error('Erro ao listar registros', { 
                 model: this.model.name || 'Unknown',
                 error: error.message 
             });
@@ -50,19 +50,19 @@ class BaseController {
         try {
             const record = await this.model.findById(req.params.id);
             if (!record) {
-                this.log.warning('Registro não encontrado', { 
+                BaseController.log.warning('Registro não encontrado', { 
                     model: this.model.name || 'Unknown',
                     id: req.params.id 
                 });
                 return res.status(404).json({ error: true, message: 'Registro não encontrado' });
             }
-            this.log.info('Registro consultado', { 
+            BaseController.log.info('Registro consultado', { 
                 model: this.model.name || 'Unknown',
                 id: req.params.id 
             });
             return res.json({ error: false, data: record });
         } catch (error) {
-            this.log.error('Erro ao buscar registro', { 
+            BaseController.log.error('Erro ao buscar registro', { 
                 model: this.model.name || 'Unknown',
                 id: req.params.id,
                 error: error.message 
@@ -79,14 +79,14 @@ class BaseController {
     static async store(req, res) {
         try {
             const record = await this.model.create(req.body);
-            this.log.info('Novo registro criado', { 
+            BaseController.log.info('Novo registro criado', { 
                 model: this.model.name || 'Unknown',
                 id: record.id,
                 data: req.body 
             });
             return res.status(201).json({ error: false, data: record });
         } catch (error) {
-            this.log.error('Erro ao criar registro', { 
+            BaseController.log.error('Erro ao criar registro', { 
                 model: this.model.name || 'Unknown',
                 data: req.body,
                 error: error.message 
@@ -104,21 +104,21 @@ class BaseController {
         try {
             const record = await this.model.findById(req.params.id);
             if (!record) {
-                this.log.warning('Registro não encontrado para atualização', { 
+                BaseController.log.warning('Registro não encontrado para atualização', { 
                     model: this.model.name || 'Unknown',
                     id: req.params.id 
                 });
                 return res.status(404).json({ error: true, message: 'Registro não encontrado' });
             }
             const updatedRecord = await this.model.update(req.params.id, req.body);
-            this.log.info('Registro atualizado', { 
+            BaseController.log.info('Registro atualizado', { 
                 model: this.model.name || 'Unknown',
                 id: req.params.id,
                 updatedFields: Object.keys(req.body) 
             });
             return res.json({ error: false, data: updatedRecord });
         } catch (error) {
-            this.log.error('Erro ao atualizar registro', { 
+            BaseController.log.error('Erro ao atualizar registro', { 
                 model: this.model.name || 'Unknown',
                 id: req.params.id,
                 error: error.message 
@@ -136,20 +136,20 @@ class BaseController {
         try {
             const record = await this.model.findById(req.params.id);
             if (!record) {
-                this.log.warning('Registro não encontrado para exclusão', { 
+                BaseController.log.warning('Registro não encontrado para exclusão', { 
                     model: this.model.name || 'Unknown',
                     id: req.params.id 
                 });
                 return res.status(404).json({ error: true, message: 'Registro não encontrado' });
             }
             await this.model.delete(req.params.id);
-            this.log.info('Registro excluído', { 
+            BaseController.log.info('Registro excluído', { 
                 model: this.model.name || 'Unknown',
                 id: req.params.id 
             });
             return res.json({ error: false, message: 'Registro excluído com sucesso' });
         } catch (error) {
-            this.log.error('Erro ao excluir registro', { 
+            BaseController.log.error('Erro ao excluir registro', { 
                 model: this.model.name || 'Unknown',
                 id: req.params.id,
                 error: error.message 
@@ -271,12 +271,14 @@ class BaseController {
                 user: req.session ? JSON.parse(req.session.data || '{}').user : null
             };
         }
+        const _version_ = '1.0.0.';
         const templateData = {
             ...sessionData,
             ...data,
             base_url: (path = '') => base_url(path, req),
             BaseController: this,
             flash: flashMessages,
+            _version_,
             hasFlash: (key) => flashMessages[key] !== undefined,
             getFlash: (key) => flashMessages[key] || null
         };

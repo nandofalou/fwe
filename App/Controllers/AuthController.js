@@ -9,7 +9,9 @@ class AuthController extends BaseController {
      * Exibe a página de login
      */
     static async index(req, res) {
-        return BaseController.view('auth/login', {}, res, req);
+        return BaseController.view('auth/login', {
+            title: 'Login ::'
+        }, res, req);
     }
 
     /**
@@ -17,16 +19,16 @@ class AuthController extends BaseController {
      */
     static async login(req, res) {
         try {
-            const { email, password } = req.body;
+            const { account_user, account_passwd } = req.body;
 
             // Validação básica
-            if (!email || !password) {
+            if (!account_user || !account_passwd) {
                 await BaseController.flashError(req, 'login', 'Email e senha são obrigatórios');
                 return res.redirect('/auth');
             }
 
             // Busca o usuário pelo email
-            const user = await User.findByEmail(email);
+            const user = await User.findByEmail(account_user);
             if (!user) {
                 await BaseController.flashError(req, 'login', 'Credenciais inválidas');
                 return res.redirect('/auth');
@@ -39,7 +41,7 @@ class AuthController extends BaseController {
             }
 
             // Verifica a senha
-            const isValidPassword = await bcrypt.compare(password, user.pass);
+            const isValidPassword = await bcrypt.compare(account_passwd, user.pass);
             if (!isValidPassword) {
                 await BaseController.flashError(req, 'login', 'Credenciais inválidas');
                 return res.redirect('/auth');

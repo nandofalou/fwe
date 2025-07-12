@@ -21,11 +21,14 @@ class Routes extends BaseRoutes {
         // Rota inicial
         this.router.get('/', HomeController.index);
         
+        this.router.get('/install', InstallController.install);
         this.router.get('/dashboard', DashboardController.index);
 
         // Rotas de documentação
         this.router.get('/docs', DocsController.index);
         this.router.get('/docs/:documento', DocsController.show);
+
+        
 
         this.group('/auth', [], router => {
             router.get('/', AuthController.index);
@@ -36,7 +39,7 @@ class Routes extends BaseRoutes {
         // Rotas públicas
         this.group('/api', [], router => {
             // Rota de instalação
-            router.get('/install', InstallController.install);
+            
 
             // Rotas de autenticação
             router.post('/auth/login', AuthApiController.login);
@@ -69,7 +72,7 @@ class Routes extends BaseRoutes {
             // router.get('/categories/name/:name', CategoryController.findByName);
         });
 
-        
+        //router.get('/install', InstallController.install);
     }
 }
 
