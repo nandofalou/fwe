@@ -2,7 +2,7 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
-    <%- include('../partial/auth_header', {_version_}) %> 
+    <%- include('../layouts/partial/auth_header', {_version_}) %> 
     <title>
         <%= title %>
     </title>
@@ -38,16 +38,7 @@
         </div>
     </div>
 
-    <%- include('../partial/scripts', {_version_}) %> 
-
-    <% if (flash && Object.keys(flash).length> 0) { %>
-        <% Object.keys(flash).forEach(function(key) { %>
-            <% const message=flash[key]; %>
-                <script>
-                    cl.sn("<%=message.message %>", "<%=message.type %>");
-                </script>
-        <% }); %>
-    <% } %>
+    <%- include('../layouts/partial/scripts', {_version_}) %> 
 </body>
 
 </html>
