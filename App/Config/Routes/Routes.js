@@ -8,8 +8,11 @@ const CategoryController = require('../../Controllers/Api/CategoryController');
 const AuthMiddleware = require('../../Middlewares/AuthMiddleware');
 const InstallController = require('../../Controllers/Api/InstallController');
 const EventController = require('../../Controllers/Api/EventController');
+const EventViewController = require('../../Controllers/EventController');
+const CategoryViewController = require('../../Controllers/CategoryController');
 const ExampleController = require('../../Controllers/ExampleController');
 const HomeController = require('../../Controllers/HomeController');
+const SessionMiddleware = require('../../Middlewares/SessionMiddleware');
 
 class Routes extends BaseRoutes {
     constructor() {
@@ -34,6 +37,24 @@ class Routes extends BaseRoutes {
             router.get('/', AuthController.index);
             router.post('/', AuthController.login);
             router.get('/logout', AuthController.logout);
+        });
+
+        // Rotas de eventos (views) com SessionMiddleware
+        this.group('/event', [SessionMiddleware], router => {
+            router.get('/', EventViewController.index);
+            router.get('/edit', EventViewController.edit);
+            router.get('/edit/:id', EventViewController.edit);
+            router.post('/', EventViewController.store);
+            router.post('/:id', EventViewController.update);
+        });
+
+        // Rotas de categorias (views) com SessionMiddleware
+        this.group('/category', [SessionMiddleware], router => {
+            router.get('/', CategoryViewController.index);
+            router.get('/edit', CategoryViewController.edit);
+            router.get('/edit/:id', CategoryViewController.edit);
+            router.post('/', CategoryViewController.store);
+            router.post('/:id', CategoryViewController.update);
         });
 
         // Rotas públicas
