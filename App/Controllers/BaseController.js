@@ -271,6 +271,7 @@ class BaseController {
                 user: req.session ? JSON.parse(req.session.data || '{}').user : null
             };
         }
+
         const _version_ = '1.0.0.';
         const templateData = {
             ...sessionData,
