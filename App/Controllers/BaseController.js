@@ -10,6 +10,46 @@ class BaseController {
     }
 
     /**
+     * Carrega todos os helpers disponíveis na pasta Helpers
+     * @returns {Object} Objeto com todos os helpers
+     */
+    static loadHelpers() {
+        const fs = require('fs');
+        const helpersPath = path.join(__dirname, '..', 'Helpers');
+        const helpers = {};
+
+        try {
+            const files = fs.readdirSync(helpersPath);
+            
+            files.forEach(file => {
+                if (file.endsWith('.js') && file !== 'index.js') {
+                    const helperName = file.replace('.js', '');
+                    try {
+                        const helperModule = require(path.join(helpersPath, file));
+                        
+                        // Se o helper exporta um objeto com múltiplas funções
+                        if (typeof helperModule === 'object' && helperModule !== null) {
+                            Object.keys(helperModule).forEach(key => {
+                                // Prefixa com 'helper_' para evitar conflitos
+                                helpers[`helper_${key}`] = helperModule[key];
+                            });
+                        } else {
+                            // Se o helper exporta uma função diretamente
+                            helpers[`helper_${helperName}`] = helperModule;
+                        }
+                    } catch (error) {
+                        console.warn(`Erro ao carregar helper ${file}:`, error.message);
+                    }
+                }
+            });
+        } catch (error) {
+            console.warn('Erro ao carregar helpers:', error.message);
+        }
+
+        return helpers;
+    }
+
+    /**
      * Métodos estáticos de logging para uso em controllers
      */
     static log = {
@@ -256,6 +296,10 @@ class BaseController {
         const path = require('path');
         const { base_url } = require('../Helpers/Common');
         const Flash = require('../Helpers/Flash');
+        
+        // Carrega todos os helpers automaticamente
+        const helpers = this.loadHelpers();
+        
         let flashMessages = {};
         let sessionData = {};
         if (req && typeof req.sessionId === 'string' && req.sessionId.length > 0) {
@@ -276,6 +320,7 @@ class BaseController {
         const templateData = {
             ...sessionData,
             ...data,
+            ...helpers, // Injeta todos os helpers automaticamente
             base_url: (path = '') => base_url(path, req),
             BaseController: this,
             flash: flashMessages,

@@ -1,26 +1,3 @@
-<!-- PAGE TITLE -->
-<header class="mt-lg-n6">
-    <div class="d-flex align-items-center justify-content-between">
-        <div>
-            <h1 class="h4"><%= isEdit ? 'Editar Categoria' : 'Nova Categoria' %></h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb small">
-                    <li class="breadcrumb-item"><a href="<%= base_url('dashboard') %>">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="<%= base_url('category') %>">Categorias</a></li>
-                    <li class="breadcrumb-item text-muted active" aria-current="page">
-                        <%= isEdit ? 'Editar' : 'Nova' %>
-                    </li>
-                </ol>
-            </nav>
-        </div>
-        <div>
-            <a href="<%= base_url('category') %>" class="btn btn-outline-secondary">
-                <i class="fi fi-arrow-left me-2"></i>Voltar
-            </a>
-        </div>
-    </div>
-</header>
-
 <!-- Flash Messages -->
 <% if (hasFlash('categories')) { %>
     <div class="alert alert-<%= getFlash('categories').type %> alert-dismissible fade show" role="alert">
@@ -32,8 +9,11 @@
 <!-- Category Form -->
 <div class="section rounded mb-3">
     <div class="bg-white shadow-md rounded">
-        <div class="p-4 border-bottom">
-            <h5 class="mb-0"><%= isEdit ? 'Editar Categoria' : 'Criar Nova Categoria' %></h5>
+        <div class="p-4 border-bottom d-flex align-items-center justify-content-between">
+            <h5 class="mb-0"><%= isEdit ? 'Editar Categoria' : 'Nova Categoria' %></h5>
+            <a href="<%= base_url('category') %>" class="btn btn-light border">
+                <i class="fi fi-arrow-left me-2"></i>Voltar
+            </a>
         </div>
         
         <div class="p-4">

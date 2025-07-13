@@ -3,6 +3,7 @@ const DashboardController = require('../../Controllers/DashboardController');
 const DocsController = require('../../Controllers/DocsController');
 const EventViewController = require('../../Controllers/EventController');
 const CategoryViewController = require('../../Controllers/CategoryController');
+const TicketController = require('../../Controllers/TicketController');
 const ExampleController = require('../../Controllers/ExampleController');
 const HomeController = require('../../Controllers/HomeController');
 const SessionMiddleware = require('../../Middlewares/SessionMiddleware');
@@ -51,6 +52,15 @@ function registerWebRoutes(router) {
         categoryRouter.get('/edit/:id', CategoryViewController.edit);
         categoryRouter.post('/', CategoryViewController.store);
         categoryRouter.post('/:id', CategoryViewController.update);
+    });
+
+    // Rotas de tickets (views) com SessionMiddleware
+    router.group('/ticket', [SessionMiddleware], ticketRouter => {
+        ticketRouter.get('/', TicketController.index);
+        ticketRouter.get('/edit', TicketController.edit);
+        ticketRouter.get('/edit/:id', TicketController.edit);
+        ticketRouter.post('/', TicketController.store);
+        ticketRouter.post('/:id', TicketController.update);
     });
 }
 

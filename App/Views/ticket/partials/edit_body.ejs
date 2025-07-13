@@ -1,0 +1,131 @@
+<!-- Flash Messages -->
+<% if (hasFlash('tickets')) { %>
+    <div class="alert alert-<%= getFlash('tickets').type %> alert-dismissible fade show" role="alert">
+        <%= getFlash('tickets').message %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<% } %>
+
+<!-- Ticket Form -->
+<div class="section rounded mb-3">
+    <div class="bg-white shadow-md rounded">
+        <div class="p-4 border-bottom d-flex align-items-center justify-content-between">
+            <h5 class="mb-0"><%= isEdit ? 'Editar Ticket' : 'Novo Ticket' %></h5>
+            <a href="<%= base_url('ticket') %>" class="btn btn-light border">
+                <i class="fi fi-arrow-left me-2"></i>Voltar
+            </a>
+        </div>
+        <div class="p-4">
+            <form method="POST" action="<%= isEdit ? base_url('ticket/' + ticket.id) : base_url('ticket') %>" class="needs-validation" novalidate>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="event_id" class="form-label">Evento *</label>
+                        <select class="form-select" id="event_id" name="event_id" required>
+                            <option value="">Selecione</option>
+                            <% events.forEach(function(event) { %>
+                                <option value="<%= event.id %>" <%= ticket && ticket.event_id == event.id ? 'selected' : '' %>><%= event.name %></option>
+                            <% }); %>
+                        </select>
+                        <div class="invalid-feedback">Evento obrigatório.</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="category_id" class="form-label">Categoria *</label>
+                        <select class="form-select" id="category_id" name="category_id" required>
+                            <option value="">Selecione</option>
+                            <% categories.forEach(function(category) { %>
+                                <option value="<%= category.id %>" <%= ticket && ticket.category_id == category.id ? 'selected' : '' %>><%= category.name %></option>
+                            <% }); %>
+                        </select>
+                        <div class="invalid-feedback">Categoria obrigatória.</div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="code" class="form-label">Cod do Ticket *</label>
+                        <input type="text" class="form-control" id="code" name="code" value="<%= ticket ? ticket.code : '' %>" required>
+                        <div class="invalid-feedback">Código obrigatório.</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="fullname" class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="fullname" name="fullname" value="<%= ticket ? ticket.fullname : '' %>">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="email" class="form-label">e-mail</label>
+                        <input type="email" class="form-control" id="email" name="email" value="<%= ticket ? ticket.email : '' %>">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="documentId" class="form-label">CPF</label>
+                        <input type="text" class="form-control" id="documentId" name="documentId" value="<%= ticket ? ticket.documentId : '' %>">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="extrafield1" class="form-label">Campo Extra 1</label>
+                        <input type="text" class="form-control" id="extrafield1" name="extrafield1" value="<%= ticket ? ticket.extrafield1 : '' %>">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="extrafield2" class="form-label">Campo Extra 2</label>
+                        <input type="text" class="form-control" id="extrafield2" name="extrafield2" value="<%= ticket ? ticket.extrafield2 : '' %>">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="active" class="form-label">Status</label>
+                        <select class="form-select" id="active" name="active">
+                            <option value="1" <%= ticket && ticket.active == 1 ? 'selected' : '' %>>Ativo</option>
+                            <option value="0" <%= ticket && ticket.active == 0 ? 'selected' : '' %>>Inativo</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="master" class="form-label">Cartão Mestre</label>
+                        <select class="form-select" id="master" name="master">
+                            <option value="0" <%= ticket && ticket.master == 0 ? 'selected' : '' %>>Não</option>
+                            <option value="1" <%= ticket && ticket.master == 1 ? 'selected' : '' %>>Sim</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <a href="<%= base_url('ticket') %>" class="btn btn-outline-secondary">
+                        <i class="fi fi-arrow-left me-2"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fi fi-check me-2"></i>
+                        <%= isEdit ? 'Atualizar Ticket' : 'Criar Ticket' %>
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="p-4 border-top">
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label">Foto</label><br>
+                    <% if (photoBase64) { %>
+                        <img src="data:image/jpeg;base64,<%= photoBase64 %>" alt="Foto do ticket" style="width:120px;height:120px;border-radius:50%;background:#eee;object-fit:cover;">
+                    <% } else { %>
+                        <img src="/assets/images/logo.png" alt="Sem foto" style="width:120px;height:120px;border-radius:50%;background:#eee;object-fit:cover;">
+                    <% } %>
+                    <div class="small text-muted mt-2">A foto não pode ser alterada aqui.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script> 

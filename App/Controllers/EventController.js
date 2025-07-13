@@ -15,7 +15,6 @@ class EventController extends BaseController {
 
         try {
             const events = await Event.get();
-            
             return BaseController.view('event/index', {
                 title: 'Eventos - FWE',
                 events: events
