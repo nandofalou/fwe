@@ -242,7 +242,6 @@ class BaseModel {
         }
         const sql = this.buildSelect();
         const params = this.instance._params;
-        // Remover log extra
         const rows = await this.instance.db.query(sql, params);
         this.instance.resetBuilder();
         return rows;
