@@ -49,6 +49,9 @@
     <!-- /offcanvas : demos -->
 
     <%- include('../layouts/partial/scripts', {_version_}) %>
+    <% if (typeof scripts !== 'undefined' && scripts) { %>
+        <%- scripts %>
+    <% } %>
 
 
 </body>

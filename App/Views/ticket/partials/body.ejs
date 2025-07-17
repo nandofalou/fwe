@@ -17,28 +17,32 @@
             <div class="row mb-3">
                 <div class="col-md-3">
                     <label>Evento</label>
-                    <select class="form-select" id="filter_event" name="event_id">
+                    <select class="form-select filters" id="filter_event" name="event_id">
                         <option value="">Todos</option>
                         <% events.forEach(function(event) { %>
-                            <option value="<%= event.id %>" <%= filter.event_id == event.id ? 'selected' : '' %>><%= event.name %></option>
-                        <% }); %>
+                            <option value="<%= event.id %>" <%=filter.event_id==event.id ? 'selected' : '' %>><%=
+                                    event.name %>
+                            </option>
+                            <% }); %>
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label>Categoria</label>
-                    <select class="form-select" id="filter_category" name="category_id">
+                    <select class="form-select filters" id="filter_category" name="category_id">
                         <option value="">Todos</option>
                         <% categories.forEach(function(category) { %>
-                            <option value="<%= category.id %>" <%= filter.category_id == category.id ? 'selected' : '' %>><%= category.name %></option>
-                        <% }); %>
+                            <option value="<%= category.id %>" <%=filter.category_id==category.id ? 'selected' : '' %>>
+                                <%= category.name %>
+                            </option>
+                            <% }); %>
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label>Status</label>
-                    <select class="form-select" id="filter_status" name="status">
+                    <select class="form-select filters" id="filter_status" name="status">
                         <option value="">Todos</option>
-                        <option value="1" <%= filter.status == 1 ? 'selected' : '' %>>Ativo</option>
-                        <option value="0" <%= filter.status == 0 ? 'selected' : '' %>>Inativo</option>
+                        <option value="1" <%=filter.status==1 ? 'selected' : '' %>>Ativo</option>
+                        <option value="0" <%=filter.status==0 ? 'selected' : '' %>>Inativo</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -49,7 +53,7 @@
         </div>
         <div class="p-4 pt-0">
             <div class="table-responsive">
-                <table id="ticketsTable" class="table table-hover align-middle">
+                <table id="ticketsTable" class="table datatable table-bordered table-hover table-striped">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -61,61 +65,10 @@
                             <th></th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <% tickets.forEach(function(ticket) { %>
-                            <tr>
-                                <td><%= ticket.id %></td>
-                                <td><%= ticket.code %><br><small>Nome: <%= ticket.fullname || '' %></small></td>
-                                <td>
-                                    <%= events.find(e => e.id == ticket.event_id)?.name || '-' %> <br>
-                                    <small>Categoria: <%= categories.find(c => c.id == ticket.category_id)?.name || '-' %></small>
-                                </td>
-                                <td>
-                                    <% if (ticket.active == 1) { %>
-                                        <span class="badge bg-success">Cadastro Ativo</span>
-                                    <% } else { %>
-                                        <span class="badge bg-secondary">Inativo</span>
-                                    <% } %>
-                                </td>
-                                <td>
-                                    Criado em: <span class="badge bg-dark text-white"><%= ticket.created_at ? helper_formatDateTime(ticket.created_at) : '-' %></span><br>
-                                    Atualizado em: <span class="badge bg-dark text-white"><%= ticket.updated_at ? helper_formatDateTime(ticket.updated_at) : '-' %></span>
-                                </td>
-                                <td>
-                                    <img src="/assets/images/logo.png" alt="Foto" style="width:40px;height:40px;border-radius:50%;background:#eee;object-fit:cover;">
-                                </td>
-                                <td>
-                                    <a href="<%= base_url('ticket/edit/' + ticket.id) %>" class="btn btn-sm btn-outline-primary"><i class="fi fi-arrow-right"></i></a>
-                                </td>
-                            </tr>
-                        <% }); %>
-                    </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
         </div>
     </div>
 </div>
 
-<!-- DataTables e Filtros -->
-<script src="<%= base_url() %>/assets/js/vendor.datatables.js"></script>
-<script>
-$(document).ready(function() {
-    var table = $('#ticketsTable').DataTable({
-        language: {
-            url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/pt-BR.json'
-        }
-    });
-    // Filtros
-    $('#filter_event, #filter_category, #filter_status').on('change', function() {
-        var params = [];
-        if ($('#filter_event').val()) params.push('event_id=' + $('#filter_event').val());
-        if ($('#filter_category').val()) params.push('category_id=' + $('#filter_category').val());
-        if ($('#filter_status').val() !== '') params.push('status=' + $('#filter_status').val());
-        var url = window.location.pathname + (params.length ? '?' + params.join('&') : '');
-        window.location.href = url;
-    });
-    $('#filter_search').on('keyup', function() {
-        table.search(this.value).draw();
-    });
-});
-</script> 

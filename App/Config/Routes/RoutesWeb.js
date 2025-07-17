@@ -57,6 +57,7 @@ function registerWebRoutes(router) {
     // Rotas de tickets (views) com SessionMiddleware
     router.group('/ticket', [SessionMiddleware], ticketRouter => {
         ticketRouter.get('/', TicketController.index);
+        ticketRouter.get('/search', TicketController.search);
         ticketRouter.get('/edit', TicketController.edit);
         ticketRouter.get('/edit/:id', TicketController.edit);
         ticketRouter.post('/', TicketController.store);

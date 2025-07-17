@@ -15,32 +15,103 @@ class TicketController extends BaseController {
             return res.redirect('/auth');
         }
         try {
-            // Filtros
-            const event_id = req.query.event_id || '';
-            const category_id = req.query.category_id || '';
-            const status = req.query.status || '';
-
             // Carregar eventos e categorias para os filtros
             const events = await Event.get();
             const categories = await Category.get();
-
-            // Montar query de tickets
-            let tickets = await Ticket.get();
-            if (event_id) tickets = tickets.filter(t => t.event_id == event_id);
-            if (category_id) tickets = tickets.filter(t => t.category_id == category_id);
-            if (status !== '') tickets = tickets.filter(t => String(t.active) === String(status));
-
             return BaseController.view('ticket/index', {
                 title: 'Cadastro de Tickets',
-                tickets,
                 events,
                 categories,
-                filter: { event_id, category_id, status }
+                filter: { event_id: '', category_id: '', status: '' }
             }, res, req);
         } catch (error) {
-            TicketController.log.error('Erro ao listar tickets', { error: error.message });
-            await BaseController.flashError(req, 'tickets', 'Erro ao carregar tickets');
+            TicketController.log.error('Erro ao carregar tela de tickets', { error: error.message });
+            await BaseController.flashError(req, 'tickets', 'Erro ao carregar tela de tickets');
             return res.redirect('/dashboard');
+        }
+    }
+
+    /**
+     * Endpoint AJAX para DataTables: /ticket/search
+     */
+    static async search(req, res) {
+        try {
+            let page = parseInt(req.query.page) || 1;
+            let perPage = parseInt(req.query.perPage) || 10;
+            let draw = 0;
+            let searchValue = '';
+
+            // draw = parseInt(req.query.draw) || 0;
+            const builder = Ticket.dataTableQuery();
+
+            if (req.query.start !== undefined && req.query.length !== undefined) {
+                
+                perPage = parseInt(req.query.length) || 10;
+                page = Math.floor((parseInt(req.query.start) || 0) / perPage) + 1;
+                draw = parseInt(req.query.draw) || 0;
+
+                builder.limit(perPage, req.query.start);
+
+                if (req.query.search && req.query.search.value) {
+                    searchValue = req.query.search.value.trim();
+                    builder.like('concat(ticket.code,ticket.fullname,ticket.extrafield1)', searchValue)
+                }
+
+                if (req.query.order && req.query.columns) {
+                    const colIdx = parseInt(req.query.order[0].column);
+                    const colName = req.query.columns[colIdx].data || req.query.columns[colIdx].name;
+                    const dir = req.query.order[0].dir && req.query.order[0].dir.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+                    if (colName) {
+                        const columnsOrder = [
+                            'ticket.id',
+                            'ticket.code',
+                            'event.name',
+                            'category.name',
+                            'ticket.active',
+                            'ticket.master',
+                            'ticket.extrafield1'
+                        ];
+                        const orderBy = columnsOrder[colName];
+                        builder.orderBy(orderBy, dir);
+                    }
+                }
+            }
+
+            const event_id = req.query.event_id || null;
+            const category_id = req.query.category_id || null;
+            const status = req.query.status || null;
+                
+            if(event_id) {
+                builder.where({ 'event.id': event_id })
+            }
+
+            if(category_id) {
+                builder.where({ 'category.id': category_id })
+            }
+
+            if(status) {
+                builder.where({ 'ticket.active': status })
+            }
+
+            // 2. Executa a paginação
+            const count = await builder.countQuery("ticket.id", perPage);
+            const tickets = await builder.get();
+            
+            const columns = ['id', 'code', 'eventName', 'categoryName', 'active', 'master', 'image'];
+            const data = tickets.map(item => columns.map(col => item[col]));
+
+            // 3. Retorna para a view/API com objeto pager
+            return res.json({
+                data,
+                recordsFiltered: count.rows,
+                recordsTotal: count.rows,
+                perPage: count.perPage,
+                // currentPage: 1,
+                pagination: count.pages
+            });
+        } catch (error) {
+            TicketController.log.error('Erro ao buscar tickets (DataTables)', { error: error.message });
+            return res.status(500).json({ error: 'Erro ao buscar tickets' });
         }
     }
 

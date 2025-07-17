@@ -1,3 +1,4 @@
-<% var body = include('./partials/body', { title, flash, tickets, events, categories, filter }) %>
+<% var body = include('./partials/body', { title, flash, events, categories, filter }) %>
+<% var scripts = include('./partials/scripts', { title, flash, events, categories, filter }) %>
 
-<%- include('../layouts/app', { title, flash, body}) %> 
+<%- include('../layouts/app', { title, flash, body, scripts}) %> 
