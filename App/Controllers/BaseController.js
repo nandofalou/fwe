@@ -1,7 +1,7 @@
 const Log = require('../Helpers/Log');
 const path = require('path');
 const ejs = require('ejs');
-const { base_url } = require('../Helpers/Common');
+const Common = require('../Helpers/Common');
 const { resolveAppPath } = require('../Helpers/Path');
 
 class BaseController {
@@ -58,6 +58,14 @@ class BaseController {
         warning: (message, data = null) => Log.warning(message, data),
         debug: (message, data = null) => Log.debug(message, data)
     };
+
+    /**
+     * Método utilitário para obter a base_url em qualquer controller
+     * Pode ser chamado como this.base_url(path, req) ou BaseController.base_url(path, req)
+     */
+    static base_url(path = '', req = null) {
+        return Common.base_url(path, req);
+    }
 
     /**
      * Listar todos os registros
@@ -294,7 +302,6 @@ class BaseController {
      */
     static async view(viewName, data = {}, res = null, req = null) {
         const path = require('path');
-        const { base_url } = require('../Helpers/Common');
         const Flash = require('../Helpers/Flash');
         
         // Carrega todos os helpers automaticamente
@@ -321,7 +328,7 @@ class BaseController {
             ...sessionData,
             ...data,
             ...helpers, // Injeta todos os helpers automaticamente
-            base_url: (path = '') => base_url(path, req),
+            base_url: (path = '') => this.base_url(path, req),
             BaseController: this,
             flash: flashMessages,
             _version_,

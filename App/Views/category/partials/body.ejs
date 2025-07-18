@@ -54,7 +54,11 @@
                                         <% } %>
                                     </td>
                                     <td>
-                                        <span class="badge bg-info"><%= category.fluxo || 0 %></span>
+                                        <% if (category.fluxo == 1) { %>
+                                            <span class="badge bg-success">Sim</span>
+                                        <% } else { %>
+                                            <span class="badge bg-secondary">Não</span>
+                                        <% } %>
                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">

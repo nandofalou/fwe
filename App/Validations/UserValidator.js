@@ -6,19 +6,19 @@ class UserValidator {
             name: 'required|max:200',
             email: 'required|email|max:200',
             pass: 'required|min:6',
-            active: 'numeric',
-            permission_id: 'numeric',
+            active: 'numeric|in:0,1',
+            permission_id: 'required|numeric'
         };
         return Validator.validate(data, rules);
     }
 
     static validateUpdate(data) {
         const rules = {
-            name: 'max:200',
-            email: 'email|max:200',
-            pass: 'min:6',
-            active: 'numeric',
-            permission_id: 'numeric',
+            name: 'required|max:200',
+            email: 'required|email|max:200',
+            pass: 'min:6|optional',
+            active: 'numeric|in:0,1',
+            permission_id: 'required|numeric'
         };
         return Validator.validate(data, rules);
     }

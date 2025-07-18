@@ -87,6 +87,8 @@ class CategoryController extends BaseController {
             }
 
             const data = req.body;
+            data.multiplo = data.multiplo ? 1 : 0;
+            data.fluxo = data.fluxo ? 1 : 0;
             
             await Category.insert(data);
             
@@ -117,6 +119,8 @@ class CategoryController extends BaseController {
             }
 
             const data = req.body;
+            data.multiplo = data.multiplo ? 1 : 0;
+            data.fluxo = data.fluxo ? 1 : 0;
             await Category.update(req.params.id, data);
             
             await BaseController.flashSuccess(req, 'categories', 'Categoria atualizada com sucesso!');

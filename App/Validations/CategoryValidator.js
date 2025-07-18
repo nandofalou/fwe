@@ -5,8 +5,8 @@ class CategoryValidator extends Validator {
         const rules = {
             name: 'required|string|max:200',
             code: 'numeric|optional',
-            multiplo: 'numeric|optional|in:0,1',
-            fluxo: 'numeric|optional',
+            multiplo: 'optional',
+            fluxo: 'optional',
             external_id: 'numeric|optional',
             type: 'string|optional|in:TICKET,CREDENCIADO,COLABORADOR'
         };
@@ -17,8 +17,8 @@ class CategoryValidator extends Validator {
         const rules = {
             name: 'string|optional|max:200',
             code: 'numeric|optional',
-            multiplo: 'numeric|optional|in:0,1',
-            fluxo: 'numeric|optional',
+            multiplo: 'optional',
+            fluxo: 'optional',
             external_id: 'numeric|optional',
             type: 'string|optional|in:TICKET,CREDENCIADO,COLABORADOR'
         };

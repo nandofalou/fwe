@@ -1,3 +1,4 @@
+const SessionMiddleware = require('../../Middlewares/SessionMiddleware');
 const AuthController = require('../../Controllers/AuthController');
 const DashboardController = require('../../Controllers/DashboardController');
 const DocsController = require('../../Controllers/DocsController');
@@ -6,7 +7,10 @@ const CategoryViewController = require('../../Controllers/CategoryController');
 const TicketController = require('../../Controllers/TicketController');
 const ExampleController = require('../../Controllers/ExampleController');
 const HomeController = require('../../Controllers/HomeController');
-const SessionMiddleware = require('../../Middlewares/SessionMiddleware');
+const UserController = require('../../Controllers/UserController');
+
+const CategoryGroupController = require('../../Controllers/CategoryGroupController');
+const TerminalController = require('../../Controllers/TerminalController');
 
 /**
  * Registra todas as rotas web (páginas)
@@ -62,6 +66,36 @@ function registerWebRoutes(router) {
         ticketRouter.get('/edit/:id', TicketController.edit);
         ticketRouter.post('/', TicketController.store);
         ticketRouter.post('/:id', TicketController.update);
+    });
+
+    // Rotas de grupos (views) com SessionMiddleware
+    router.group('/group', [SessionMiddleware], groupRouter => {
+        groupRouter.get('/', CategoryGroupController.index);
+        groupRouter.get('/search', CategoryGroupController.search);
+        groupRouter.get('/edit', CategoryGroupController.edit);
+        groupRouter.get('/edit/:id', CategoryGroupController.edit);
+        groupRouter.post('/', CategoryGroupController.store);
+        groupRouter.post('/:id', CategoryGroupController.update);
+    });
+
+    // Rotas de equipamentos (views) com SessionMiddleware
+    router.group('/device', [SessionMiddleware], deviceRouter => {
+        deviceRouter.get('/', TerminalController.index);
+        deviceRouter.get('/search', TerminalController.search);
+        deviceRouter.get('/edit', TerminalController.edit);
+        deviceRouter.get('/edit/:id', TerminalController.edit);
+        deviceRouter.post('/', TerminalController.store);
+        deviceRouter.post('/:id', TerminalController.update);
+    });
+
+    // Rotas de usuários (views) com SessionMiddleware
+    router.group('/user', [SessionMiddleware], userRouter => {
+        userRouter.get('/', UserController.index);
+        userRouter.get('/edit', UserController.edit);
+        userRouter.get('/edit/:id', UserController.edit);
+        userRouter.post('/', UserController.store);
+        userRouter.post('/:id', UserController.update);
+        userRouter.post('/:id/delete', UserController.delete);
     });
 }
 

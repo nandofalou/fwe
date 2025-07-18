@@ -1,0 +1,32 @@
+<!-- DataTables para Usuários -->
+<script src="<%= base_url() %>/assets/js/vendor.datatables.js"></script>
+<script>
+$(document).ready(function() {
+    $('#usersTable').dataTable({
+        pageLength: 10,
+        order: [[0, 'desc']],
+        language: {
+            emptyTable: "Nenhum registro encontrado.",
+            info: "Exibindo _START_ até _END_ de _TOTAL_ registros",
+            infoEmpty: "Exibindo 0 até 0 de 0 registros",
+            infoFiltered: "(filtrados de _MAX_ no total)",
+            thousands: ",",
+            lengthMenu: "Exibindo _MENU_ registros",
+            loadingRecords: "Carregando...",
+            processing: "Processando...",
+            search: "Busca:",
+            zeroRecords: "Nenhum registro encontrado.",
+            paginate: {
+                first: "Primeiro",
+                last: "Ultimo",
+                next: "Prox.",
+                previous: "Ant."
+            },
+            aria: {
+                sortAscending: ": ativar para ordenar crescente",
+                sortDescending: ": ativar para ordenar decrescente"
+            }
+        }
+    });
+});
+</script> 

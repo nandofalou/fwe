@@ -1,3 +1,8 @@
+<!-- HEADER PRINCIPAL -->
+<header class="mt-lg-n6 mb-4">
+    <h1 class="h4 mb-0">Cadastro de Categorias</h1>
+</header>
+
 <!-- Flash Messages -->
 <% if (hasFlash('categories')) { %>
     <div class="alert alert-<%= getFlash('categories').type %> alert-dismissible fade show" role="alert">
@@ -55,20 +60,19 @@
                     
                     <div class="col-md-4 mb-3">
                         <label for="multiplo" class="form-label">Múltiplo</label>
-                        <select class="form-select" id="multiplo" name="multiplo">
-                            <option value="1" <%= category && category.multiplo == 1 ? 'selected' : '' %>>Sim</option>
-                            <option value="0" <%= category && category.multiplo == 0 ? 'selected' : '' %>>Não</option>
-                        </select>
+                        <label class="d-flex align-items-center mb-3">
+                            <input class="d-none-cloaked" type="checkbox" name="multiplo" id="multiplo" value="1" <%= category && category.multiplo == 1 ? 'checked' : '' %>>
+                            <i class="switch-icon switch-icon-primary switch-icon-xs"></i>
+                            <span class="px-3 user-select-none">Acesso multiplo</span>
+                        </label>
                     </div>
-                    
                     <div class="col-md-4 mb-3">
                         <label for="fluxo" class="form-label">Fluxo</label>
-                        <input type="number" 
-                               class="form-control" 
-                               id="fluxo" 
-                               name="fluxo" 
-                               value="<%= category ? category.fluxo : 0 %>"
-                               placeholder="0">
+                        <label class="d-flex align-items-center mb-3">
+                            <input class="d-none-cloaked" type="checkbox" name="fluxo" id="fluxo" value="1" <%= category && category.fluxo == 1 ? 'checked' : '' %>>
+                            <i class="switch-icon switch-icon-primary switch-icon-xs"></i>
+                            <span class="px-3 user-select-none">Fluxo de acesso</span>
+                        </label>
                     </div>
                 </div>
                 

@@ -9,7 +9,13 @@ class Terminal extends BaseModel {
             'pin', 'ip', 'model', 'name', 'plataform', 'category_group_id',
             'active', 'created_at', 'updated_at', 'deleted_at'
         ];
+
+        this.models = [
+            'CATRACA', 'APP', 'OUTROS'
+        ];
     }
+
+
 }
 
 module.exports = Terminal; 
