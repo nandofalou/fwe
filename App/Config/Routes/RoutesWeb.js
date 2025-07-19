@@ -78,6 +78,10 @@ function registerWebRoutes(router) {
         groupRouter.post('/:id', CategoryGroupController.update);
     });
 
+    // Associação de categorias ao grupo
+    router.get('/group/:id/category', CategoryGroupController.category);
+    router.post('/group/:id/category', CategoryGroupController.associateCategory);
+
     // Rotas de equipamentos (views) com SessionMiddleware
     router.group('/device', [SessionMiddleware], deviceRouter => {
         deviceRouter.get('/', TerminalController.index);

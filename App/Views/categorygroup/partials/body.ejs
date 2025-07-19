@@ -31,7 +31,21 @@
                             <th></th>
                         </tr>
                     </thead>
-                    <tbody></tbody>
+                    <tbody>
+                        <% groups.forEach(function(group) { %>
+                            <tr>
+                                <td><%= group.id %></td>
+                                <td><%= group.name %></td>
+                                <td>
+                                    <a href="<%= base_url('group/edit/' + group.id) %>" class="btn btn-sm btn-outline-primary"><i class="fi fi-pencil"></i></a>
+                                    <form method="POST" action="<%= base_url('group/' + group.id) %>" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este grupo?');">
+                                        <button type="submit" class="btn btn-sm btn-danger"><i class="fi fi-thrash"></i></button>
+                                    </form>
+                                    <a href="<%= base_url('group/' + group.id + '/category') %>" class="btn btn-sm btn-secondary" title="Associar Categorias"><i class="fi fi-gears"></i></a>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
                 </table>
             </div>
         </div>
