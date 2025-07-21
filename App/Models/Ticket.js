@@ -23,9 +23,7 @@ class Ticket extends BaseModel {
                 event.name as eventName,
                 category.name as categoryName,
                 ticket.active,
-                ticket.master,
-                ticket.extrafield1,
-                '' as image
+                ticket.master
             `)
             .join('event', 'event.id = ticket.event_id')
             .join('category', 'category.id = ticket.category_id');

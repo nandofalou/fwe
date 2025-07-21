@@ -40,9 +40,9 @@
                 <div class="col-md-3">
                     <label>Status</label>
                     <select class="form-select filters" id="filter_status" name="status">
-                        <option value="">Todos</option>
-                        <option value="1" <%=filter.status==1 ? 'selected' : '' %>>Ativo</option>
-                        <option value="0" <%=filter.status==0 ? 'selected' : '' %>>Inativo</option>
+                        <option value="" selected>Todos</option>
+                        <option value="1">Ativo</option>
+                        <option value="0">Inativo</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -60,8 +60,7 @@
                             <th>Ticket</th>
                             <th>Evento / Categoria</th>
                             <th>Status</th>
-                            <th>Atividade</th>
-                            <th>Image</th>
+                            <th>Master</th>
                             <th></th>
                         </tr>
                     </thead>

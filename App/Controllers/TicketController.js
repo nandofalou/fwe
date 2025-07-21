@@ -68,8 +68,8 @@ class TicketController extends BaseController {
                             'event.name',
                             'category.name',
                             'ticket.active',
-                            'ticket.master',
-                            'ticket.extrafield1'
+                            'ticket.master'
+                            
                         ];
                         const orderBy = columnsOrder[colName];
                         builder.orderBy(orderBy, dir);
@@ -97,8 +97,39 @@ class TicketController extends BaseController {
             const count = await builder.countQuery("ticket.id", perPage);
             const tickets = await builder.get();
             
-            const columns = ['id', 'code', 'eventName', 'categoryName', 'active', 'master', 'image'];
-            const data = tickets.map(item => columns.map(col => item[col]));
+            const columns = ['id', 'code', 'eventName', 'active', 'master'];
+            
+            const data = tickets.map(item => {
+                const row = columns.map(col => {
+                    if (col === 'eventName') {
+                        return `${item.eventName}<br/>${item.categoryName}`;
+                    }
+                    if (col === 'active') {
+                        if(item.active === 1) {
+                            return `<span class="badge bg-success">Ativo</span>`
+                        } else {
+                            return `<span class="badge bg-danger">inativo</span>`
+                        }
+                    }
+                    if (col === 'master') {
+                        if(item.master === 1) {
+                            return `<span class="badge bg-success">Ativo</span>`
+                        } else {
+                            return `<span class="badge bg-danger">inativo</span>`
+                        }
+                    }
+                    return item[col];
+                });
+                row.push(`<div class="btn-group" role="group">
+                            <a href="${BaseController.base_url('ticket/edit')}/${item.id}" class="btn btn-sm btn-outline-primary btn-edit">
+                                <i class="fi fi-pencil"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-danger js-ajax-confirm" title="Excluir" onclick="confirmDelete(1, 'teste abc')">
+                                <i class="fi fi-thrash"></i>
+                            </button>
+                        </div>`);
+                return row;
+            });
 
             // 3. Retorna para a view/API com objeto pager
             return res.json({
@@ -106,7 +137,6 @@ class TicketController extends BaseController {
                 recordsFiltered: count.rows,
                 recordsTotal: count.rows,
                 perPage: count.perPage,
-                // currentPage: 1,
                 pagination: count.pages
             });
         } catch (error) {
