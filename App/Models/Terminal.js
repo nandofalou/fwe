@@ -15,6 +15,25 @@ class Terminal extends BaseModel {
         ];
     }
 
+    /**
+     * Retorna o builder padrão para DataTable de tickets
+     */
+    static getTerminal() {
+        return this
+            .select([
+                'terminal.id', 
+                'terminal.pin', 
+                'terminal.name', 
+                'terminal.category_group_id', 
+                'category_group.name as groupName'
+            ])
+            .join(
+                'category_group', 
+                'category_group.id = terminal.category_group_id',
+                'INNER')
+            .where('terminal.active', 1);
+    }
+
 
 }
 

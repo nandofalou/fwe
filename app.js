@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const routes = require('./App/Config/Routes/Routes');
 const path = require('path');
-const engine = require('ejs-mate');
 
 const app = express();
 
@@ -14,6 +13,14 @@ app.use(express.urlencoded({ extended: true }));
 // Rotas
 app.use(routes);
 
+// Middleware para rotas não encontradas (404)
+app.use('*', (req, res) => {
+    res.status(404).json({
+        error: true,
+        message: 'Rota não encontrada'
+    });
+});
+
 // Tratamento de erros
 app.use((err, req, res, next) => {
     console.error(err.stack);
@@ -23,7 +30,6 @@ app.use((err, req, res, next) => {
     });
 });
 
-app.engine('ejs', engine);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'App', 'Views'));
 app.use(express.static(path.join(__dirname, 'Public')));

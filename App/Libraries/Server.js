@@ -50,6 +50,14 @@ class Server {
         try {
             const routes = require('../Config/Routes/Routes');
             this.app.use(routes);
+            
+            // Middleware para rotas não encontradas (404)
+            this.app.use('*', (req, res) => {
+                res.status(404).json({
+                    error: true,
+                    message: 'Rota não encontrada'
+                });
+            });
         } catch (error) {
             console.error('Erro ao carregar rotas:', error);
             this.app.use((req, res) => {

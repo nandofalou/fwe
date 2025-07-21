@@ -2,6 +2,7 @@ const AuthApiController = require('../../Controllers/Api/AuthController');
 const UserController = require('../../Controllers/Api/UserController');
 const CategoryController = require('../../Controllers/Api/CategoryController');
 const EventController = require('../../Controllers/Api/EventController');
+const AcessoController = require('../../Controllers/Api/AcessoController');
 const AuthMiddleware = require('../../Middlewares/AuthMiddleware');
 
 /**
@@ -41,6 +42,12 @@ function registerApiRoutes(router) {
         // protectedApiRouter.get('/categories/code/:code', CategoryController.findByCode);
         // protectedApiRouter.get('/categories/name/:name', CategoryController.findByName);
     });
+
+    router.group('/api/acesso', [], acesso => {
+        
+        acesso.post('/', AcessoController.acesso);
+        acesso.post('/register', AcessoController.register);
+    })
 }
 
 module.exports = registerApiRoutes; 

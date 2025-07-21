@@ -11,6 +11,7 @@ const UserController = require('../../Controllers/UserController');
 
 const CategoryGroupController = require('../../Controllers/CategoryGroupController');
 const TerminalController = require('../../Controllers/TerminalController');
+// const AcessoController = require('../../Controllers/Api/AcessoController');
 
 /**
  * Registra todas as rotas web (páginas)
@@ -101,6 +102,7 @@ function registerWebRoutes(router) {
         userRouter.post('/:id', UserController.update);
         userRouter.post('/:id/delete', UserController.delete);
     });
+
 }
 
 module.exports = registerWebRoutes; 

@@ -21,6 +21,7 @@ class BaseModel {
         this._limit = null;
         this._offset = null;
         this._params = [];
+        this._selectParams = [];
         this._joins = [];
         this._groupBy = '';
         this._having = [];
@@ -73,11 +74,12 @@ class BaseModel {
      * INNER JOIN
      * @param {string} table - Tabela para fazer join
      * @param {string} condition - Condição do join (ex: 'users.id = posts.user_id')
+     * @param {string} type - INNER|LEFT|OUTER|RIGHT|FULL OUTER
      * @returns {BaseModel} - Para encadeamento
      */
-    static join(table, condition) {
+    static join(table, condition, type = 'INNER') {
         this.instance._joins.push({
-            type: 'INNER',
+            type,
             table: table,
             condition: condition
         });
@@ -217,6 +219,50 @@ class BaseModel {
         return this;
     }
 
+    /**
+     * SELECT RAW
+     * @param {string} rawSql - SQL cru para o SELECT
+     * @param {array} params - Parâmetros opcionais para o SELECT
+     * @returns {BaseModel} - Para encadeamento
+     */
+    static selectRaw(rawSql, params = []) {
+        this.instance._select = rawSql;
+        this.instance._selectParams = params || [];
+        return this;
+    }
+
+    /**
+     * WHERE RAW
+     * @param {string} rawSql - SQL cru para o WHERE
+     * @param {array} params - Parâmetros opcionais
+     * @returns {BaseModel} - Para encadeamento
+     */
+    static whereRaw(rawSql, params = []) {
+        this.instance._where.push({ raw: true, sql: rawSql, params });
+        return this;
+    }
+
+    /**
+     * JOIN RAW
+     * @param {string} rawSql - SQL cru para o JOIN
+     * @returns {BaseModel} - Para encadeamento
+     */
+    static joinRaw(rawSql) {
+        this.instance._joins.push({ type: 'RAW', sql: rawSql });
+        return this;
+    }
+
+    /**
+     * HAVING RAW
+     * @param {string} rawSql - SQL cru para o HAVING
+     * @param {array} params - Parâmetros opcionais
+     * @returns {BaseModel} - Para encadeamento
+     */
+    static havingRaw(rawSql, params = []) {
+        this.instance._having.push({ raw: true, sql: rawSql, params });
+        return this;
+    }
+
     // --- Execução ---
     static async find(id) {
         this.instance.resetBuilder();
@@ -316,20 +362,32 @@ class BaseModel {
     // --- SQL Builder ---
     static buildSelect() {
         let sql = `SELECT ${this.instance._select} FROM ${this.tableName()}`;
-        
+
         // Adiciona JOINs
         if (this.instance._joins.length > 0) {
             this.instance._joins.forEach(join => {
-                if (join.type === 'CROSS') {
+                if (join.type === 'RAW') {
+                    sql += ` ${join.sql}`;
+                } else if (join.type === 'CROSS') {
                     sql += ` CROSS JOIN ${join.table}`;
                 } else {
                     sql += ` ${join.type} JOIN ${join.table} ON ${join.condition}`;
                 }
             });
         }
-        
+
+        // Parâmetros acumulados
+        let params = [];
+
+        if (this.instance._selectParams && this.instance._selectParams.length > 0) {
+            params.push(...this.instance._selectParams);
+        }
+
         if (this.instance._where.length > 0) {
             const whereClauses = this.instance._where.map(w => {
+                if (w.raw) {
+                    return w.sql;
+                }
                 if (w.op === 'IN' || w.op === 'NOT IN') {
                     const placeholders = w.value.map(() => '?').join(', ');
                     return `${w.key} ${w.op} (${placeholders})`;
@@ -342,13 +400,76 @@ class BaseModel {
                 }
             }).join(' AND ');
             sql += ` WHERE ${whereClauses}`;
-            // Monta os parâmetros na ordem correta
-            this.instance._params = [];
+            // Parâmetros do WHERE
             this.instance._where.forEach(w => {
-                if (w.op === 'IN' || w.op === 'NOT IN') {
-                    this.instance._params.push(...w.value);
+                if (w.raw) {
+                    params.push(...(w.params || []));
+                } else if (w.op === 'IN' || w.op === 'NOT IN') {
+                    params.push(...w.value);
                 } else if (w.op === 'IS NULL' || w.op === 'IS NOT NULL') {
                     // Não adiciona parâmetro
+                } else {
+                    params.push(w.value);
+                }
+            });
+        }
+
+        // Adiciona GROUP BY
+        if (this.instance._groupBy) {
+            sql += ` GROUP BY ${this.instance._groupBy}`;
+        }
+
+        // Adiciona HAVING
+        if (this.instance._having.length > 0) {
+            const havingClauses = this.instance._having.map(h => h.raw ? h.sql : h.condition).join(' AND ');
+            sql += ` HAVING ${havingClauses}`;
+            // Parâmetros do HAVING
+            this.instance._having.forEach(h => {
+                if (h.raw) {
+                    params.push(...(h.params || []));
+                } else {
+                    params.push(...h.params);
+                }
+            });
+        }
+
+        if (this.instance._orderBy) sql += ` ${this.instance._orderBy}`;
+        if (this.instance._limit) {
+            sql += ` LIMIT ${this.instance._limit}`;
+            if (this.instance._offset) sql += ` OFFSET ${this.instance._offset}`;
+        }
+        this.instance._params = params;
+        return sql;
+    }
+
+    static buildCount(selectCount) {
+        let sql = `SELECT ${selectCount} FROM ${this.tableName()}`;
+        
+        // Adiciona JOINs
+        if (this.instance._joins.length > 0) {
+            this.instance._joins.forEach(join => {
+                if (join.type === 'RAW') {
+                    sql += ` ${join.sql}`;
+                } else if (join.type === 'CROSS') {
+                    sql += ` CROSS JOIN ${join.table}`;
+                } else {
+                    sql += ` ${join.type} JOIN ${join.table} ON ${join.condition}`;
+                }
+            });
+        }
+        
+        if (this.instance._where.length > 0) {
+            const whereClauses = this.instance._where.map(w => {
+                if (w.raw) {
+                    return w.sql;
+                }
+                return `${w.key} ${w.op} ?`;
+            }).join(' AND ');
+            sql += ` WHERE ${whereClauses}`;
+            this.instance._params = [];
+            this.instance._where.forEach(w => {
+                if (w.raw) {
+                    this.instance._params.push(...(w.params || []));
                 } else {
                     this.instance._params.push(w.value);
                 }
@@ -362,54 +483,15 @@ class BaseModel {
         
         // Adiciona HAVING
         if (this.instance._having.length > 0) {
-            const havingClauses = this.instance._having.map(h => h.condition).join(' AND ');
+            const havingClauses = this.instance._having.map(h => h.raw ? h.sql : h.condition).join(' AND ');
             sql += ` HAVING ${havingClauses}`;
             // Adiciona parâmetros do HAVING
             this.instance._having.forEach(h => {
-                this.instance._params.push(...h.params);
-            });
-        }
-        
-        if (this.instance._orderBy) sql += ` ${this.instance._orderBy}`;
-        if (this.instance._limit) {
-            sql += ` LIMIT ${this.instance._limit}`;
-            if (this.instance._offset) sql += ` OFFSET ${this.instance._offset}`;
-        }
-        return sql;
-    }
-
-    static buildCount(selectCount) {
-        let sql = `SELECT ${selectCount} FROM ${this.tableName()}`;
-        
-        // Adiciona JOINs
-        if (this.instance._joins.length > 0) {
-            this.instance._joins.forEach(join => {
-                if (join.type === 'CROSS') {
-                    sql += ` CROSS JOIN ${join.table}`;
+                if (h.raw) {
+                    this.instance._params.push(...(h.params || []));
                 } else {
-                    sql += ` ${join.type} JOIN ${join.table} ON ${join.condition}`;
+                    this.instance._params.push(...h.params);
                 }
-            });
-        }
-        
-        if (this.instance._where.length > 0) {
-            const whereClauses = this.instance._where.map(w => `${w.key} ${w.op} ?`).join(' AND ');
-            sql += ` WHERE ${whereClauses}`;
-            this.instance._params = this.instance._where.map(w => w.value);
-        }
-        
-        // Adiciona GROUP BY
-        if (this.instance._groupBy) {
-            sql += ` GROUP BY ${this.instance._groupBy}`;
-        }
-        
-        // Adiciona HAVING
-        if (this.instance._having.length > 0) {
-            const havingClauses = this.instance._having.map(h => h.condition).join(' AND ');
-            sql += ` HAVING ${havingClauses}`;
-            // Adiciona parâmetros do HAVING
-            this.instance._having.forEach(h => {
-                this.instance._params.push(...h.params);
             });
         }
         

@@ -192,3 +192,29 @@ const tickets = await builder.get();
 
 **Dica:**
 Use este método para obter dados de paginação antes de buscar os registros com `.get()`, especialmente em APIs e DataTables. 
+
+# QueryBuilder - Métodos RAW
+
+Agora o QueryBuilder suporta métodos para inserir SQL "cru" (raw) em partes específicas da query, inspirado no CodeIgniter 4. Use com responsabilidade!
+
+## selectRaw
+Permite definir o SELECT com SQL customizado e passar parâmetros opcionais para o SQL.
+
+```js
+// Exemplo simples
+User.selectRaw('id, name, (SELECT COUNT(*) FROM orders WHERE user_id = users.id) as order_count')
+    .where({ status: 'active' })
+    .get();
+
+// Exemplo com parâmetro:
+User.selectRaw('
+    id, name,
+    CASE WHEN ? BETWEEN startdate AND enddate THEN 1 ELSE 0 END as isActive
+', [DateHelper.now(true)])
+    .get();
+```
+
+## whereRaw
+Permite adicionar condições WHERE customizadas.
+
+```
