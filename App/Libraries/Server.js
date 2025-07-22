@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const fileUpload = require('express-fileupload');
 const Database = require('../Helpers/Database');
 const path = require('path');
 const ejs = require('ejs');
@@ -22,6 +23,7 @@ class Server {
         this.app.use(cors());
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
+        this.app.use(fileUpload());
         // Configura EJS como view engine (async: true para permitir await nas views)
         this.app.set('view engine', 'ejs');
         const isAsar = __dirname.includes('app.asar');

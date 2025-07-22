@@ -11,7 +11,6 @@ const UserController = require('../../Controllers/UserController');
 
 const CategoryGroupController = require('../../Controllers/CategoryGroupController');
 const TerminalController = require('../../Controllers/TerminalController');
-// const AcessoController = require('../../Controllers/Api/AcessoController');
 
 /**
  * Registra todas as rotas web (páginas)
@@ -61,12 +60,17 @@ function registerWebRoutes(router) {
 
     // Rotas de tickets (views) com SessionMiddleware
     router.group('/ticket', [SessionMiddleware], ticketRouter => {
+        ticketRouter.get('/generate', TicketController.generate);
+        ticketRouter.post('/generatetickets', TicketController.generateTickets);
+        ticketRouter.get('/import', TicketController.import);
+        ticketRouter.post('/importtickets', TicketController.importTickets);
         ticketRouter.get('/', TicketController.index);
         ticketRouter.get('/search', TicketController.search);
         ticketRouter.get('/edit', TicketController.edit);
         ticketRouter.get('/edit/:id', TicketController.edit);
         ticketRouter.post('/', TicketController.store);
         ticketRouter.post('/:id', TicketController.update);
+        
     });
 
     // Rotas de grupos (views) com SessionMiddleware

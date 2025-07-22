@@ -36,44 +36,40 @@ class TicketController extends BaseController {
      */
     static async search(req, res) {
         try {
-            let page = parseInt(req.query.page) || 1;
+            let page = 1;
+            let start = parseInt(req.query.start) || 0;
             let perPage = parseInt(req.query.perPage) || 10;
             let draw = 0;
             let searchValue = '';
 
             // draw = parseInt(req.query.draw) || 0;
             const builder = Ticket.dataTableQuery();
-
-            if (req.query.start !== undefined && req.query.length !== undefined) {
                 
-                perPage = parseInt(req.query.length) || 10;
-                page = Math.floor((parseInt(req.query.start) || 0) / perPage) + 1;
-                draw = parseInt(req.query.draw) || 0;
+            perPage = parseInt(req.query.length) || 10;
+            page = Math.floor((parseInt(req.query.start) || 0) / perPage) + 1;
+            draw = parseInt(req.query.draw) || 0;
 
-                builder.limit(perPage, req.query.start);
+            if (req.query.search && req.query.search.value) {
+                searchValue = req.query.search.value.trim();
+                builder.like('concat(ticket.code,ticket.fullname,ticket.extrafield1)', searchValue)
+            }
 
-                if (req.query.search && req.query.search.value) {
-                    searchValue = req.query.search.value.trim();
-                    builder.like('concat(ticket.code,ticket.fullname,ticket.extrafield1)', searchValue)
-                }
-
-                if (req.query.order && req.query.columns) {
-                    const colIdx = parseInt(req.query.order[0].column);
-                    const colName = req.query.columns[colIdx].data || req.query.columns[colIdx].name;
-                    const dir = req.query.order[0].dir && req.query.order[0].dir.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
-                    if (colName) {
-                        const columnsOrder = [
-                            'ticket.id',
-                            'ticket.code',
-                            'event.name',
-                            'category.name',
-                            'ticket.active',
-                            'ticket.master'
-                            
-                        ];
-                        const orderBy = columnsOrder[colName];
-                        builder.orderBy(orderBy, dir);
-                    }
+            if (req.query.order && req.query.columns) {
+                const colIdx = parseInt(req.query.order[0].column);
+                const colName = req.query.columns[colIdx].data || req.query.columns[colIdx].name;
+                const dir = req.query.order[0].dir && req.query.order[0].dir.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+                if (colName) {
+                    const columnsOrder = [
+                        'ticket.id',
+                        'ticket.code',
+                        'event.name',
+                        'category.name',
+                        'ticket.active',
+                        'ticket.master'
+                        
+                    ];
+                    const orderBy = columnsOrder[colName];
+                    builder.orderBy(orderBy, dir);
                 }
             }
 
@@ -95,6 +91,9 @@ class TicketController extends BaseController {
 
             // 2. Executa a paginação
             const count = await builder.countQuery("ticket.id", perPage);
+
+            builder.limit(perPage, req.query.start);
+
             const tickets = await builder.get();
             
             const columns = ['id', 'code', 'eventName', 'active', 'master'];
@@ -195,6 +194,245 @@ class TicketController extends BaseController {
     }
 
     /**
+     * Exibe formulário para geração de tickets
+     */
+    static async import(req, res) {
+        
+        const sessionData = BaseController.loadSession(req);
+        if (!sessionData.user) {
+            return res.redirect('/auth');
+        }
+        try {
+            const events = await Event.get();
+            const categories = await Category.get();
+            return BaseController.view('ticket/import', {
+                title: 'Importar Tickets',
+                events,
+                categories
+            }, res, req);
+        } catch (error) {
+            TicketController.log.error('Erro ao carregar tela de importação de tickets', { error: error.message });
+            await BaseController.flashError(req, 'tickets', 'Erro ao carregar tela de importação de tickets');
+            return res.redirect('/');
+        }
+    }
+
+    /**
+     * Processa geração de tickets
+     */
+    static async importTickets(req, res) {
+        const sessionData = BaseController.loadSession(req);
+        if (!sessionData.user) {
+            return res.redirect('/auth');
+        }
+
+        if (!req.files || Object.keys(req.files).length === 0) {
+            await BaseController.flashError(req, 'tickets', 'Nenhum arquivo foi enviado.');
+            return res.status(400).send('Nenhum arquivo foi enviado.');
+        }
+        
+        try {
+            const { event_id, category_id, active, master } = req.body;
+
+            if (!event_id || !category_id || !req.files.file) {
+                await BaseController.flashError(req, 'tickets', 'Preencha todos os campos obrigatórios e envie um arquivo CSV.');
+                return res.redirect('/ticket/import');
+            }
+
+            const arquivo = req.files.file;
+            const buffer = arquivo.data;
+            const filePath = buffer.toString('utf-8');
+
+            //const filePath = req.file.path;
+            // const content = fs.readFileSync(filePath, 'utf8');
+            const content = filePath;
+            const linhas = content.split(/\r?\n/).filter(l => l.trim().length > 0);
+            let total = linhas.length;
+            let importados = 0;
+            let erros = 0;
+            for (let linha of linhas) {
+                // Esperado: Ticket;Nome;Email;RG;CPF;CE1;Status;Mestre
+                // Exemplo: "03254521";"Fulano";"";"";"campoExtra1";"1";"0"
+                const campos = linha.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+                if (campos.length < 1) {
+                    erros++;
+                    continue;
+                }
+                const code = campos[0];
+                if (!code) {
+                    erros++;
+                    continue;
+                }
+                // Verifica duplicidade
+                const existe = (await Ticket.where({ code }).get()).length > 0;
+                if (existe) {
+                    erros++;
+                    continue;
+                }
+                const data = {
+                    event_id,
+                    category_id,
+                    code,
+                    active: typeof active !== 'undefined' ? (active ? 1 : 0) : (campos[6] ? parseInt(campos[6]) : 1),
+                    master: typeof master !== 'undefined' ? (master ? 1 : 0) : (campos[7] ? parseInt(campos[7]) : 0),
+                    extrafield1: campos[5] || '',
+                    user_id: sessionData.user.id,
+                    fullname: campos[1] || '',
+                    email: campos[2] || '',
+                    extrafield2: campos[3] || '', // RG
+                    extrafield3: campos[4] || ''  // CPF
+                };
+                try {
+                    await Ticket.insert(data);
+                    importados++;
+                } catch (e) {
+                    erros++;
+                }
+            }
+            // Remove arquivo temporário
+            //fs.unlinkSync(filePath);
+            await BaseController.flashWarning(req, 'tickets', `Arquivo: ${total} linhas. Tickets importados: ${importados}. Não importados: ${erros}.`);
+            return res.redirect('/ticket/import');
+        } catch (error) {
+            TicketController.log.error('Erro ao importar tickets', { error: error.message });
+            await BaseController.flashError(req, 'tickets', 'Erro ao importar tickets');
+            return res.redirect('/ticket/import');
+        }
+    }
+
+    /**
+     * Gera código aleatório de ticket
+     */
+    static generateCode(size = 8) {
+        let codigo = '';
+        while (codigo.length < size) {
+            codigo += Math.floor(Math.random() * 10);
+        }
+        // Remove zeros à esquerda
+        codigo = codigo.replace(/^0+/, '');
+        // Se ficou vazio, força um dígito diferente de zero no início
+        if (!codigo || codigo.length < size) {
+            codigo = (Math.floor(Math.random() * 9) + 1) + codigo;
+            codigo = codigo.slice(0, size);
+        }
+        return codigo;
+    }
+
+    /**
+     * Exibe formulário para geração de tickets
+     */
+    static async generate(req, res) {
+        
+        const sessionData = BaseController.loadSession(req);
+        if (!sessionData.user) {
+            return res.redirect('/auth');
+        }
+        try {
+            const events = await Event.get();
+            const categories = await Category.get();
+            return BaseController.view('ticket/generate', {
+                title: 'Gerar Tickets',
+                events,
+                categories
+            }, res, req);
+        } catch (error) {
+            TicketController.log.error('Erro ao carregar tela de geração de tickets', { error: error.message });
+            await BaseController.flashError(req, 'tickets', 'Erro ao carregar tela de geração de tickets');
+            return res.redirect('/');
+        }
+    }
+
+    /**
+     * Processa geração de tickets
+     */
+    static async generateTickets(req, res) {
+       
+        const sessionData = BaseController.loadSession(req);
+        if (!sessionData.user) {
+            return res.redirect('/auth');
+        }
+        try {
+            const { event_id, category_id, quantidade, tamanho, active, master, campoextra1 } = req.body;
+            const qtd = parseInt(quantidade) || 0;
+            const size = parseInt(tamanho) || 8;
+            if (!event_id || !category_id || qtd <= 0 || size <= 0) {
+                await BaseController.flashError(req, 'tickets', 'Preencha todos os campos obrigatórios corretamente.');
+                return res.redirect('/ticket/generate');
+            }
+            let contErros = 0;
+            let gerados = 0;
+            for (let i = 0; i < qtd; i++) {
+                let codigo;
+                let tentativas = 0;
+                let jaExiste = false;
+                do {
+                    codigo = TicketController.generateCode(size);
+                    tentativas++;
+                    // Não pode começar com zero
+                    const resultado = await Ticket.where({code: codigo}).get();
+                    jaExiste = resultado.length > 0;
+                } while ((codigo.startsWith('0') || jaExiste) && tentativas < 10);
+                if (tentativas >= 10) {
+                    contErros++;
+                    continue;
+                }
+                const data = {
+                    event_id,
+                    category_id,
+                    code: codigo,
+                    active: active ? 1 : 0,
+                    master: master ? 1 : 0,
+                    extrafield1: campoextra1 || '',
+                    user_id: sessionData.user.id
+                };
+                try {
+                    await Ticket.insert(data);
+                    gerados++;
+                } catch (e) {
+                    contErros++;
+                }
+            }
+            if (contErros > 0) {
+                await BaseController.flashWarning(req, 'tickets', `${gerados} tickets gerados com sucesso. ${contErros} não foram gerados por duplicidade ou erro.`);
+            } else {
+                await BaseController.flashSuccess(req, 'tickets', `${gerados} tickets gerados com sucesso!`);
+            }
+            return res.redirect('/ticket/generate');
+        } catch (error) {
+            TicketController.log.error('Erro ao gerar tickets', { error: error.message });
+            await BaseController.flashError(req, 'tickets', 'Erro ao gerar tickets');
+            return res.redirect('/ticket/generate');
+        }
+    }
+
+    /**
+     * Gera código aleatório de ticket
+     */
+    static generateCode(size = 8) {
+        let codigo = '';
+        while (codigo.length < size) {
+            codigo += Math.floor(Math.random() * 10);
+        }
+        // Remove zeros à esquerda
+        codigo = codigo.replace(/^0+/, '');
+        // Se ficou vazio, força um dígito diferente de zero no início
+        if (!codigo || codigo.length < size) {
+            codigo = (Math.floor(Math.random() * 9) + 1) + codigo;
+            codigo = codigo.slice(0, size);
+        }
+        return codigo;
+    }
+
+    
+
+    /**
+     * Busca ticket por código
+     */
+    static async findByCode(code) {
+        return await Ticket.where({ code }).first();
+    }
+
+    /**
      * Cria um novo ticket
      */
     static async store(req, res) {
@@ -245,4 +483,5 @@ class TicketController extends BaseController {
     }
 }
 
+module.exports = TicketController; 
 module.exports = TicketController; 
