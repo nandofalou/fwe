@@ -321,42 +321,88 @@ class BaseModel {
         };
     }
 
-    static async insert(data) {
+    static async insert(data, priority = 'auto') {
         const fields = Object.keys(data).filter(f => this.instance.allowedFields.length === 0 || this.instance.allowedFields.includes(f));
         const values = fields.map(f => data[f]);
         const placeholders = fields.map(() => '?').join(',');
         const sql = `INSERT INTO ${this.tableName()} (${fields.join(',')}) VALUES (${placeholders})`;
-        const result = await this.instance.db.insert(sql, values);
+        const result = await this.instance.db.insert(sql, values, priority);
         this.instance.event.emit(`${this.tableName()}:created`, result);
         return result;
     }
 
-    static async update(id, data) {
+    static async update(id, data, priority = 'auto') {
         const fields = Object.keys(data).filter(f => this.instance.allowedFields.length === 0 || this.instance.allowedFields.includes(f));
         const values = fields.map(f => data[f]);
         const setClause = fields.map(f => `${f} = ?`).join(', ');
         const sql = `UPDATE ${this.tableName()} SET ${setClause} WHERE ${this.instance.primaryKey} = ?`;
-        await this.instance.db.update(sql, [...values, id]);
+        await this.instance.db.update(sql, [...values, id], priority);
         this.instance.event.emit(`${this.tableName()}:updated`, { id, ...data });
         return true;
     }
 
-    static async delete(id) {
+    static async delete(id, priority = 'auto') {
         if (this.instance.softDelete) {
             // Soft delete: marca deleted_at
             const sql = `UPDATE ${this.tableName()} SET deleted_at = ? WHERE ${this.instance.primaryKey} = ?`;
-            await this.instance.db.update(sql, [new Date(), id]);
+            await this.instance.db.update(sql, [new Date(), id], priority);
         } else {
             // Hard delete: remove do banco
             const sql = `DELETE FROM ${this.tableName()} WHERE ${this.instance.primaryKey} = ?`;
-            await this.instance.db.delete(sql, [id]);
+            await this.instance.db.delete(sql, [id], priority);
         }
         this.instance.event.emit(`${this.tableName()}:deleted`, id);
         return true;
     }
 
-    static async rawQuery(sql, params = []) {
-        return await this.instance.db.query(sql, params);
+    static async rawQuery(sql, params = [], priority = 'auto') {
+        return await this.instance.db.query(sql, params, priority);
+    }
+
+    /**
+     * Insere múltiplos registros em uma transação
+     * @param {Array} dataArray Array de objetos com dados
+     * @returns {Promise<Array>} Array com IDs dos registros inseridos
+     */
+    static async insertBatch(dataArray) {
+        if (!Array.isArray(dataArray) || dataArray.length === 0) {
+            return [];
+        }
+
+        return await this.instance.db.batchTransaction(async () => {
+            const results = [];
+            for (const data of dataArray) {
+                const fields = Object.keys(data).filter(f => this.instance.allowedFields.length === 0 || this.instance.allowedFields.includes(f));
+                const values = fields.map(f => data[f]);
+                const placeholders = fields.map(() => '?').join(',');
+                const sql = `INSERT INTO ${this.tableName()} (${fields.join(',')}) VALUES (${placeholders})`;
+                const result = await this.instance.db._insert(sql, values);
+                results.push(result);
+            }
+            return results;
+        });
+    }
+
+    /**
+     * Atualiza múltiplos registros em uma transação
+     * @param {Array} updates Array de objetos {id, data}
+     * @returns {Promise<boolean>} true se bem-sucedido
+     */
+    static async updateBatch(updates) {
+        if (!Array.isArray(updates) || updates.length === 0) {
+            return true;
+        }
+
+        return await this.instance.db.batchTransaction(async () => {
+            for (const { id, data } of updates) {
+                const fields = Object.keys(data).filter(f => this.instance.allowedFields.length === 0 || this.instance.allowedFields.includes(f));
+                const values = fields.map(f => data[f]);
+                const setClause = fields.map(f => `${f} = ?`).join(', ');
+                const sql = `UPDATE ${this.tableName()} SET ${setClause} WHERE ${this.instance.primaryKey} = ?`;
+                await this.instance.db._update(sql, [...values, id]);
+            }
+            return true;
+        });
     }
 
     // --- SQL Builder ---

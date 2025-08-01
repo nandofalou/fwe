@@ -66,7 +66,6 @@ class TicketController extends BaseController {
                         'category.name',
                         'ticket.active',
                         'ticket.master'
-                        
                     ];
                     const orderBy = columnsOrder[colName];
                     builder.orderBy(orderBy, dir);
@@ -243,13 +242,15 @@ class TicketController extends BaseController {
             const buffer = arquivo.data;
             const filePath = buffer.toString('utf-8');
 
-            //const filePath = req.file.path;
-            // const content = fs.readFileSync(filePath, 'utf8');
             const content = filePath;
             const linhas = content.split(/\r?\n/).filter(l => l.trim().length > 0);
             let total = linhas.length;
             let importados = 0;
             let erros = 0;
+
+            // Preparar dados para inserção em lote
+            const ticketsToInsert = [];
+            
             for (let linha of linhas) {
                 // Esperado: Ticket;Nome;Email;RG;CPF;CE1;Status;Mestre
                 // Exemplo: "03254521";"Fulano";"";"";"campoExtra1";"1";"0"
@@ -263,12 +264,14 @@ class TicketController extends BaseController {
                     erros++;
                     continue;
                 }
-                // Verifica duplicidade
+                
+                // Verifica duplicidade usando prioridade crítica
                 const existe = (await Ticket.where({ code }).get()).length > 0;
                 if (existe) {
                     erros++;
                     continue;
                 }
+                
                 const data = {
                     event_id,
                     category_id,
@@ -282,15 +285,21 @@ class TicketController extends BaseController {
                     extrafield2: campos[3] || '', // RG
                     extrafield3: campos[4] || ''  // CPF
                 };
+                
+                ticketsToInsert.push(data);
+            }
+
+            // Inserir em lote usando transação
+            if (ticketsToInsert.length > 0) {
                 try {
-                    await Ticket.insert(data);
-                    importados++;
+                    await Ticket.insertBatch(ticketsToInsert);
+                    importados = ticketsToInsert.length;
                 } catch (e) {
-                    erros++;
+                    erros += ticketsToInsert.length;
+                    TicketController.log.error('Erro na inserção em lote', { error: e.message });
                 }
             }
-            // Remove arquivo temporário
-            //fs.unlinkSync(filePath);
+
             await BaseController.flashWarning(req, 'tickets', `Arquivo: ${total} linhas. Tickets importados: ${importados}. Não importados: ${erros}.`);
             return res.redirect('/ticket/import');
         } catch (error) {
@@ -361,6 +370,10 @@ class TicketController extends BaseController {
             }
             let contErros = 0;
             let gerados = 0;
+
+            // Preparar dados para inserção em lote
+            const ticketsToInsert = [];
+            
             for (let i = 0; i < qtd; i++) {
                 let codigo;
                 let tentativas = 0;
@@ -385,13 +398,20 @@ class TicketController extends BaseController {
                     extrafield1: campoextra1 || '',
                     user_id: sessionData.user.id
                 };
+                ticketsToInsert.push(data);
+            }
+
+            // Inserir em lote usando transação
+            if (ticketsToInsert.length > 0) {
                 try {
-                    await Ticket.insert(data);
-                    gerados++;
+                    await Ticket.insertBatch(ticketsToInsert);
+                    gerados = ticketsToInsert.length;
                 } catch (e) {
-                    contErros++;
+                    contErros += ticketsToInsert.length;
+                    TicketController.log.error('Erro na inserção em lote', { error: e.message });
                 }
             }
+
             if (contErros > 0) {
                 await BaseController.flashWarning(req, 'tickets', `${gerados} tickets gerados com sucesso. ${contErros} não foram gerados por duplicidade ou erro.`);
             } else {
@@ -447,7 +467,8 @@ class TicketController extends BaseController {
                 return res.redirect('/ticket/edit');
             }
             const data = req.body;
-            await Ticket.insert(data);
+            // Usar prioridade crítica para operações de edição
+            await Ticket.insert(data, 'critical');
             await BaseController.flashSuccess(req, 'tickets', 'Ticket criado com sucesso!');
             return res.redirect('/ticket');
         } catch (error) {
@@ -472,7 +493,8 @@ class TicketController extends BaseController {
                 return res.redirect(`/ticket/edit/${req.params.id}`);
             }
             const data = req.body;
-            await Ticket.update(req.params.id, data);
+            // Usar prioridade crítica para operações de edição
+            await Ticket.update(req.params.id, data, 'critical');
             await BaseController.flashSuccess(req, 'tickets', 'Ticket atualizado com sucesso!');
             return res.redirect('/ticket');
         } catch (error) {
@@ -483,5 +505,4 @@ class TicketController extends BaseController {
     }
 }
 
-module.exports = TicketController; 
 module.exports = TicketController; 

@@ -66,12 +66,15 @@ class AcessoController extends BaseController {
 
             output.ticketNumber = ticket;
             output.hora_acesso = DateHelper.now(true);
+            
+            // Usar prioridade crítica para validação de terminal
             const equipamento = await Terminal.getTerminal().where('terminal.pin', pin).first();
             
             if (!equipamento) {
                 return res.status(401).json(Response.access(false,{message: 'Equipamento não encontrado.'}));
             }
 
+            // Usar prioridade crítica para validação de ticket
             const result = await Ticket.validateTicketQuery(output.hora_acesso)
                .where({
                     'terminal.pin': pin
@@ -127,6 +130,7 @@ class AcessoController extends BaseController {
             output.actionType.info = 'Ticket Liberado'
             output.actionType.style = 'success'
 
+            // Usar prioridade crítica para salvar acesso
             await AcessoController.saveAccess(result, 1)
 
             return res.json(Response.access(true, output));
@@ -138,6 +142,7 @@ class AcessoController extends BaseController {
 
     static async validIsMaster(result) {
         if(result.master == 1 ) {
+            // Usar prioridade crítica para salvar acesso
             await AcessoController.saveAccess(result, 1)
             return true;
         }
@@ -146,6 +151,7 @@ class AcessoController extends BaseController {
 
     static async validBloqueado(result) {
         if(result.action == 0 ) {
+            // Usar prioridade crítica para salvar acesso
             await this.saveAccess(result, 2)
             return true;
         }
@@ -154,6 +160,7 @@ class AcessoController extends BaseController {
 
     static async invalidEvent(result) {
         if(result.eventActive == 0 ) {
+            // Usar prioridade crítica para salvar acesso
             await this.saveAccess(result, 3)
             return true;
         }
@@ -166,6 +173,7 @@ class AcessoController extends BaseController {
             && result.access != 0
             && result.master != 1
         ) {
+            // Usar prioridade crítica para salvar acesso
             await this.saveAccess(result, 4)
             return true;
         }
@@ -173,6 +181,7 @@ class AcessoController extends BaseController {
     }
 
     static async saveAccess(result, actId) {
+        // Usar prioridade crítica para operações de acesso
         return await TicketAccess.insert({
             ticket_id: result.id,
             event_id: result.event_id,
@@ -180,7 +189,7 @@ class AcessoController extends BaseController {
             code: result.code,
             access_date: DateHelper.now(true), // Data/hora atual no formato SQL
             access_action_id: actId
-        })
+        }, 'critical');
     }
 
 }
