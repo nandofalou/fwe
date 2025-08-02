@@ -1,12 +1,52 @@
 const Log = require('../Helpers/Log');
 const path = require('path');
 const ejs = require('ejs');
-const { base_url } = require('../Helpers/Common');
+const Common = require('../Helpers/Common');
 const { resolveAppPath } = require('../Helpers/Path');
 
 class BaseController {
     constructor(model) {
         this.model = model;
+    }
+
+    /**
+     * Carrega todos os helpers disponíveis na pasta Helpers
+     * @returns {Object} Objeto com todos os helpers
+     */
+    static loadHelpers() {
+        const fs = require('fs');
+        const helpersPath = path.join(__dirname, '..', 'Helpers');
+        const helpers = {};
+
+        try {
+            const files = fs.readdirSync(helpersPath);
+            
+            files.forEach(file => {
+                if (file.endsWith('.js') && file !== 'index.js') {
+                    const helperName = file.replace('.js', '');
+                    try {
+                        const helperModule = require(path.join(helpersPath, file));
+                        
+                        // Se o helper exporta um objeto com múltiplas funções
+                        if (typeof helperModule === 'object' && helperModule !== null) {
+                            Object.keys(helperModule).forEach(key => {
+                                // Prefixa com 'helper_' para evitar conflitos
+                                helpers[`helper_${key}`] = helperModule[key];
+                            });
+                        } else {
+                            // Se o helper exporta uma função diretamente
+                            helpers[`helper_${helperName}`] = helperModule;
+                        }
+                    } catch (error) {
+                        console.warn(`Erro ao carregar helper ${file}:`, error.message);
+                    }
+                }
+            });
+        } catch (error) {
+            console.warn('Erro ao carregar helpers:', error.message);
+        }
+
+        return helpers;
     }
 
     /**
@@ -20,6 +60,14 @@ class BaseController {
     };
 
     /**
+     * Método utilitário para obter a base_url em qualquer controller
+     * Pode ser chamado como this.base_url(path, req) ou BaseController.base_url(path, req)
+     */
+    static base_url(path = '', req = null) {
+        return Common.base_url(path, req);
+    }
+
+    /**
      * Listar todos os registros
      * @param {Object} req - Requisição
      * @param {Object} res - Resposta
@@ -27,13 +75,13 @@ class BaseController {
     static async index(req, res) {
         try {
             const records = await this.model.findAll();
-            this.log.info('Listagem de registros realizada', { 
+            BaseController.log.info('Listagem de registros realizada', { 
                 model: this.model.name || 'Unknown',
                 count: records.length 
             });
             return res.json({ error: false, data: records });
         } catch (error) {
-            this.log.error('Erro ao listar registros', { 
+            BaseController.log.error('Erro ao listar registros', { 
                 model: this.model.name || 'Unknown',
                 error: error.message 
             });
@@ -50,19 +98,19 @@ class BaseController {
         try {
             const record = await this.model.findById(req.params.id);
             if (!record) {
-                this.log.warning('Registro não encontrado', { 
+                BaseController.log.warning('Registro não encontrado', { 
                     model: this.model.name || 'Unknown',
                     id: req.params.id 
                 });
                 return res.status(404).json({ error: true, message: 'Registro não encontrado' });
             }
-            this.log.info('Registro consultado', { 
+            BaseController.log.info('Registro consultado', { 
                 model: this.model.name || 'Unknown',
                 id: req.params.id 
             });
             return res.json({ error: false, data: record });
         } catch (error) {
-            this.log.error('Erro ao buscar registro', { 
+            BaseController.log.error('Erro ao buscar registro', { 
                 model: this.model.name || 'Unknown',
                 id: req.params.id,
                 error: error.message 
@@ -79,14 +127,14 @@ class BaseController {
     static async store(req, res) {
         try {
             const record = await this.model.create(req.body);
-            this.log.info('Novo registro criado', { 
+            BaseController.log.info('Novo registro criado', { 
                 model: this.model.name || 'Unknown',
                 id: record.id,
                 data: req.body 
             });
             return res.status(201).json({ error: false, data: record });
         } catch (error) {
-            this.log.error('Erro ao criar registro', { 
+            BaseController.log.error('Erro ao criar registro', { 
                 model: this.model.name || 'Unknown',
                 data: req.body,
                 error: error.message 
@@ -104,21 +152,21 @@ class BaseController {
         try {
             const record = await this.model.findById(req.params.id);
             if (!record) {
-                this.log.warning('Registro não encontrado para atualização', { 
+                BaseController.log.warning('Registro não encontrado para atualização', { 
                     model: this.model.name || 'Unknown',
                     id: req.params.id 
                 });
                 return res.status(404).json({ error: true, message: 'Registro não encontrado' });
             }
             const updatedRecord = await this.model.update(req.params.id, req.body);
-            this.log.info('Registro atualizado', { 
+            BaseController.log.info('Registro atualizado', { 
                 model: this.model.name || 'Unknown',
                 id: req.params.id,
                 updatedFields: Object.keys(req.body) 
             });
             return res.json({ error: false, data: updatedRecord });
         } catch (error) {
-            this.log.error('Erro ao atualizar registro', { 
+            BaseController.log.error('Erro ao atualizar registro', { 
                 model: this.model.name || 'Unknown',
                 id: req.params.id,
                 error: error.message 
@@ -136,20 +184,20 @@ class BaseController {
         try {
             const record = await this.model.findById(req.params.id);
             if (!record) {
-                this.log.warning('Registro não encontrado para exclusão', { 
+                BaseController.log.warning('Registro não encontrado para exclusão', { 
                     model: this.model.name || 'Unknown',
                     id: req.params.id 
                 });
                 return res.status(404).json({ error: true, message: 'Registro não encontrado' });
             }
             await this.model.delete(req.params.id);
-            this.log.info('Registro excluído', { 
+            BaseController.log.info('Registro excluído', { 
                 model: this.model.name || 'Unknown',
                 id: req.params.id 
             });
             return res.json({ error: false, message: 'Registro excluído com sucesso' });
         } catch (error) {
-            this.log.error('Erro ao excluir registro', { 
+            BaseController.log.error('Erro ao excluir registro', { 
                 model: this.model.name || 'Unknown',
                 id: req.params.id,
                 error: error.message 
@@ -254,8 +302,11 @@ class BaseController {
      */
     static async view(viewName, data = {}, res = null, req = null) {
         const path = require('path');
-        const { base_url } = require('../Helpers/Common');
         const Flash = require('../Helpers/Flash');
+        
+        // Carrega todos os helpers automaticamente
+        const helpers = this.loadHelpers();
+        
         let flashMessages = {};
         let sessionData = {};
         if (req && typeof req.sessionId === 'string' && req.sessionId.length > 0) {
@@ -271,12 +322,16 @@ class BaseController {
                 user: req.session ? JSON.parse(req.session.data || '{}').user : null
             };
         }
+
+        const _version_ = '1.0.0.';
         const templateData = {
             ...sessionData,
             ...data,
-            base_url: (path = '') => base_url(path, req),
+            ...helpers, // Injeta todos os helpers automaticamente
+            base_url: (path = '') => this.base_url(path, req),
             BaseController: this,
             flash: flashMessages,
+            _version_,
             hasFlash: (key) => flashMessages[key] !== undefined,
             getFlash: (key) => flashMessages[key] || null
         };

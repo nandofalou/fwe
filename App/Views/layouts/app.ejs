@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <%- include('../layouts/partial/app_head', {_version_}) %>
+</head>
+
+<body class="layout-fixed sidebar-expand-lg sidebar-open bg-body-tertiary">
+  <div class="app-wrapper">
+    <%- include('../layouts/partial/app_menubar', {_version_}) %>
+    <%- include('../layouts/partial/app_sidebar', {_version_}) %>
+    <main class="app-main">
+        <%- body %>
+    </main>
+    <%- include('../layouts/partial/app_footer', {_version_}) %>
+  </div>
+  <%- include('../layouts/partial/scripts', {_version_}) %>
+    <% if (typeof scripts !== 'undefined' && scripts) { %>
+        <%- scripts %>
+    <% } %>
+</body>
+</html>

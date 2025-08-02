@@ -24,6 +24,8 @@ class Session {
      * @returns {string} ID da sessão
      */
     async create(options = {}) {
+        // Limpa sessões expiradas antes de criar nova sessão
+        await SessionModel.deleteExpired();
         const sessionId = this.generateId();
         const now = new Date();
         const ttl = options.ttl || 60 * 60 * 24; // 1 dia padrão

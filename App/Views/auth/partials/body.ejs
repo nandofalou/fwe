@@ -1,0 +1,37 @@
+<div class="card-body login-card-body">
+    <p class="login-box-msg">Sign in to start your session</p>
+
+    <form action="<%= base_url() %>/auth" method="post">
+        <div class="input-group mb-1">
+            <div class="form-floating">
+                <input id="account_user" name="account_user" type="email" class="form-control" value="" placeholder="" />
+                <label for="account_user">Email</label>
+            </div>
+            <div class="input-group-text">
+                <span class="bi bi-envelope"></span>
+            </div>
+        </div>
+        <div class="input-group mb-1">
+            <div class="form-floating">
+                <input id="account_passwd" name="account_passwd" type="password" class="form-control" placeholder="" />
+                <label for="account_passwd">Password</label>
+            </div>
+            <div class="input-group-text">
+                <span class="bi bi-lock-fill"></span>
+            </div>
+        </div>
+        <!--begin::Row-->
+        <div class="row">
+            <!-- /.col -->
+            <div class="col-4">
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Sign In</button>
+                </div>
+            </div>
+            <!-- /.col -->
+        </div>
+        <!--end::Row-->
+    </form>
+
+    
+</div>

@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const fileUpload = require('express-fileupload');
 const Database = require('../Helpers/Database');
 const path = require('path');
 const ejs = require('ejs');
@@ -22,6 +23,7 @@ class Server {
         this.app.use(cors());
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
+        this.app.use(fileUpload());
         // Configura EJS como view engine (async: true para permitir await nas views)
         this.app.set('view engine', 'ejs');
         const isAsar = __dirname.includes('app.asar');
@@ -50,6 +52,14 @@ class Server {
         try {
             const routes = require('../Config/Routes/Routes');
             this.app.use(routes);
+            
+            // Middleware para rotas não encontradas (404)
+            this.app.use('*', (req, res) => {
+                res.status(404).json({
+                    error: true,
+                    message: 'Rota não encontrada'
+                });
+            });
         } catch (error) {
             console.error('Erro ao carregar rotas:', error);
             this.app.use((req, res) => {

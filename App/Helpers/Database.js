@@ -15,6 +15,12 @@ const Database = {
     driver: (Config.database && Config.database.driver) ? Config.database.driver : 'sqlite',
     connections: new Map(),
     event: Event,
+    
+    // --- FILAS SEPARADAS POR PRIORIDADE ---
+    criticalQueue: Promise.resolve(), // Para operações críticas (acesso, edição)
+    batchQueue: Promise.resolve(),    // Para operações em lote (importação, geração)
+    maxConcurrentBatch: 3,           // Máximo de operações em lote simultâneas
+    activeBatchOperations: 0,
 
     async connect() {
         if (this.config.database.driver === 'mysql') {
@@ -68,21 +74,142 @@ const Database = {
         });
     },
 
-    async query(sql, params = []) {
-        if (this.config.database.driver === 'mysql') {
-            const [rows] = await this.connection.execute(sql, params);
-            return rows;
-        }
-        // SQLite
-        return new Promise((resolve, reject) => {
-            this.connection.all(sql, params, (err, rows) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(rows);
-                }
-            });
+    // --- SISTEMA DE FILAS MELHORADO ---
+    
+    /**
+     * Adiciona operação crítica à fila (alta prioridade)
+     * Usado para: acesso, edição, operações que não podem esperar
+     */
+    enqueueCritical(operation) {
+        this.criticalQueue = this.criticalQueue.then(operation).catch(err => {
+            console.error("Erro na execução crítica do banco:", err);
+            throw err;
         });
+        return this.criticalQueue;
+    },
+
+    /**
+     * Adiciona operação em lote à fila (baixa prioridade)
+     * Usado para: importação, geração em massa
+     */
+    async enqueueBatch(operation) {
+        // Aguarda se há muitas operações em lote ativas
+        while (this.activeBatchOperations >= this.maxConcurrentBatch) {
+            await new Promise(resolve => setTimeout(resolve, 10));
+        }
+        
+        this.activeBatchOperations++;
+        
+        try {
+            this.batchQueue = this.batchQueue.then(async () => {
+                try {
+                    return await operation();
+                } finally {
+                    this.activeBatchOperations--;
+                }
+            }).catch(err => {
+                this.activeBatchOperations--;
+                console.error("Erro na execução em lote do banco:", err);
+                throw err;
+            });
+            return this.batchQueue;
+        } catch (error) {
+            this.activeBatchOperations--;
+            throw error;
+        }
+    },
+
+    /**
+     * Determina automaticamente se é operação crítica ou em lote
+     */
+    enqueue(operation, priority = 'auto') {
+        if (priority === 'critical') {
+            return this.enqueueCritical(operation);
+        } else if (priority === 'batch') {
+            return this.enqueueBatch(operation);
+        } else {
+            // Auto-detecta baseado no tipo de operação
+            const operationStr = operation.toString();
+            if (operationStr.includes('INSERT') || operationStr.includes('UPDATE') || operationStr.includes('DELETE')) {
+                // Se for operação de modificação, usa fila crítica
+                return this.enqueueCritical(operation);
+            } else {
+                // Se for consulta, usa fila crítica
+                return this.enqueueCritical(operation);
+            }
+        }
+    },
+
+    async query(sql, params = [], priority = 'auto') {
+        return this.enqueue(() => this._query(sql, params), priority);
+    },
+
+    /**
+     * Insere um registro
+     * @param {string} sql Query SQL
+     * @param {Array} params Valores
+     * @param {string} priority Prioridade da operação
+     * @returns {Promise<number>} ID do registro
+     */
+    async insert(sql, params = [], priority = 'auto') {
+        return this.enqueue(() => this._insert(sql, params), priority);
+    },
+
+    /**
+     * Atualiza registros
+     * @param {string} sql Query SQL
+     * @param {Array} params Valores
+     * @param {string} priority Prioridade da operação
+     * @returns {Promise<number>} Número de registros afetados
+     */
+    async update(sql, params = [], priority = 'auto') {
+        return this.enqueue(() => this._update(sql, params), priority);
+    },
+
+    /**
+     * Remove registros
+     * @param {string} sql Query SQL
+     * @param {Array} params Valores
+     * @param {string} priority Prioridade da operação
+     * @returns {Promise<number>} Número de registros afetados
+     */
+    async delete(sql, params = [], priority = 'auto') {
+        return this.enqueue(() => this._delete(sql, params), priority);
+    },
+
+    // --- Métodos reais (privados) ---
+    _query(sql, params) {
+        if (this.driver === 'mysql') {
+            return this.connection.execute(sql, params);
+        } else {
+            return new Promise((resolve, reject) => {
+                this.connection.all(sql, params, (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows);
+                });
+            });
+        }
+    },
+
+    _insert(sql, params) {
+        if (this.driver === 'mysql') {
+            return this.connection.execute(sql, params);
+        } else {
+            return new Promise((resolve, reject) => {
+                this.connection.run(sql, params, function (err) {
+                    if (err) reject(err);
+                    else resolve(this.lastID);
+                });
+            });
+        }
+    },
+
+    _update(sql, params) {
+        return this._insert(sql, params);
+    },
+
+    _delete(sql, params) {
+        return this._insert(sql, params);
     },
 
     async execute(sql, params = []) {
@@ -148,75 +275,7 @@ const Database = {
         });
     },
 
-    /**
-     * Insere um registro
-     * @param {string} sql Query SQL
-     * @param {Array} params Valores
-     * @returns {Promise<number>} ID do registro
-     */
-    async insert(sql, params = []) {
-        if (this.config.database.driver === 'mysql') {
-            const [result] = await this.connection.execute(sql, params);
-            return result.insertId;
-        }
-        // SQLite
-        return new Promise((resolve, reject) => {
-            this.connection.run(sql, params, function(err) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(this.lastID);
-                }
-            });
-        });
-    },
-
-    /**
-     * Atualiza registros
-     * @param {string} sql Query SQL
-     * @param {Array} params Valores
-     * @returns {Promise<number>} Número de registros afetados
-     */
-    async update(sql, params = []) {
-        if (this.config.database.driver === 'mysql') {
-            const [result] = await this.connection.execute(sql, params);
-            return result.affectedRows;
-        }
-        // SQLite
-        return new Promise((resolve, reject) => {
-            this.connection.run(sql, params, function(err) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(this.changes);
-                }
-            });
-        });
-    },
-
-    /**
-     * Remove registros
-     * @param {string} sql Query SQL
-     * @param {Array} params Valores
-     * @returns {Promise<number>} Número de registros afetados
-     */
-    async delete(sql, params = []) {
-        if (this.config.database.driver === 'mysql') {
-            const [result] = await this.connection.execute(sql, params);
-            return result.affectedRows;
-        }
-        // SQLite
-        return new Promise((resolve, reject) => {
-            this.connection.run(sql, params, function(err) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(this.changes);
-                }
-            });
-        });
-    },
-
+    
     /**
      * Inicia uma transação
      */
@@ -244,21 +303,41 @@ const Database = {
 
     /**
      * Executa uma transação
-     * @param {string} name Nome da conexão
+     * @param {Function} callback Função de callback
+     * @param {string} priority Prioridade da transação
+     * @returns {Promise<*>} Resultado
+     */
+    async transaction(callback, priority = 'auto') {
+        return this.enqueue(async () => {
+            await this.beginTransaction();
+            try {
+                const result = await callback();
+                await this.commit();
+                return result;
+            } catch (err) {
+                await this.rollback();
+                throw err;
+            }
+        }, priority);
+    },
+
+    /**
+     * Executa uma transação em lote (para importação/geração)
      * @param {Function} callback Função de callback
      * @returns {Promise<*>} Resultado
      */
-    async transaction(name, callback) {
-        await this.beginTransaction(name);
-
-        try {
-            const result = await callback();
-            await this.commit(name);
-            return result;
-        } catch (err) {
-            await this.rollback(name);
-            throw err;
-        }
+    async batchTransaction(callback) {
+        return this.enqueueBatch(async () => {
+            await this.beginTransaction();
+            try {
+                const result = await callback();
+                await this.commit();
+                return result;
+            } catch (err) {
+                await this.rollback();
+                throw err;
+            }
+        });
     },
 
     /**
@@ -430,14 +509,14 @@ const Database = {
     },
 
     /**
-     * Executa as migrations localizadas em App/Migrations
+     * Executa as migrations localizadas em App/Migrations/Mysql ou App/Migrations/Sqlite
      */
     async runMigrations() {
-        const migrationsDir = path.join(__dirname, '../Migrations');
+        const isMySQL = this.config.database.driver === 'mysql';
+        const migrationsDir = path.join(__dirname, isMySQL ? '../Migrations/Mysql' : '../Migrations/Sqlite');
         if (!fs.existsSync(migrationsDir)) {
             fs.mkdirSync(migrationsDir, { recursive: true });
         }
-        const isMySQL = this.config.database.driver === 'mysql';
         // Cria tabela de controle
         if (isMySQL) {
             await this.connection.execute(`CREATE TABLE IF NOT EXISTS migrations (
@@ -472,7 +551,6 @@ const Database = {
             if (!already) {
                 const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
                 if (isMySQL) {
-                    // Executa múltiplos comandos se houver (split por ';')
                     for (const statement of sql.split(';').map(s => s.trim()).filter(Boolean)) {
                         await this.connection.execute(statement);
                     }

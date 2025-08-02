@@ -1,0 +1,37 @@
+const AuthApiController = require('../../Controllers/Api/AuthController');
+const UserController = require('../../Controllers/Api/UserController');
+const AuthMiddleware = require('../../Middlewares/AuthMiddleware');
+
+/**
+ * Registra todas as rotas da API
+ * @param {BaseRoutes} router - Instância do router
+ */
+function registerApiRoutes(router) {
+    // Rotas públicas da API (sem autenticação)
+    router.group('/api', [], publicApiRouter => {
+        // Rotas de autenticação
+        publicApiRouter.post('/auth/login', AuthApiController.login);
+        publicApiRouter.post('/auth/register', AuthApiController.register);
+        publicApiRouter.post('/auth/forgot-password', AuthApiController.forgotPassword);
+        publicApiRouter.post('/auth/reset-password', AuthApiController.resetPassword);
+        publicApiRouter.post('/auth/verify-email', AuthApiController.verifyEmail);
+        publicApiRouter.post('/auth/resend-verification', AuthApiController.resendVerification);
+    });
+
+    // Rotas protegidas da API (com autenticação)
+    router.group('/api', [AuthMiddleware.handle], protectedApiRouter => {
+        // Rotas de usuário
+        protectedApiRouter.resource('/users', UserController);
+        protectedApiRouter.get('/users/profile', UserController.profile);
+        protectedApiRouter.put('/users/profile', UserController.updateProfile);
+        protectedApiRouter.put('/users/password', UserController.updatePassword);
+        protectedApiRouter.post('/users/avatar', UserController.uploadAvatar);
+        protectedApiRouter.delete('/users/avatar', UserController.removeAvatar);
+        
+        // Rotas de eventos
+        // protectedApiRouter.resource('/events', EventController);
+        
+    });
+}
+
+module.exports = registerApiRoutes; 

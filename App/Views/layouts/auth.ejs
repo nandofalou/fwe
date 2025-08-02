@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <%- include('../layouts/partial/auth_header', {_version_}) %>
+        <title>
+            <%= title %>
+        </title>
+</head>
+
+<body class="login-page bg-body-secondary">
+    <div class="login-box">
+        <div class="card card-outline card-primary">
+            <div class="card-header">
+                <div class="link-dark text-center link-offset-2 link-opacity-100 link-opacity-50-hover">
+                    <h1 class="mb-0"><b>Admin</b> FWE</h1>
+                </div>
+            </div>
+            <%- body %>
+        </div>
+    </div>
+
+    <%- include('../layouts/partial/scripts', {_version_}) %>
+</body>
+
+</html>

@@ -52,6 +52,13 @@ const total = await User.count();
 - `.insert(dados)` — Insere registro (use preferencialmente via métodos do model)
 - `.update(id, dados)` — Atualiza registro
 - `.delete(id)` — Remove registro
+- `.like(campo, valor, posicao)` — Adiciona condição LIKE (posicao: 'before', 'after', 'both' - padrão 'both')
+- `.whereIn(campo, array)` — Adiciona condição IN
+- `.notIn(campo, array)` — Adiciona condição NOT IN
+- `.not(campo, valor)` — Adiciona condição !=
+- `.isNull(campo)` — Adiciona condição IS NULL
+- `.isNotNull(campo)` — Adiciona condição IS NOT NULL
+- `.countQuery(idxcount, perPage)` — Conta o total de registros (ou distintos) e retorna dados de paginação
 
 ---
 
@@ -106,3 +113,108 @@ const events = await Event.where({ active: 1, created_by: userId })
 ---
 
 Mantenha o padrão e garanta segurança e manutenibilidade no acesso ao banco de dados! 
+
+## Novos Métodos Avançados
+
+### LIKE
+```js
+// LIKE padrão (both)
+const users = await User.like('title', 'match').get(); // WHERE title LIKE '%match%'
+
+// LIKE before
+const users = await User.like('title', 'match', 'before').get(); // WHERE title LIKE '%match'
+
+// LIKE after
+const users = await User.like('title', 'match', 'after').get(); // WHERE title LIKE 'match%'
+
+// LIKE both (explícito)
+const users = await User.like('title', 'match', 'both').get(); // WHERE title LIKE '%match%'
+
+// LIKE múltiplos campos
+const users = await User.like({ title: 'match', page1: 'match', page2: 'match' }).get();
+// WHERE title LIKE '%match%' AND page1 LIKE '%match%' AND page2 LIKE '%match%'
+```
+
+### IN
+```js
+// Buscar eventos com ids específicos
+const events = await Event.whereIn('id', [1,2,3]).get();
+```
+
+### NOT IN
+```js
+// Buscar categorias exceto as de id 5, 6 e 7
+const categories = await Category.notIn('id', [5,6,7]).get();
+```
+
+### NOT
+```js
+// Buscar usuários que não estão inativos
+const users = await User.not('active', 0).get();
+``` 
+
+### IS NULL
+```js
+// Buscar usuários sem email cadastrado
+const users = await User.isNull('email').get();
+```
+
+### IS NOT NULL
+```js
+// Buscar eventos que possuem data de início definida
+const events = await Event.isNotNull('startdate').get();
+``` 
+
+### countQuery
+
+O método `countQuery` retorna o total de registros (ou distintos) da consulta atual, útil para paginação avançada, especialmente em DataTables ou APIs.
+
+**Parâmetros:**
+- `idxcount` (string, opcional): campo a ser contado de forma distinta (ex: 'ticket.id'). Se não informado, conta a chave primária.
+- `perPage` (int, opcional): quantidade de registros por página (padrão: 10).
+
+**Retorno:**
+Um objeto com:
+- `pages`: total de páginas
+- `rows`: total de registros
+- `perPage`: quantidade por página
+
+**Exemplo de uso:**
+```js
+const count = await Ticket.countQuery('ticket.id', 20);
+// count = { pages: 5, rows: 100, perPage: 20 }
+
+// Uso típico em paginação:
+const builder = Ticket.dataTableQuery();
+const count = await builder.countQuery('ticket.id', perPage);
+const tickets = await builder.get();
+```
+
+**Dica:**
+Use este método para obter dados de paginação antes de buscar os registros com `.get()`, especialmente em APIs e DataTables. 
+
+# QueryBuilder - Métodos RAW
+
+Agora o QueryBuilder suporta métodos para inserir SQL "cru" (raw) em partes específicas da query, inspirado no CodeIgniter 4. Use com responsabilidade!
+
+## selectRaw
+Permite definir o SELECT com SQL customizado e passar parâmetros opcionais para o SQL.
+
+```js
+// Exemplo simples
+User.selectRaw('id, name, (SELECT COUNT(*) FROM orders WHERE user_id = users.id) as order_count')
+    .where({ status: 'active' })
+    .get();
+
+// Exemplo com parâmetro:
+User.selectRaw('
+    id, name,
+    CASE WHEN ? BETWEEN startdate AND enddate THEN 1 ELSE 0 END as isActive
+', [DateHelper.now(true)])
+    .get();
+```
+
+## whereRaw
+Permite adicionar condições WHERE customizadas.
+
+```

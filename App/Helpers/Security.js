@@ -1,3 +1,10 @@
+/**
+ * Helper de segurança do framework FWE
+ *
+ * ATENÇÃO: Este helper é exportado já instanciado.
+ * Use diretamente: Security.hashPassword(...)
+ * NÃO use: new Security().hashPassword(...)
+ */
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
