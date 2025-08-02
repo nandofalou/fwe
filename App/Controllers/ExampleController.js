@@ -34,7 +34,8 @@ class ExampleController extends BaseController {
         // Chamada correta, sem return:
         BaseController.view('example', {
             title: 'Exemplo de Flash Messages',
-            description: 'Esta página demonstra como usar o sistema de flash messages similar ao CodeIgniter 4'
+            description: 'Esta página demonstra como usar o sistema de flash messages similar ao CodeIgniter 4',
+            BaseController
         }, res, req);
     }
 }

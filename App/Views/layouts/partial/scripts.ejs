@@ -1,0 +1,14 @@
+<script src="<%= base_url() %>/assets/js/core.min.js?version=<%= _version_ %>"></script>
+<script src="<%= base_url() %>/assets/js/vendor_bundle.min.js?version=<%= _version_ %>"></script>
+<script src="<%= base_url() %>/assets/js/js-snackbar.min.js?version=<%= _version_ %>"></script>
+<script src="<%= base_url() %>/assets/js/client.min.js?version=<%= _version_ %>"></script>
+<script src="<%= base_url() %>/assets/js/cl.min.js?version=<%= _version_ %>"></script>
+
+<% if (flash && Object.keys(flash).length> 0) { %>
+    <% Object.keys(flash).forEach(function(key) { %>
+        <% const message=flash[key]; %>
+            <script>
+                cl.sn("<%=message.message %>", "<%=message.type %>");
+            </script>
+    <% }); %>
+<% } %>

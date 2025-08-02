@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <%- include('../layouts/partial/app_head', {_version_}) %>
+</head>
+
+<body class="layout-admin layout-padded aside-sticky"
+    data-s2t-class="btn-primary btn-sm bg-gradient-default rounded-circle border-0">
+
+    <div id="wrapper" class="d-flex align-items-stretch flex-column">
+
+
+        <%- include('../layouts/partial/app_menubar', {_version_}) %>
+
+
+        <!-- content -->
+        <div id="wrapper_content" class="d-flex flex-fill">
+
+
+            <%- include('../layouts/partial/app_sidebar', {_version_}) %>
+
+
+            <!-- main -->
+            <main id="middle" class="flex-fill mx-auto">
+                <%- body %>
+            </main>
+            <!-- /main -->
+
+        </div>
+        <!-- /content -->
+
+
+        <!-- footer -->
+        <%- include('../layouts/partial/app_footer', {_version_}) %>
+        <!-- /footer -->
+
+
+    </div><!-- /#wrapper -->
+
+
+    <!-- offcanvas : chat -->
+    <% //- include('../layouts/partial/app_chat', {_version_}) %>
+    <!-- /offcanvas : chat -->
+
+
+    <!-- offcanvas : demos -->
+    <% //- include('../layouts/partial/app_offcanvas', {_version_}) %>
+    <!-- /offcanvas : demos -->
+
+    <%- include('../layouts/partial/scripts', {_version_}) %>
+    <% if (typeof scripts !== 'undefined' && scripts) { %>
+        <%- scripts %>
+    <% } %>
+
+
+</body>
+
+</html>

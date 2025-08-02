@@ -1,0 +1,14 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : 'FWE Framework' %></title>
+    <% if (typeof styles !== 'undefined') { %><%- styles %><% } %>
+</head>
+<body>
+    <!-- Conteúdo principal sem header/footer -->
+    <%- body %>
+    <% if (typeof scripts !== 'undefined') { %><%- scripts %><% } %>
+</body>
+</html>

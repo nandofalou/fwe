@@ -11,7 +11,6 @@ class BaseModel {
         this.primaryKey = 'id';
         this.allowedFields = [];
         this.softDelete = false; // padrão: hard delete
-        this.resetBuilder();
     }
 
     // --- Query Builder ---
@@ -22,10 +21,17 @@ class BaseModel {
         this._limit = null;
         this._offset = null;
         this._params = [];
+        this._selectParams = [];
+        this._joins = [];
+        this._groupBy = '';
+        this._having = [];
     }
 
     static get instance() {
-        if (!this._instance) this._instance = new this();
+        if (!this._instance) {
+            this._instance = new this();
+            this._instance.resetBuilder();
+        }
         return this._instance;
     }
 
@@ -59,6 +65,201 @@ class BaseModel {
     static limit(limit, offset = null) {
         this.instance._limit = limit;
         this.instance._offset = offset;
+        return this;
+    }
+
+    // --- JOIN Methods ---
+    
+    /**
+     * INNER JOIN
+     * @param {string} table - Tabela para fazer join
+     * @param {string} condition - Condição do join (ex: 'users.id = posts.user_id')
+     * @param {string} type - INNER|LEFT|OUTER|RIGHT|FULL OUTER
+     * @returns {BaseModel} - Para encadeamento
+     */
+    static join(table, condition, type = 'INNER') {
+        this.instance._joins.push({
+            type,
+            table: table,
+            condition: condition
+        });
+        return this;
+    }
+
+    /**
+     * LEFT JOIN
+     * @param {string} table - Tabela para fazer join
+     * @param {string} condition - Condição do join (ex: 'users.id = posts.user_id')
+     * @returns {BaseModel} - Para encadeamento
+     */
+    static leftJoin(table, condition) {
+        this.instance._joins.push({
+            type: 'LEFT',
+            table: table,
+            condition: condition
+        });
+        return this;
+    }
+
+    /**
+     * RIGHT JOIN
+     * @param {string} table - Tabela para fazer join
+     * @param {string} condition - Condição do join (ex: 'users.id = posts.user_id')
+     * @returns {BaseModel} - Para encadeamento
+     */
+    static rightJoin(table, condition) {
+        this.instance._joins.push({
+            type: 'RIGHT',
+            table: table,
+            condition: condition
+        });
+        return this;
+    }
+
+    /**
+     * FULL OUTER JOIN
+     * @param {string} table - Tabela para fazer join
+     * @param {string} condition - Condição do join (ex: 'users.id = posts.user_id')
+     * @returns {BaseModel} - Para encadeamento
+     */
+    static fullJoin(table, condition) {
+        this.instance._joins.push({
+            type: 'FULL OUTER',
+            table: table,
+            condition: condition
+        });
+        return this;
+    }
+
+    /**
+     * CROSS JOIN
+     * @param {string} table - Tabela para fazer join
+     * @returns {BaseModel} - Para encadeamento
+     */
+    static crossJoin(table) {
+        this.instance._joins.push({
+            type: 'CROSS',
+            table: table,
+            condition: null
+        });
+        return this;
+    }
+
+    /**
+     * GROUP BY
+     * @param {string|array} fields - Campos para agrupar
+     * @returns {BaseModel} - Para encadeamento
+     */
+    static groupBy(fields) {
+        if (Array.isArray(fields)) {
+            this.instance._groupBy = fields.join(', ');
+        } else {
+            this.instance._groupBy = fields;
+        }
+        return this;
+    }
+
+    /**
+     * HAVING
+     * @param {string} condition - Condição HAVING
+     * @param {array} params - Parâmetros para a condição (opcional)
+     * @returns {BaseModel} - Para encadeamento
+     */
+    static having(condition, params = []) {
+        this.instance._having.push({
+            condition: condition,
+            params: params
+        });
+        return this;
+    }
+
+    static like(field, value, position = 'both') {
+        // Se for objeto, adiciona múltiplos likes
+        if (typeof field === 'object' && field !== null) {
+            Object.entries(field).forEach(([k, v]) => {
+                this.like(k, v, position);
+            });
+            return this;
+        }
+        // Monta o valor com wildcards
+        let likeValue = value;
+        if (position === 'before') {
+            likeValue = `%${value}`;
+        } else if (position === 'after') {
+            likeValue = `${value}%`;
+        } else { // both (padrão)
+            likeValue = `%${value}%`;
+        }
+        this.instance._where.push({ key: field, op: 'LIKE', value: likeValue });
+        return this;
+    }
+
+    static whereIn(field, values) {
+        this.instance._where.push({ key: field, op: 'IN', value: values });
+        return this;
+    }
+
+    static notIn(field, values) {
+        this.instance._where.push({ key: field, op: 'NOT IN', value: values });
+        return this;
+    }
+
+    static not(field, value) {
+        this.instance._where.push({ key: field, op: '!=', value });
+        return this;
+    }
+
+    static isNull(field) {
+        this.instance._where.push({ key: field, op: 'IS NULL' });
+        return this;
+    }
+
+    static isNotNull(field) {
+        this.instance._where.push({ key: field, op: 'IS NOT NULL' });
+        return this;
+    }
+
+    /**
+     * SELECT RAW
+     * @param {string} rawSql - SQL cru para o SELECT
+     * @param {array} params - Parâmetros opcionais para o SELECT
+     * @returns {BaseModel} - Para encadeamento
+     */
+    static selectRaw(rawSql, params = []) {
+        this.instance._select = rawSql;
+        this.instance._selectParams = params || [];
+        return this;
+    }
+
+    /**
+     * WHERE RAW
+     * @param {string} rawSql - SQL cru para o WHERE
+     * @param {array} params - Parâmetros opcionais
+     * @returns {BaseModel} - Para encadeamento
+     */
+    static whereRaw(rawSql, params = []) {
+        this.instance._where.push({ raw: true, sql: rawSql, params });
+        return this;
+    }
+
+    /**
+     * JOIN RAW
+     * @param {string} rawSql - SQL cru para o JOIN
+     * @returns {BaseModel} - Para encadeamento
+     */
+    static joinRaw(rawSql) {
+        this.instance._joins.push({ type: 'RAW', sql: rawSql });
+        return this;
+    }
+
+    /**
+     * HAVING RAW
+     * @param {string} rawSql - SQL cru para o HAVING
+     * @param {array} params - Parâmetros opcionais
+     * @returns {BaseModel} - Para encadeamento
+     */
+    static havingRaw(rawSql, params = []) {
+        this.instance._having.push({ raw: true, sql: rawSql, params });
         return this;
     }
 
@@ -98,52 +299,248 @@ class BaseModel {
         return Number(rows[0]?.count || 0);
     }
 
-    static async insert(data) {
+    static async countQuery(idxcount = null, perPage = 10) {
+        let selectCount = ""
+        if(idxcount != null) {
+            selectCount = `COUNT(DISTINCT ${idxcount}) as count`;
+        } else {
+            selectCount = `COUNT(${this.instance.primaryKey}) as count`;
+        }
+        
+
+        const sql = this.buildCount(selectCount)
+        const params = this.instance._params;
+        const rows = await this.instance.db.query(sql, params);
+
+        const totalRows = rows[0]?.count || 0;
+
+        const pages = Math.floor((parseInt(totalRows) || 0) / perPage) + 1;
+   
+        return {
+            pages, rows: totalRows, perPage
+        };
+    }
+
+    static async insert(data, priority = 'auto') {
         const fields = Object.keys(data).filter(f => this.instance.allowedFields.length === 0 || this.instance.allowedFields.includes(f));
         const values = fields.map(f => data[f]);
         const placeholders = fields.map(() => '?').join(',');
         const sql = `INSERT INTO ${this.tableName()} (${fields.join(',')}) VALUES (${placeholders})`;
-        const result = await this.instance.db.insert(sql, values);
+        const result = await this.instance.db.insert(sql, values, priority);
         this.instance.event.emit(`${this.tableName()}:created`, result);
         return result;
     }
 
-    static async update(id, data) {
+    static async update(id, data, priority = 'auto') {
         const fields = Object.keys(data).filter(f => this.instance.allowedFields.length === 0 || this.instance.allowedFields.includes(f));
         const values = fields.map(f => data[f]);
         const setClause = fields.map(f => `${f} = ?`).join(', ');
         const sql = `UPDATE ${this.tableName()} SET ${setClause} WHERE ${this.instance.primaryKey} = ?`;
-        await this.instance.db.update(sql, [...values, id]);
+        await this.instance.db.update(sql, [...values, id], priority);
         this.instance.event.emit(`${this.tableName()}:updated`, { id, ...data });
         return true;
     }
 
-    static async delete(id) {
+    static async delete(id, priority = 'auto') {
         if (this.instance.softDelete) {
             // Soft delete: marca deleted_at
             const sql = `UPDATE ${this.tableName()} SET deleted_at = ? WHERE ${this.instance.primaryKey} = ?`;
-            await this.instance.db.update(sql, [new Date(), id]);
+            await this.instance.db.update(sql, [new Date(), id], priority);
         } else {
             // Hard delete: remove do banco
             const sql = `DELETE FROM ${this.tableName()} WHERE ${this.instance.primaryKey} = ?`;
-            await this.instance.db.delete(sql, [id]);
+            await this.instance.db.delete(sql, [id], priority);
         }
         this.instance.event.emit(`${this.tableName()}:deleted`, id);
         return true;
     }
 
-    static async rawQuery(sql, params = []) {
-        return await this.instance.db.query(sql, params);
+    static async rawQuery(sql, params = [], priority = 'auto') {
+        return await this.instance.db.query(sql, params, priority);
+    }
+
+    /**
+     * Insere múltiplos registros em uma transação
+     * @param {Array} dataArray Array de objetos com dados
+     * @returns {Promise<Array>} Array com IDs dos registros inseridos
+     */
+    static async insertBatch(dataArray) {
+        if (!Array.isArray(dataArray) || dataArray.length === 0) {
+            return [];
+        }
+
+        return await this.instance.db.batchTransaction(async () => {
+            const results = [];
+            for (const data of dataArray) {
+                const fields = Object.keys(data).filter(f => this.instance.allowedFields.length === 0 || this.instance.allowedFields.includes(f));
+                const values = fields.map(f => data[f]);
+                const placeholders = fields.map(() => '?').join(',');
+                const sql = `INSERT INTO ${this.tableName()} (${fields.join(',')}) VALUES (${placeholders})`;
+                const result = await this.instance.db._insert(sql, values);
+                results.push(result);
+            }
+            return results;
+        });
+    }
+
+    /**
+     * Atualiza múltiplos registros em uma transação
+     * @param {Array} updates Array de objetos {id, data}
+     * @returns {Promise<boolean>} true se bem-sucedido
+     */
+    static async updateBatch(updates) {
+        if (!Array.isArray(updates) || updates.length === 0) {
+            return true;
+        }
+
+        return await this.instance.db.batchTransaction(async () => {
+            for (const { id, data } of updates) {
+                const fields = Object.keys(data).filter(f => this.instance.allowedFields.length === 0 || this.instance.allowedFields.includes(f));
+                const values = fields.map(f => data[f]);
+                const setClause = fields.map(f => `${f} = ?`).join(', ');
+                const sql = `UPDATE ${this.tableName()} SET ${setClause} WHERE ${this.instance.primaryKey} = ?`;
+                await this.instance.db._update(sql, [...values, id]);
+            }
+            return true;
+        });
     }
 
     // --- SQL Builder ---
     static buildSelect() {
         let sql = `SELECT ${this.instance._select} FROM ${this.tableName()}`;
-        if (this.instance._where.length > 0) {
-            const whereClauses = this.instance._where.map(w => `${w.key} ${w.op} ?`).join(' AND ');
-            sql += ` WHERE ${whereClauses}`;
-            this.instance._params = this.instance._where.map(w => w.value);
+
+        // Adiciona JOINs
+        if (this.instance._joins.length > 0) {
+            this.instance._joins.forEach(join => {
+                if (join.type === 'RAW') {
+                    sql += ` ${join.sql}`;
+                } else if (join.type === 'CROSS') {
+                    sql += ` CROSS JOIN ${join.table}`;
+                } else {
+                    sql += ` ${join.type} JOIN ${join.table} ON ${join.condition}`;
+                }
+            });
         }
+
+        // Parâmetros acumulados
+        let params = [];
+
+        if (this.instance._selectParams && this.instance._selectParams.length > 0) {
+            params.push(...this.instance._selectParams);
+        }
+
+        if (this.instance._where.length > 0) {
+            const whereClauses = this.instance._where.map(w => {
+                if (w.raw) {
+                    return w.sql;
+                }
+                if (w.op === 'IN' || w.op === 'NOT IN') {
+                    const placeholders = w.value.map(() => '?').join(', ');
+                    return `${w.key} ${w.op} (${placeholders})`;
+                } else if (w.op === 'LIKE') {
+                    return `${w.key} LIKE ?`;
+                } else if (w.op === 'IS NULL' || w.op === 'IS NOT NULL') {
+                    return `${w.key} ${w.op}`;
+                } else {
+                    return `${w.key} ${w.op} ?`;
+                }
+            }).join(' AND ');
+            sql += ` WHERE ${whereClauses}`;
+            // Parâmetros do WHERE
+            this.instance._where.forEach(w => {
+                if (w.raw) {
+                    params.push(...(w.params || []));
+                } else if (w.op === 'IN' || w.op === 'NOT IN') {
+                    params.push(...w.value);
+                } else if (w.op === 'IS NULL' || w.op === 'IS NOT NULL') {
+                    // Não adiciona parâmetro
+                } else {
+                    params.push(w.value);
+                }
+            });
+        }
+
+        // Adiciona GROUP BY
+        if (this.instance._groupBy) {
+            sql += ` GROUP BY ${this.instance._groupBy}`;
+        }
+
+        // Adiciona HAVING
+        if (this.instance._having.length > 0) {
+            const havingClauses = this.instance._having.map(h => h.raw ? h.sql : h.condition).join(' AND ');
+            sql += ` HAVING ${havingClauses}`;
+            // Parâmetros do HAVING
+            this.instance._having.forEach(h => {
+                if (h.raw) {
+                    params.push(...(h.params || []));
+                } else {
+                    params.push(...h.params);
+                }
+            });
+        }
+
+        if (this.instance._orderBy) sql += ` ${this.instance._orderBy}`;
+        if (this.instance._limit) {
+            sql += ` LIMIT ${this.instance._limit}`;
+            if (this.instance._offset) sql += ` OFFSET ${this.instance._offset}`;
+        }
+        this.instance._params = params;
+        return sql;
+    }
+
+    static buildCount(selectCount) {
+        let sql = `SELECT ${selectCount} FROM ${this.tableName()}`;
+        
+        // Adiciona JOINs
+        if (this.instance._joins.length > 0) {
+            this.instance._joins.forEach(join => {
+                if (join.type === 'RAW') {
+                    sql += ` ${join.sql}`;
+                } else if (join.type === 'CROSS') {
+                    sql += ` CROSS JOIN ${join.table}`;
+                } else {
+                    sql += ` ${join.type} JOIN ${join.table} ON ${join.condition}`;
+                }
+            });
+        }
+        
+        if (this.instance._where.length > 0) {
+            const whereClauses = this.instance._where.map(w => {
+                if (w.raw) {
+                    return w.sql;
+                }
+                return `${w.key} ${w.op} ?`;
+            }).join(' AND ');
+            sql += ` WHERE ${whereClauses}`;
+            this.instance._params = [];
+            this.instance._where.forEach(w => {
+                if (w.raw) {
+                    this.instance._params.push(...(w.params || []));
+                } else {
+                    this.instance._params.push(w.value);
+                }
+            });
+        }
+        
+        // Adiciona GROUP BY
+        if (this.instance._groupBy) {
+            sql += ` GROUP BY ${this.instance._groupBy}`;
+        }
+        
+        // Adiciona HAVING
+        if (this.instance._having.length > 0) {
+            const havingClauses = this.instance._having.map(h => h.raw ? h.sql : h.condition).join(' AND ');
+            sql += ` HAVING ${havingClauses}`;
+            // Adiciona parâmetros do HAVING
+            this.instance._having.forEach(h => {
+                if (h.raw) {
+                    this.instance._params.push(...(h.params || []));
+                } else {
+                    this.instance._params.push(...h.params);
+                }
+            });
+        }
+        
         if (this.instance._orderBy) sql += ` ${this.instance._orderBy}`;
         if (this.instance._limit) {
             sql += ` LIMIT ${this.instance._limit}`;

@@ -1,0 +1,21 @@
+CREATE TABLE `ticket_delivery` (
+  `id` int(19) unsigned NOT NULL AUTO_INCREMENT,
+  `ticket_id` int(10) unsigned DEFAULT NULL,
+  `event_id` int(10) unsigned DEFAULT NULL,
+  `terminal_id` int(10) unsigned DEFAULT NULL,
+  `access_action_id` int(10) unsigned DEFAULT NULL,
+  `code` varchar(50) DEFAULT NULL,
+  `access_date` datetime DEFAULT NULL,
+  `spin` varchar(5) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `ticket_delivery_ticket_id` (`ticket_id`),
+  KEY `ticket_delivery_event_id` (`event_id`),
+  KEY `ticket_delivery_terminal_id` (`terminal_id`),
+  KEY `ticket_delivery_access_action_id` (`access_action_id`),
+  KEY `ticket_delivery_code` (`code`),
+  KEY `ticket_delivery_access_date` (`access_date`),
+  CONSTRAINT `ticket_delivery_fk1` FOREIGN KEY (`ticket_id`) REFERENCES `ticket` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `ticket_delivery_fk2` FOREIGN KEY (`event_id`) REFERENCES `event` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `ticket_delivery_fk3` FOREIGN KEY (`terminal_id`) REFERENCES `terminal` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `ticket_delivery_fk4` FOREIGN KEY (`access_action_id`) REFERENCES `access_action` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

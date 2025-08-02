@@ -1,0 +1,89 @@
+<!-- Flash Messages -->
+<% if (hasFlash('users')) { %>
+    <div class="alert alert-<%= getFlash('users').type %> alert-dismissible fade show" role="alert">
+        <%= getFlash('users').message %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<% } %>
+
+<!-- Usuário Form -->
+<div class="section rounded mb-3">
+    <div class="bg-white shadow-md rounded">
+        <div class="p-4 border-bottom d-flex align-items-center justify-content-between">
+            <h5 class="mb-0"><%= isEdit ? 'Editar Usuário' : 'Novo Usuário' %></h5>
+            <a href="<%= base_url('user') %>" class="btn btn-light border">
+                <i class="fi fi-arrow-left me-2"></i>Voltar
+            </a>
+        </div>
+        <div class="p-4">
+            <form method="POST" action="<%= isEdit ? base_url('user/' + user.id) : base_url('user') %>" class="needs-validation" novalidate autocomplete="off">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="name" class="form-label">Nome *</label>
+                        <input type="text" class="form-control" id="name" name="name" maxlength="200" value="<%= user ? user.name : '' %>" required>
+                        <div class="invalid-feedback">Nome obrigatório.</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="email" class="form-label">Email *</label>
+                        <input type="email" class="form-control" id="email" name="email" maxlength="200" value="<%= user ? user.email : '' %>" required>
+                        <div class="invalid-feedback">Email obrigatório.</div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="pass" class="form-label">Senha <%= isEdit ? '(preencha para alterar)' : '*' %></label>
+                        <input type="password" class="form-control" id="pass" name="pass" minlength="6" <%= isEdit ? '' : 'required' %>>
+                        <% if (!isEdit) { %><div class="invalid-feedback">Senha obrigatória.</div><% } %>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="permission_id" class="form-label">Permissão *</label>
+                        <select class="form-select" id="permission_id" name="permission_id" required>
+                            <option value="">Selecione</option>
+                            <% if (permissions) { permissions.forEach(function(perm) { %>
+                                <option value="<%= perm.id %>" <%= user && user.permission_id == perm.id ? 'selected' : '' %>><%= perm.name %></option>
+                            <% }); } %>
+                        </select>
+                        <div class="invalid-feedback">Permissão obrigatória.</div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="active" class="form-label">Status</label>
+                        <select class="form-select" id="active" name="active">
+                            <option value="1" <%= user && user.active == 1 ? 'selected' : '' %>>Ativo</option>
+                            <option value="0" <%= user && user.active == 0 ? 'selected' : '' %>>Inativo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <a href="<%= base_url('user') %>" class="btn btn-outline-secondary">
+                        <i class="fi fi-arrow-left me-2"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fi fi-check me-2"></i>
+                        <%= isEdit ? 'Atualizar Usuário' : 'Criar Usuário' %>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script> 

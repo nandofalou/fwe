@@ -1,0 +1,422 @@
+<!-- PAGE TITLE -->
+<header class="mt-lg-n6">
+    <h1 class="h4">Good morning, John!</h1>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item text-muted active" aria-current="page">You've got 2 new sales
+                today</li>
+        </ol>
+    </nav>
+</header>
+
+<!-- Primary -->
+<div class="section rounded mb-3">
+
+    <div class="d-flex align-items-center justify-content-between border-bottom pb-4 my-2">
+
+        <div class="w-100">
+            <h2 class="h5 mb-0">Monthly orders</h2>
+            <small class="small text-muted">Monthly revenue of 2022</small>
+        </div>
+
+        <!-- save image -->
+        <a href="#" data-chartjs-id="visitsvsorders" data-file-name="visitsvsorders"
+            class="chartjs-save btn btn-sm btn-light text-primary-hover rounded-circle float-end m-0"
+            data-bs-toggle="tooltip" title="Save Chart" aria-label="Save Chart">
+            <i class="fi fi-arrow-download m-0"></i>
+        </a>
+
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-12 col-lg-7 col-xl-9 order-1 order-xl-2">
+
+            <div class="position-relative h-100" style="min-height:250px; max-height:500px">
+                <canvas id="visitsvsorders" class="chartjs" data-chartjs-dots="false" data-chartjs-legend="false"
+                    data-chartjs-grid="true" data-chartjs-tooltip="true" data-chartjs-title=""
+                    data-chartjs-xaxes-label="" data-chartjs-yaxes-label="" data-chartjs-line-width="5"
+                    data-chartjs-type="line"
+                    data-chartjs-labels='["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]'
+                    data-chartjs-datasets='[{
+                  "label": "Orders",
+                  "data": [14, 16, 16, 14, 13, 12, 14, 14, 13, 14, 12, 10],
+                  "fill": true,
+                  "backgroundColor": "rgba(163, 167, 255, 0.4)"
+                }]'></canvas>
+
+            </div>
+
+        </div>
+
+        <div class="col-12 col-lg-5 col-xl-3 order-2 order-xl-1">
+
+            <!-- reveal on hover container -->
+            <div class="position-relative animate-reveal-up-item">
+
+                <!-- card rating -->
+                <div
+                    class="position-relative reveal-item bg-white shadow-lg-hover rounded-xl p-5 p-md-3 py-xl-5 p-4-xs z-index-2">
+
+                    <h6 class="text-muted text-center">MONTHLY REVENUE</h6>
+
+                    <div class="text-center mt-5">
+
+                        <!-- chart -->
+                        <div class="h--120 easypie d-inline-block position-relative z-index-1" data-bar-color="#574fec"
+                            data-track-color="#eaeaea" data-scale-color="#cccccc" data-scale-length="0"
+                            data-line-width="10" data-line-cap="round" data-size="120" data-percent="61">
+
+                            <div class="absolute-full d-middle pt-0 pb-2">
+                                <div class="flex-none text-center">
+                                    <span class="d-block">61%</span>
+                                    <small class="d-block text-muted">Conversion</small>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /chart -->
+
+
+                        <p class="text-muted mt-4 mb-2">Sales this month</p>
+                        <p class="lead fw-medium mb-0 text-primary">
+                            $<span data-toggle="count" data-count-to="2144.55" data-count-duration="2500">0</span>
+                        </p>
+
+                        <!-- 2 cols -->
+                        <div class="d-flex mt-4 fs--15">
+                            <div class="flex-fill"><!-- col 1 -->
+                                <p class="text-gray-500 m-0">last month</p>
+                                <p class="text-gray-600 m-0 fw-medium">$12978.51</p>
+                            </div>
+
+                            <div class="flex-fill"><!-- col 2 -->
+                                <p class="text-gray-500 m-0">last 3 months</p>
+                                <p class="text-gray-600 m-0 fw-medium">$4122.11</p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+                <!-- /card rating -->
+
+                <!-- link under -->
+                <div class="fs--16 position-absolute left-0 right-0 bottom-0 z-index-1 pt-3 px-2">
+
+                    <div class="clearfix bg-light p-1 row-pill">
+                        <a href="#!" class="btn btn-pill btn-sm btn-success py-1 mb-0 float-start transition-hover-end"
+                            title="Detailed Revenue" aria-label="Detailed Revenue">View</a>
+                        <span class="d-block pt-1 pl-2 pr-2 text-muted text-truncate">
+                            more
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+            <!-- /reveal on hover container -->
+
+        </div>
+
+    </div>
+
+</div>
+<!-- /Primary -->
+
+
+
+<!-- widgets -->
+<div class="row g-3">
+
+   <!-- imports -->
+    <div class="col-12 col-xl-8">
+
+        <div class="portlet">
+
+            <div class="portlet-header">
+
+                <div class="float-end dropdown">
+
+                    <a href="#" class="btn btn-sm btn-light px-2 py-1 mt-n1">
+                        <small>View All</small>
+                    </a>
+
+                </div>
+
+                <span class="d-block text-muted text-truncate fw-medium">
+                    Shop Imports
+                </span>
+
+            </div>
+
+
+            <!-- content loaded via ajax! -->
+            <div class="portlet-body max-h-500 scrollable-vertical scrollable-styled-dark">
+
+                <!-- item -->
+                <div class="d-flex align-items-center p-3 border-bottom border-light">
+
+                    <div class="flex-none">
+                        <img width="40" height="40" class="img-fluid lazy"
+                            data-src="../html_frontend/demo.files/svg/icons/files/csv.svg"
+                            src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="...">
+                    </div>
+
+                    <div class="flex-fill text-truncate px-3">
+                        <span class="text-muted">384 items imported, 766 updated, 12 ignored</span>
+                        <span class="small d-block text-muted">29 June, 2020 / 18:44</span>
+                    </div>
+
+                    <div class="flex-none ms-2 small text-muted text-align-end dropdown">
+
+                        <!-- dropdown -->
+                        <a id="dropdownImport_1" href="#" class="dropdown-toggle btn btn-sm btn-light px-2 py-1 mt-n1"
+                            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="options">
+                            <span>
+                                <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                                    class="bi bi-three-dots-vertical" viewBox="0 0 16 16">
+                                    <path
+                                        d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z">
+                                    </path>
+                                </svg>
+                            </span>
+                        </a>
+                        <div aria-labelledby="dropdownImport_1"
+                            class="prefix-link-icon prefix-icon-dot dropdown-menu mt-2">
+                            <a href="#" class="dropdown-item">View Log</a>
+                            <a href="#" class="dropdown-item">Download</a>
+                        </div>
+                        <!-- /dropdown -->
+
+                    </div>
+
+
+                </div>
+                <!-- /item -->
+
+
+
+                <!-- item -->
+                <div class="d-flex align-items-center p-3 border-bottom border-light">
+
+                    <div class="flex-none">
+                        <img width="40" height="40" class="img-fluid lazy"
+                            data-src="../html_frontend/demo.files/svg/icons/files/csv.svg"
+                            src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="...">
+                    </div>
+
+                    <div class="flex-fill text-truncate px-3">
+                        <span class="text-muted">12 items imported, 67 updated, 1 ignored</span>
+                        <span class="small d-block text-muted">15 February, 2020 / 16:51</span>
+                    </div>
+
+                    <div class="flex-none ms-2 small text-muted text-align-end">
+                        <a href="#">view log</a>
+                    </div>
+
+                </div>
+                <!-- /item -->
+
+
+
+                <!-- item -->
+                <div class="d-flex align-items-center p-3 border-bottom border-light">
+
+                    <div class="flex-none">
+                        <img width="40" height="40" class="img-fluid lazy"
+                            data-src="../html_frontend/demo.files/svg/icons/files/jpg.svg"
+                            src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="...">
+                    </div>
+
+                    <div class="flex-fill text-truncate px-3">
+                        <span class="text-muted">384 images imported to 281 products</span>
+                        <span class="small d-block text-muted">1 February, 2020 / 13:43</span>
+                    </div>
+
+                    <div class="flex-none ms-2 small text-muted text-align-end">
+                        <a href="#">view log</a>
+                    </div>
+
+                </div>
+                <!-- /item -->
+
+            </div>
+
+            <div class="d-flex align-self-baseline w-100 py-2">
+                <a href="#" class="btn btn-sm link-muted border-0 shadow-none">
+                    <i class="fi fi-arrow-end"></i>
+                    <span>View All</span>
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+    <!-- /imports -->
+
+
+    <!-- orders -->
+    <div class="col-12 col-xl-4">
+
+        <div class="portlet">
+
+            <div class="portlet-header">
+
+                <!-- dropdown options -->
+                <div class="float-end dropdown">
+                    <button type="button" class="dropdown-toggle btn btn-sm btn-light px-2 py-1 mt-n1"
+                        id="dropdownOrders" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="js-trigger-text small">Export</span>
+                        <i class="fi fi-arrow-down"></i>
+                    </button>
+                    <div class="prefix-link-icon prefix-icon-dot dropdown-menu dropdown-menu-invert mt-2"
+                        aria-labelledby="dropdownOrders">
+                        <div class="dropdown-header smaller px-4 text-muted fw-medium">Export options
+                        </div>
+                        <a href="#" class="dropdown-item">Export CSV</a>
+                        <a href="#" class="dropdown-item">Export XLS</a>
+                        <a href="#" class="dropdown-item">Export PDF</a>
+                        <a href="#" class="dropdown-item">Print</a>
+                    </div>
+                </div>
+                <!-- /dropdown options -->
+
+                <span class="d-block text-muted text-truncate fw-medium">
+                    Orders
+                </span>
+
+            </div>
+
+            <!-- items -->
+            <div class="portlet-body scrollable-vertical scrollable-styled-dark" style="max-height:300px">
+
+                <!-- item -->
+                <a href="#"
+                    class="clearfix d-block dropdown-item fw-medium p-3 rounded overflow-hidden border-bottom border-light">
+
+                    <!-- badge -->
+                    <span class="float-end fw-bold text-muted small">$2155.00</span>
+
+                    <!-- icon -->
+                    <div class="float-start avatar avatar-sm rounded-circle bg-gray-200 fs-5">
+                        <i class="fi fi-cart-1"></i>
+                    </div>
+
+                    <p class="m-0 text-truncate fw-normal">2 items</p>
+                    <small class="text-muted d-block smaller">3 hours ago</small>
+
+                </a>
+                <!-- /item -->
+
+
+                <!-- item -->
+                <a href="#"
+                    class="clearfix d-block dropdown-item fw-medium p-3 rounded overflow-hidden border-bottom border-light">
+
+                    <!-- badge -->
+                    <span class="float-end fw-bold text-muted small">$280.00</span>
+
+                    <!-- icon -->
+                    <div class="float-start avatar avatar-sm rounded-circle bg-gray-200 fs-5">
+                        <i class="fi fi-cart-1"></i>
+                    </div>
+
+                    <p class="m-0 text-truncate fw-normal">3 items</p>
+                    <small class="text-muted d-block smaller">8 hours ago</small>
+
+                </a>
+                <!-- /item -->
+
+
+                <!-- item -->
+                <a href="#"
+                    class="clearfix d-block dropdown-item fw-medium p-3 rounded overflow-hidden border-bottom border-light">
+
+                    <!-- badge -->
+                    <span class="float-end fw-bold text-muted small">$999.98</span>
+
+                    <!-- icon -->
+                    <div class="float-start avatar avatar-sm rounded-circle bg-gray-200 fs-5">
+                        <i class="fi fi-cart-1"></i>
+                    </div>
+
+                    <p class="m-0 text-truncate fw-normal">4 items</p>
+                    <small class="text-muted d-block smaller">12 hours ago</small>
+
+                </a>
+                <!-- /item -->
+
+
+                <!-- item -->
+                <a href="#"
+                    class="clearfix d-block dropdown-item fw-medium p-3 rounded overflow-hidden border-bottom border-light">
+
+                    <!-- badge -->
+                    <span class="float-end fw-bold text-muted small">$596.36</span>
+
+                    <!-- icon -->
+                    <div class="float-start avatar avatar-sm rounded-circle bg-gray-200 fs-5">
+                        <i class="fi fi-cart-1"></i>
+                    </div>
+
+                    <p class="m-0 text-truncate fw-normal">1 items</p>
+                    <small class="text-muted d-block smaller">24 hours ago</small>
+
+                </a>
+                <!-- /item -->
+
+
+                <!-- item -->
+                <a href="#"
+                    class="clearfix d-block dropdown-item fw-medium p-3 rounded overflow-hidden border-bottom border-light">
+
+                    <!-- badge -->
+                    <span class="float-end fw-bold text-muted small">$280.00</span>
+
+                    <!-- icon -->
+                    <div class="float-start avatar avatar-sm rounded-circle bg-gray-200 fs-5">
+                        <i class="fi fi-cart-1"></i>
+                    </div>
+
+                    <p class="m-0 text-truncate fw-normal">3 items</p>
+                    <small class="text-muted d-block smaller">8 hours ago</small>
+
+                </a>
+                <!-- /item -->
+
+
+                <!-- item -->
+                <a href="#"
+                    class="clearfix d-block dropdown-item fw-medium p-3 rounded overflow-hidden border-bottom border-light">
+
+                    <!-- badge -->
+                    <span class="float-end fw-bold text-muted small">$999.98</span>
+
+                    <!-- icon -->
+                    <div class="float-start avatar avatar-sm rounded-circle bg-gray-200 fs-5">
+                        <i class="fi fi-cart-1"></i>
+                    </div>
+
+                    <p class="m-0 text-truncate fw-normal">4 items</p>
+                    <small class="text-muted d-block smaller">12 hours ago</small>
+
+                </a>
+                <!-- /item -->
+
+            </div>
+            <!-- /items -->
+
+            <div class="d-flex align-self-baseline w-100 py-2">
+                <a href="#" class="btn btn-sm link-muted border-0 shadow-none">
+                    <i class="fi fi-arrow-end"></i>
+                    <span>View All</span>
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+    <!-- /orders -->
+
+</div>
+<!-- /widgets -->

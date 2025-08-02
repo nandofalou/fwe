@@ -98,9 +98,10 @@ module.exports = EventController;
 
 ## 4. Criar a Migration
 
-- Crie um arquivo SQL em `App/Migrations/` e também em `App/Migrations/forMySQL/` e `App/Migrations/forSqlite/` se necessário.
+- Crie um arquivo SQL em `App/Migrations/Mysql/` (para MySQL) ou `App/Migrations/Sqlite/` (para SQLite).
 - Use prefixo numérico crescente (ex: `006_create_novo_recurso_table.sql`).
 - Siga o padrão dos exemplos existentes.
+- O sistema executa automaticamente as migrations da pasta correta conforme o banco configurado no `config.ini`.
 
 **Exemplo MySQL:**
 ```sql

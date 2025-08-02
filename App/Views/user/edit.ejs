@@ -1,0 +1,4 @@
+<% var body = include('./partials/edit_body', { title, flash, user, isEdit, permissions }) %>
+<% var scripts = include('./partials/scripts', { title, flash, user, isEdit, permissions }) %>
+
+<%- include('../layouts/app', { title, flash, body, scripts}) %> 

@@ -1,0 +1,122 @@
+<!-- HEADER PRINCIPAL -->
+<header class="mt-lg-n6 mb-4">
+    <h1 class="h4 mb-0">Cadastro de Categorias</h1>
+</header>
+
+<!-- Flash Messages -->
+<% if (hasFlash('categories')) { %>
+    <div class="alert alert-<%= getFlash('categories').type %> alert-dismissible fade show" role="alert">
+        <%= getFlash('categories').message %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<% } %>
+
+<!-- Category Form -->
+<div class="section rounded mb-3">
+    <div class="bg-white shadow-md rounded">
+        <div class="p-4 border-bottom d-flex align-items-center justify-content-between">
+            <h5 class="mb-0"><%= isEdit ? 'Editar Categoria' : 'Nova Categoria' %></h5>
+            <a href="<%= base_url('category') %>" class="btn btn-light border">
+                <i class="fi fi-arrow-left me-2"></i>Voltar
+            </a>
+        </div>
+        
+        <div class="p-4">
+            <form method="POST" action="<%= isEdit ? base_url('category/' + category.id) : base_url('category') %>" class="needs-validation" novalidate>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="name" class="form-label">Nome da Categoria *</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="name" 
+                               name="name" 
+                               value="<%= category ? category.name : '' %>"
+                               required>
+                        <div class="invalid-feedback">
+                            Nome da categoria é obrigatório.
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="code" class="form-label">Código</label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="code" 
+                               name="code" 
+                               value="<%= category ? category.code : '' %>"
+                               placeholder="Código da categoria">
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="type" class="form-label">Tipo</label>
+                        <select class="form-select" id="type" name="type">
+                            <option value="CREDENCIADO" <%= category && category.type === 'CREDENCIADO' ? 'selected' : '' %>>Credenciado</option>
+                            <option value="TICKET" <%= category && category.type === 'TICKET' ? 'selected' : '' %>>Ticket</option>
+                            <option value="COLABORADOR" <%= category && category.type === 'COLABORADOR' ? 'selected' : '' %>>Colaborador</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="multiplo" class="form-label">Múltiplo</label>
+                        <label class="d-flex align-items-center mb-3">
+                            <input class="d-none-cloaked" type="checkbox" name="multiplo" id="multiplo" value="1" <%= category && category.multiplo == 1 ? 'checked' : '' %>>
+                            <i class="switch-icon switch-icon-primary switch-icon-xs"></i>
+                            <span class="px-3 user-select-none">Acesso multiplo</span>
+                        </label>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="fluxo" class="form-label">Fluxo</label>
+                        <label class="d-flex align-items-center mb-3">
+                            <input class="d-none-cloaked" type="checkbox" name="fluxo" id="fluxo" value="1" <%= category && category.fluxo == 1 ? 'checked' : '' %>>
+                            <i class="switch-icon switch-icon-primary switch-icon-xs"></i>
+                            <span class="px-3 user-select-none">Fluxo de acesso</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="external_id" class="form-label">ID Externo</label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="external_id" 
+                               name="external_id" 
+                               value="<%= category ? category.external_id : '' %>"
+                               placeholder="ID externo">
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="<%= base_url('category') %>" class="btn btn-outline-secondary">
+                        <i class="fi fi-arrow-left me-2"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fi fi-check me-2"></i>
+                        <%= isEdit ? 'Atualizar Categoria' : 'Criar Categoria' %>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script> 

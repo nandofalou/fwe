@@ -1,0 +1,63 @@
+<!-- HEADER PADRÃO CRUD -->
+<header class="mt-lg-n6 mb-4">
+    <h1 class="h4 mb-0">Cadastro de Grupos</h1>
+</header>
+
+<!-- Flash Messages -->
+<% if (hasFlash('groups')) { %>
+    <div class="alert alert-<%= getFlash('groups').type %> alert-dismissible fade show" role="alert">
+        <%= getFlash('groups').message %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<% } %>
+
+<!-- Grupo Form -->
+<div class="section rounded mb-3">
+    <div class="bg-white shadow-md rounded">
+        <div class="p-4 border-bottom d-flex align-items-center justify-content-between">
+            <h5 class="mb-0"><%= isEdit ? 'Editar Grupo' : 'Novo Grupo' %></h5>
+            <a href="<%= base_url('group') %>" class="btn btn-light border">
+                <i class="fi fi-arrow-left me-2"></i>Voltar
+            </a>
+        </div>
+        <div class="p-4">
+            <form method="POST" action="<%= isEdit ? base_url('group/' + group.id) : base_url('group') %>" class="needs-validation" novalidate>
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        <label for="name" class="form-label">Nome *</label>
+                        <input type="text" class="form-control" id="name" name="name" value="<%= group ? group.name : '' %>" required>
+                        <div class="invalid-feedback">Nome obrigatório.</div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <a href="<%= base_url('group') %>" class="btn btn-outline-secondary">
+                        <i class="fi fi-arrow-left me-2"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fi fi-check me-2"></i>
+                        <%= isEdit ? 'Atualizar Grupo' : 'Criar Grupo' %>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script> 

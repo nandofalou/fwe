@@ -7,5 +7,8 @@ module.exports = {
     },
     error(message = 'Erro inesperado', error = null, data = null, extra = {}) {
         return { status: false, message, error, data, ...extra };
+    },
+    access(status, data = null, extra = {}) {
+        return { status: true,...data, ...extra };
     }
 }; 
