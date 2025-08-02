@@ -1,53 +1,70 @@
-<!-- HEADER PADRÃO CRUD -->
-<header class="mt-lg-n6 mb-4">
-    <h1 class="h4 mb-0">Cadastro de Usuários</h1>
-</header>
-
-<!-- Tabela de Usuários -->
-<div class="section rounded mb-3">
-    <div class="bg-white shadow-md rounded">
-        <div class="p-4 border-bottom d-flex align-items-center justify-content-between">
-            <h5 class="mb-0">Lista de Usuários</h5>
-            <a href="<%= base_url('user/edit') %>" class="btn btn-primary">
-                <i class="fi fi-plus me-2"></i> Novo Usuário
-            </a>
-        </div>
-        <div class="p-4 pt-0">
-            <div class="table-responsive">
-                <table id="usersTable" class="table datatable table-bordered table-hover table-striped">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nome</th>
-                            <th>Email</th>
-                            <th>Permissão</th>
-                            <th>Status</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (users && users.length > 0) { %>
-                            <% users.forEach(function(user) { %>
-                                <tr>
-                                    <td><%= user.id %></td>
-                                    <td><%= user.name %></td>
-                                    <td><%= user.email %></td>
-                                    <td><%= user.permissionName %></td>
-                                    <td><%= user.active == 1 ? 'Ativo' : 'Inativo' %></td>
-                                    <td>
-                                        <a href="<%= base_url('user/edit/' + user.id) %>" class="btn btn-sm btn-outline-primary"><i class="fi fi-pencil"></i></a>
-                                        <form method="POST" action="<%= base_url('user/' + user.id) %>" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este usuário?');">
-                                            <button type="submit" class="btn btn-sm btn-danger"><i class="fi fi-thrash"></i></button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            <% }); %>
-                        <% } else { %>
-                            <tr><td colspan="6" class="text-center">Nenhum usuário encontrado.</td></tr>
-                        <% } %>
-                    </tbody>
-                </table>
+<div class="app-content-header">
+    <!--begin::Container-->
+    <div class="container-fluid">
+        <!--begin::Row-->
+        <div class="row">
+            <div class="col-sm-6">
+                <h3 class="mb-0">Cadastro de Usuários</h3>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item"><a href="#">User</a></li>
+                </ol>
             </div>
         </div>
+        <!--end::Row-->
     </div>
-</div> 
+    <!--end::Container-->
+</div>
+<!--end::App Content Header-->
+<!--begin::App Content-->
+<div class="app-content">
+    <div class="section rounded mb-3">
+        <div class="bg-white shadow-md rounded">
+            <div class="p-4 border-bottom d-flex align-items-center justify-content-between">
+                <h5 class="mb-0">Lista de Usuários</h5>
+                <a href="<%= base_url('user/edit') %>" class="btn btn-primary">
+                    <i class="fi fi-plus me-2"></i> Novo Usuário
+                </a>
+            </div>
+            <div class="p-4 pt-0">
+                <div class="table-responsive">
+                    <table id="usersTable" class="table datatable table-bordered table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Permissão</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (users && users.length > 0) { %>
+                                <% users.forEach(function(user) { %>
+                                    <tr>
+                                        <td><%= user.id %></td>
+                                        <td><%= user.name %></td>
+                                        <td><%= user.email %></td>
+                                        <td><%= user.permissionName %></td>
+                                        <td><%= user.active == 1 ? 'Ativo' : 'Inativo' %></td>
+                                        <td>
+                                            <a href="<%= base_url('user/edit/' + user.id) %>" class="btn btn-sm btn-outline-primary">EDIT</a>
+                                            <form method="POST" action="<%= base_url('user/' + user.id) %>" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este usuário?');">
+                                                <button type="submit" class="btn btn-sm btn-danger">REMOVE</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr><td colspan="6" class="text-center">Nenhum usuário encontrado.</td></tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div> 
+</div>
+<!--end::App Content-->

@@ -228,7 +228,7 @@ A função `base_url()` está disponível automaticamente em todas as views EJS 
 ```js
 const { base_url } = require('../Helpers/Common');
 console.log(base_url()); // http://localhost:9000
-console.log(base_url('assets/img/logo.png'));
+console.log(base_url('assets/images/logo.png'));
 ```
 
 **Exemplo de uso em view EJS:**

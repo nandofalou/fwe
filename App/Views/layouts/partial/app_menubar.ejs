@@ -1,90 +1,59 @@
-<!--  header -->
-<header id="header" class="d-flex align-items-center bg-transparent">
+<nav class="app-header navbar navbar-expand bg-body">
+    <!--begin::Container-->
+    <div class="container-fluid">
+      <!--begin::Start Navbar Links-->
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button">
+            <i class="bi bi-list"></i>
+          </a>
+        </li>
+        <li class="nav-item d-none d-md-block">
+          <a href="<%= base_url('dashboard') %>" class="nav-link">Home</a>
+        </li>
+        <li class="nav-item d-none d-md-block">
+          <a href="#" class="nav-link">Contact</a>
+        </li>
+      </ul>
+      <!--end::Start Navbar Links-->
 
-    <!-- Navbar -->
-    <div class="px-3 px-lg-0 w-100 position-relative">
+      <!--begin::End Navbar Links-->
+      <ul class="navbar-nav ms-auto">
+        <!--begin::Fullscreen Toggle-->
+        <li class="nav-item">
+          <a class="nav-link" href="#" data-lte-toggle="fullscreen">
+            <i data-lte-icon="maximize" class="bi bi-arrows-fullscreen"></i>
+            <i data-lte-icon="minimize" class="bi bi-fullscreen-exit" style="display: none"></i>
+          </a>
+        </li>
+        <!--end::Fullscreen Toggle-->
 
-        <nav class="navbar navbar-expand-lg navbar-light justify-content-between h-auto">
-
-            <!-- logo, navigation toggler -->
-            <div class="align-items-start">
-
-                <!-- sidebar toggler -->
-                <a href="#aside-main"
-                    class="btn-sidebar-toggle h-100 d-inline-block d-lg-none justify-content-center align-items-center p-2">
-                    <span>
-                        <svg width="25" height="25" viewBox="0 0 20 20">
-                            <path
-                                d="M 19.9876 1.998 L -0.0108 1.998 L -0.0108 -0.0019 L 19.9876 -0.0019 L 19.9876 1.998 Z">
-                            </path>
-                            <path
-                                d="M 19.9876 7.9979 L -0.0108 7.9979 L -0.0108 5.9979 L 19.9876 5.9979 L 19.9876 7.9979 Z">
-                            </path>
-                            <path
-                                d="M 19.9876 13.9977 L -0.0108 13.9977 L -0.0108 11.9978 L 19.9876 11.9978 L 19.9876 13.9977 Z">
-                            </path>
-                            <path
-                                d="M 19.9876 19.9976 L -0.0108 19.9976 L -0.0108 17.9976 L 19.9876 17.9976 L 19.9876 19.9976 Z">
-                            </path>
-                        </svg>
-                    </span>
-                </a>
-
-                <!-- logo : mobile only -->
-                <a class="navbar-brand d-inline-block d-lg-none mx-2" href="<%= base_url('dashboard') %>">
-                    <img src="<%= base_url() %>/assets/images/logo/logo_sm.svg" width="38" height="38" alt="...">
-                </a>
-
-            </div>
-
-            <!-- options -->
-            <ul class="list-inline list-unstyled mb-0 d-flex align-items-end">
-
-
-                <!-- account -->
-                <li class="list-inline-item mx-1 dropdown">
-
-                    <!-- has avatar -->
-                    <a href="#" id="dropdownAccountOptions"
-                        class="avatar avatar-sm dropdown-toggle rounded-circle shadow bg-cover"
-                        data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"
-                        aria-haspopup="true" aria-label="Account options">
-                        <%= user ? user.name.charAt(0).toUpperCase() : 'U' %>
-                    </a>
-
-
-                    <div aria-labelledby="dropdownAccountOptions"
-                        class="dropdown-menu dropdown-menu-clean dropdown-menu-navbar-autopos dropdown-menu-invert dropdown-fadeindown p-0 mt-2 w-300">
-
-                        <!-- user detail -->
-                        <div
-                            class="dropdown-header bg-primary bg-gradient rounded rounded-bottom-0 text-white small p-4">
-                            <span class="d-block fw-medium text-truncate">
-                                <%= user ? user.name : 'Usuário' %>
-                            </span>
-                            <span class="d-block smaller fw-medium text-truncate"><a href="/cdn-cgi/l/email-protection"
-                                    class="__cf_email__"
-                                    data-cfemail="c4aeabacaaeaa0aba184a3a9a5ada8eaa7aba9">[email&#160;protected]</a></span>
-                            <span class="d-block smaller"><b>Último Login:</b>
-                                <%= session.created_at ? new Date(session.created_at).toLocaleString('pt-BR') : ''%></span>
-                        </div>
-
-                        <a href="<%=base_url('auth/logout') %>"
-                            class="prefix-icon-ignore dropdown-footer dropdown-custom-ignore fw-medium py-3 px-4">
-                            <i class="fi fi-power float-start"></i>
-                            Log Out
-                        </a>
-                    </div>
-
-                </li>
-
-            </ul>
-            <!-- /options -->
-
-        </nav>
-
+        <!--begin::User Menu Dropdown-->
+        <li class="nav-item dropdown user-menu">
+          <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+            <img src="<%= base_url() %>/assets/images/user2-160x160.jpg" class="user-image rounded-circle shadow" alt="User Image" />
+            <span class="d-none d-md-inline"><%= user ? user.name : 'Usuário' %></span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
+            <!--begin::User Image-->
+            <li class="user-header text-bg-primary">
+              <img src="<%= base_url() %>/assets/images/user2-160x160.jpg" class="rounded-circle shadow" alt="User Image" />
+              <p>
+                <%= user ? user.name : 'Usuário' %> - Web Developer
+                <small><%= session.created_at ? new Date(session.created_at).toLocaleString('pt-BR') : ''%></small>
+              </p>
+            </li>
+            
+            <li class="user-footer">
+              <a href="#" class="btn btn-default btn-flat">Profile</a>
+              <a href="<%=base_url('auth/logout') %>" class="btn btn-default btn-flat float-end">Sign out</a>
+            </li>
+            <!--end::Menu Footer-->
+          </ul>
+        </li>
+        <!--end::User Menu Dropdown-->
+      </ul>
+      <!--end::End Navbar Links-->
     </div>
-    <!-- /Navbar -->
-
-</header>
-<!-- /Header -->
+    <!--end::Container-->
+  </nav>

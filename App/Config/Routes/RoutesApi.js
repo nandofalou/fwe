@@ -1,8 +1,5 @@
 const AuthApiController = require('../../Controllers/Api/AuthController');
 const UserController = require('../../Controllers/Api/UserController');
-const CategoryController = require('../../Controllers/Api/CategoryController');
-const EventController = require('../../Controllers/Api/EventController');
-const AcessoController = require('../../Controllers/Api/AcessoController');
 const AuthMiddleware = require('../../Middlewares/AuthMiddleware');
 
 /**
@@ -32,22 +29,9 @@ function registerApiRoutes(router) {
         protectedApiRouter.delete('/users/avatar', UserController.removeAvatar);
         
         // Rotas de eventos
-        protectedApiRouter.resource('/events', EventController);
+        // protectedApiRouter.resource('/events', EventController);
         
-        // Rotas de categorias
-        protectedApiRouter.resource('/categories', CategoryController);
-        
-        // Rotas customizadas de categorias (comentadas para uso futuro)
-        // protectedApiRouter.get('/categories/type/:type', CategoryController.findByType);
-        // protectedApiRouter.get('/categories/code/:code', CategoryController.findByCode);
-        // protectedApiRouter.get('/categories/name/:name', CategoryController.findByName);
     });
-
-    router.group('/api/acesso', [], acesso => {
-        
-        acesso.post('/', AcessoController.acesso);
-        acesso.post('/register', AcessoController.register);
-    })
 }
 
 module.exports = registerApiRoutes; 
