@@ -1,21 +1,26 @@
 {
   "name": "fwe",
-  "version": "1.0.0",
-  "description": "FWE - Framework Web Electron",
+  "version": "1.0.1",
+  "description": "fwe - Framework",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "nodemon --exec electron .",
+    "dev": "nodemon --exec electron . --dev",
+    "devfull": "nodemon --exec electron .",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "debug": "electron . --dev --inspect=5858",
+    "debug-server": "node --inspect=9229 server.js",
     "build": "electron-builder",
-    "build:portable": "electron-builder --win portable"
+    "build:portable": "electron-builder --win portable",
+    "build:debug": "electron-builder --win portable",
+    "start:debug": "electron . --dev"
   },
   "keywords": [
     "electron",
     "framework",
     "web"
   ],
-  "author": "",
+  "author": "CloudID",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -29,9 +34,15 @@
     "marked": "^4.3.0",
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.14.1",
+    "node-machine-id": "^1.1.12",
     "sqlite3": "^5.1.6"
   },
   "build": {
+    "appId": "com.cloudid.fwe",
+    "productName": "fwe - Framework",
+    "directories": {
+      "output": "dist"
+    },
     "files": [
       "App/**/*",
       "Public/**/*",
@@ -43,7 +54,27 @@
       "App/Views",
       "Public",
       "docs"
-    ]
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "installerIcon": "build/installer.ico"
+    }
   },
   "devDependencies": {
     "electron": "^28.1.0",

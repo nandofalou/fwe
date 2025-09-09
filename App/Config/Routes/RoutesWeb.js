@@ -5,7 +5,7 @@ const DocsController = require('../../Controllers/DocsController');
 const ExampleController = require('../../Controllers/ExampleController');
 const HomeController = require('../../Controllers/HomeController');
 const UserController = require('../../Controllers/UserController');
-
+const ServicesController = require('../../Controllers/ServicesController');
 
 /**
  * Registra todas as rotas web (páginas)
@@ -21,28 +21,20 @@ function registerWebRoutes(router) {
     // Rota de instalação
     router.get('/install', require('../../Controllers/Api/InstallController').install);
     
-    // Dashboard
-    router.get('/dashboard', DashboardController.index);
+    // Dashboard (com SessionMiddleware para verificar autenticação)
+    router.get('/dashboard', [SessionMiddleware], DashboardController.index);
 
-    // Rotas de documentação
-    router.get('/docs', DocsController.index);
-    router.get('/docs/:documento', DocsController.show);
+    // Rotas de documentação (com SessionMiddleware para manter sessão)
+    router.get('/docs', SessionMiddleware, DocsController.index);
+    router.get('/docs/:documento', SessionMiddleware, DocsController.show);
 
-    // Rotas de autenticação
-    router.group('/auth', [], authRouter => {
+    // Rotas de autenticação (com SessionMiddleware e LicenseMiddleware)
+    router.group('/auth', [SessionMiddleware], authRouter => {
         authRouter.get('/', AuthController.index);
         authRouter.post('/', AuthController.login);
         authRouter.get('/logout', AuthController.logout);
     });
-
-    // Rotas de eventos (views) com SessionMiddleware
-    // router.group('/event', [SessionMiddleware], eventRouter => {
-    //     eventRouter.get('/', EventViewController.index);
-    //     eventRouter.get('/edit', EventViewController.edit);
-    //     eventRouter.get('/edit/:id', EventViewController.edit);
-    //     eventRouter.post('/', EventViewController.store);
-    //     eventRouter.post('/:id', EventViewController.update);
-    // });
+   
 
     // Rotas de usuários (views) com SessionMiddleware
     router.group('/user', [SessionMiddleware], userRouter => {
@@ -54,6 +46,21 @@ function registerWebRoutes(router) {
         userRouter.post('/:id/delete', UserController.delete);
     });
 
+    //Rotas de serviços (views) com SessionMiddleware
+    router.group('/services', [SessionMiddleware], servicesRouter => {
+        servicesRouter.get('/', ServicesController.index);
+        servicesRouter.get('/list', ServicesController.list);
+        servicesRouter.get('/search', ServicesController.search);
+        servicesRouter.get('/status', ServicesController.status);
+        servicesRouter.get('/info/:serviceName', ServicesController.info);
+        servicesRouter.post('/run/:serviceName', ServicesController.run);
+        servicesRouter.post('/stop/:serviceName', ServicesController.stop);
+        servicesRouter.post('/stop-id/:id', ServicesController.stopById);
+        servicesRouter.post('/stop-all', ServicesController.stopAll);
+        servicesRouter.post('/restart/:serviceName', ServicesController.restart);
+        servicesRouter.post('/cleanup', ServicesController.cleanup);
+        servicesRouter.post('/reload', ServicesController.reload);
+    });
 }
 
 module.exports = registerWebRoutes; 

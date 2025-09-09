@@ -25,6 +25,11 @@ class BaseModel {
         this._joins = [];
         this._groupBy = '';
         this._having = [];
+        
+        // Log para debug
+        if (process.env.NODE_ENV === 'development') {
+            console.log('Builder resetado para:', this.table);
+        }
     }
 
     static get instance() {
@@ -360,6 +365,58 @@ class BaseModel {
     }
 
     /**
+     * Deleta registros baseado em condições
+     * @param {Object} conditions Condições para deletar
+     * @param {string} priority Prioridade da operação
+     * @returns {Promise} Número de registros afetados
+     */
+    static async deleteWhere(conditions, priority = 'auto') {
+        // Se não há condições, deletar todos os registros
+        if (!conditions || Object.keys(conditions).length === 0) {
+            return await this.rawQuery(`DELETE FROM ${this.tableName()}`, [], priority);
+        }
+        
+        // Construir WHERE clause
+        const whereClauses = Object.entries(conditions)
+            .map(([key]) => `${key} = ?`)
+            .join(' AND ');
+        const sql = `DELETE FROM ${this.tableName()} WHERE ${whereClauses}`;
+        const params = Object.values(conditions);
+        
+        return await this.rawQuery(sql, params, priority);
+    }
+
+    /**
+     * Atualiza registros baseado em condições
+     * @param {Object} data Dados para atualizar
+     * @param {Object} conditions Condições para atualizar
+     * @param {string} priority Prioridade da operação
+     * @returns {Promise} Número de registros afetados
+     */
+    static async updateWhere(data, conditions, priority = 'auto') {
+        // Construir SET clause
+        const setClauses = Object.entries(data)
+            .map(([key]) => `${key} = ?`)
+            .join(', ');
+        
+        // Se não há condições, atualizar todos os registros
+        if (!conditions || Object.keys(conditions).length === 0) {
+            const sql = `UPDATE ${this.tableName()} SET ${setClauses}`;
+            const params = Object.values(data);
+            return await this.rawQuery(sql, params, priority);
+        }
+        
+        // Construir WHERE clause
+        const whereClauses = Object.entries(conditions)
+            .map(([key]) => `${key} = ?`)
+            .join(' AND ');
+        const sql = `UPDATE ${this.tableName()} SET ${setClauses} WHERE ${whereClauses}`;
+        const params = [...Object.values(data), ...Object.values(conditions)];
+        
+        return await this.rawQuery(sql, params, priority);
+    }
+
+    /**
      * Insere múltiplos registros em uma transação
      * @param {Array} dataArray Array de objetos com dados
      * @returns {Promise<Array>} Array com IDs dos registros inseridos
@@ -509,6 +566,10 @@ class BaseModel {
                 if (w.raw) {
                     return w.sql;
                 }
+                // Para operadores IS NULL e IS NOT NULL, não adiciona ?
+                if (w.op === 'IS NULL' || w.op === 'IS NOT NULL') {
+                    return `${w.key} ${w.op}`;
+                }
                 return `${w.key} ${w.op} ?`;
             }).join(' AND ');
             sql += ` WHERE ${whereClauses}`;
@@ -516,7 +577,8 @@ class BaseModel {
             this.instance._where.forEach(w => {
                 if (w.raw) {
                     this.instance._params.push(...(w.params || []));
-                } else {
+                } else if (w.op !== 'IS NULL' && w.op !== 'IS NOT NULL') {
+                    // Só adiciona parâmetros para operadores que precisam de valor
                     this.instance._params.push(w.value);
                 }
             });

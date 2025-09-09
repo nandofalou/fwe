@@ -12,7 +12,16 @@ class BaseRoutes {
      * @param {Function} handler 
      * @param {Array} middlewares 
      */
-    get(path, handler, middlewares = []) {
+    get(path, ...args) {
+        let handler, middlewares = [];
+        
+        if (args.length === 1) {
+            handler = args[0];
+        } else if (args.length === 2) {
+            middlewares = Array.isArray(args[0]) ? args[0] : [args[0]];
+            handler = args[1];
+        }
+        
         this.routes.push({
             method: 'get',
             path,
@@ -28,7 +37,16 @@ class BaseRoutes {
      * @param {Function} handler 
      * @param {Array} middlewares 
      */
-    post(path, handler, middlewares = []) {
+    post(path, ...args) {
+        let handler, middlewares = [];
+        
+        if (args.length === 1) {
+            handler = args[0];
+        } else if (args.length === 2) {
+            middlewares = Array.isArray(args[0]) ? args[0] : [args[0]];
+            handler = args[1];
+        }
+        
         this.routes.push({
             method: 'post',
             path,
@@ -44,7 +62,16 @@ class BaseRoutes {
      * @param {Function} handler 
      * @param {Array} middlewares 
      */
-    put(path, handler, middlewares = []) {
+    put(path, ...args) {
+        let handler, middlewares = [];
+        
+        if (args.length === 1) {
+            handler = args[0];
+        } else if (args.length === 2) {
+            middlewares = Array.isArray(args[0]) ? args[0] : [args[0]];
+            handler = args[1];
+        }
+        
         this.routes.push({
             method: 'put',
             path,
@@ -60,7 +87,16 @@ class BaseRoutes {
      * @param {Function} handler 
      * @param {Array} middlewares 
      */
-    delete(path, handler, middlewares = []) {
+    delete(path, ...args) {
+        let handler, middlewares = [];
+        
+        if (args.length === 1) {
+            handler = args[0];
+        } else if (args.length === 2) {
+            middlewares = Array.isArray(args[0]) ? args[0] : [args[0]];
+            handler = args[1];
+        }
+        
         this.routes.push({
             method: 'delete',
             path,
@@ -76,7 +112,16 @@ class BaseRoutes {
      * @param {Function} handler 
      * @param {Array} middlewares 
      */
-    patch(path, handler, middlewares = []) {
+    patch(path, ...args) {
+        let handler, middlewares = [];
+        
+        if (args.length === 1) {
+            handler = args[0];
+        } else if (args.length === 2) {
+            middlewares = Array.isArray(args[0]) ? args[0] : [args[0]];
+            handler = args[1];
+        }
+        
         this.routes.push({
             method: 'patch',
             path,

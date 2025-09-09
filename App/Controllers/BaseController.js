@@ -68,6 +68,36 @@ class BaseController {
     }
 
     /**
+     * Método para tratar erros em controllers
+     * @param {Object} res - Resposta
+     * @param {Error} error - Erro
+     * @param {string} message - Mensagem personalizada
+     */
+    handleError(res, error, message = 'Erro interno do servidor') {
+        BaseController.log.error(message, { error: error.message, stack: error.stack });
+        
+        if (res.headersSent) {
+            return;
+        }
+
+        // Se for uma requisição AJAX, retorna JSON
+        if (res.req && res.req.xhr) {
+            return res.status(500).json({
+                error: true,
+                message: message,
+                details: error.message
+            });
+        }
+
+        // Se não for AJAX, renderiza página de erro
+        return res.status(500).render('error', {
+            title: 'Erro',
+            message: message,
+            error: error.message
+        });
+    }
+
+    /**
      * Listar todos os registros
      * @param {Object} req - Requisição
      * @param {Object} res - Resposta
