@@ -9,24 +9,24 @@
   - Campos permitidos (`this.allowedFields`)
   - Se usa soft delete (`this.softDelete`)
 
-**Exemplo: `App/Models/Event.js`**
+**Exemplo: `App/Models/Service.js`**
 ```js
 const BaseModel = require('./BaseModel');
 
-class Event extends BaseModel {
+class Service extends BaseModel {
     constructor() {
         super();
-        this.table = 'event';
+        this.table = 'services';
         this.primaryKey = 'id';
         this.softDelete = false;
         this.allowedFields = [
-            'created_by', 'name', 'startdate', 'enddate', 'active', 'local',
-            'created_at', 'updated_at', 'deleted_at'
+            'name', 'status', 'started_at', 'stopped_at', 'memory_usage', 'cpu_usage',
+            'created_at', 'updated_at'
         ];
     }
 }
 
-module.exports = Event;
+module.exports = Service;
 ```
 
 ---
@@ -37,24 +37,24 @@ module.exports = Event;
 - Use o helper `Validator` e defina métodos estáticos para cada operação (create, update, id, etc).
 - As regras são strings separadas por pipe (`|`).
 
-**Exemplo: `App/Validations/EventValidator.js`**
+**Exemplo: `App/Validations/ServiceValidator.js`**
 ```js
 const Validator = require('../Helpers/Validator');
 
-class EventValidator {
+class ServiceValidator {
     static validateCreate(data) {
         const rules = {
-            name: 'required',
-            startdate: 'required|date',
-            enddate: 'required|date',
-            active: 'required|numeric'
+            name: 'required|string|max:100',
+            status: 'required|in:running,stopped,error',
+            memory_usage: 'optional|numeric',
+            cpu_usage: 'optional|numeric'
         };
         return Validator.validate(data, rules);
     }
     // ... outros métodos (validateUpdate, validateId)
 }
 
-module.exports = EventValidator;
+module.exports = ServiceValidator;
 ```
 
 ---
@@ -66,23 +66,23 @@ module.exports = EventValidator;
 - Implemente os métodos `index`, `show`, `store`, `update`, `destroy`.
 - Sempre valide os dados antes de criar/atualizar.
 
-**Exemplo: `App/Controllers/EventController.js`**
+**Exemplo: `App/Controllers/ServiceController.js`**
 ```js
-const Event = require('../Models/Event');
-const EventValidator = require('../Validations/EventValidator');
+const Service = require('../Models/Service');
+const ServiceValidator = require('../Validations/ServiceValidator');
 const Response = require('../Helpers/Response');
 
-const EventController = {
+const ServiceController = {
     async index(req, res) {
         try {
-            const events = await Event.get();
-            return res.json(Response.success(events));
+            const services = await Service.get();
+            return res.json(Response.success(services));
         } catch (error) {
-            return res.status(500).json(Response.error('Erro ao listar eventos.', null));
+            return res.status(500).json(Response.error('Erro ao listar serviços.', null));
         }
     },
     async show(req, res) {
-        const validation = EventValidator.validateId(req.params.id);
+        const validation = ServiceValidator.validateId(req.params.id);
         if (!validation.isValid) {
             return res.status(422).json(Response.error('ID inválido', validation.errors));
         }
@@ -91,7 +91,7 @@ const EventController = {
     // store, update, destroy...
 };
 
-module.exports = EventController;
+module.exports = ServiceController;
 ```
 
 ---
@@ -105,18 +105,32 @@ module.exports = EventController;
 
 **Exemplo MySQL:**
 ```sql
-CREATE TABLE IF NOT EXISTS event (
+CREATE TABLE IF NOT EXISTS services (
   id INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-  -- campos...
+  name VARCHAR(100) NOT NULL,
+  status ENUM('running', 'stopped', 'error') DEFAULT 'stopped',
+  started_at DATETIME NULL,
+  stopped_at DATETIME NULL,
+  memory_usage BIGINT NULL,
+  cpu_usage DECIMAL(10,2) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 **Exemplo SQLite:**
 ```sql
-CREATE TABLE IF NOT EXISTS event (
+CREATE TABLE IF NOT EXISTS services (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  -- campos...
+  name VARCHAR(100) NOT NULL,
+  status TEXT DEFAULT 'stopped' CHECK (status IN ('running', 'stopped', 'error')),
+  started_at DATETIME NULL,
+  stopped_at DATETIME NULL,
+  memory_usage INTEGER NULL,
+  cpu_usage REAL NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
@@ -133,9 +147,9 @@ CREATE TABLE IF NOT EXISTS event (
 
 **Exemplo:**
 ```js
-const EventController = require('../../Controllers/EventController');
+const ServiceController = require('../../Controllers/ServiceController');
 // ...
-router.resource('/events', EventController);
+router.resource('/services', ServiceController);
 ```
 
 ---

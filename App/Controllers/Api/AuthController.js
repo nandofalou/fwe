@@ -44,20 +44,34 @@ class AuthController extends BaseController {
                 { expiresIn: config.jwt.expiresIn }
             );
 
+            // Calcular data de expiração
+            const expiresInMs = AuthController.parseExpiresIn(config.jwt.expiresIn);
+            const expiresAt = new Date(Date.now() + expiresInMs);
+
             AuthController.log.info('Login realizado com sucesso', { userId: user.id, email: user.email });
 
             return res.json({
-                error: false,
-                message: 'Login realizado com sucesso',
-                data: {
-                    token,
-                    user: {
+                    "token_type": "Bearer",
+                    "expires_in": expiresAt.toISOString(),
+                    "access_token": token,
+                    "user": {
                         id: user.id,
                         name: user.name,
                         email: user.email
                     }
-                }
-            });
+                });
+            // return res.json({
+            //     error: false,
+            //     message: 'Login realizado com sucesso',
+            //     data: {
+            //         token,
+            //         user: {
+            //             id: user.id,
+            //             name: user.name,
+            //             email: user.email
+            //         }
+            //     }
+            // });
         } catch (error) {
             AuthController.log.error('Erro ao fazer login', { email: req.body.email, error: error.message });
             return res.status(500).json({
@@ -297,6 +311,32 @@ class AuthController extends BaseController {
                 message: 'Erro interno do servidor'
             });
         }
+    }
+
+    /**
+     * Converte string de tempo (ex: "24h", "7d", "30m") em milissegundos
+     * @param {string} expiresIn - String de tempo (ex: "24h", "7d", "30m")
+     * @returns {number} - Tempo em milissegundos
+     */
+    static parseExpiresIn(expiresIn) {
+        const match = expiresIn.match(/^(\d+)([smhdwy])$/);
+        if (!match) {
+            throw new Error(`Formato de tempo inválido: ${expiresIn}`);
+        }
+
+        const value = parseInt(match[1]);
+        const unit = match[2];
+
+        const multipliers = {
+            's': 1000,        // segundos
+            'm': 60 * 1000,   // minutos
+            'h': 60 * 60 * 1000, // horas
+            'd': 24 * 60 * 60 * 1000, // dias
+            'w': 7 * 24 * 60 * 60 * 1000, // semanas
+            'y': 365 * 24 * 60 * 60 * 1000 // anos
+        };
+
+        return value * multipliers[unit];
     }
 }
 

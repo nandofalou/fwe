@@ -1,6 +1,6 @@
 {
-    "name": "Credenciamento::Gestor",
-    "short_name": "Gestor",
+    "name": "Fwe::Framework",
+    "short_name": "Fwe",
     "icons": [
         {
             "src": "/assets/images/android-chrome-192x192.png",

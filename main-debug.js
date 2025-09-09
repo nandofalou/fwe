@@ -17,21 +17,10 @@ function createWindow() {
     try {
         Log.info('Criando janela principal...');
         
-        // Verificar se o ícone existe
-        let iconPath = path.join(__dirname, 'build', 'icon.ico');
-        if (!fs.existsSync(iconPath)) {
-            Log.warning('Ícone da janela não encontrado, tentando alternativas...');
-            iconPath = path.join(process.resourcesPath, 'build', 'icon.ico');
-            if (!fs.existsSync(iconPath)) {
-                Log.warning('Ícone não encontrado, usando ícone padrão');
-                iconPath = null;
-            }
-        }
-        
         mainWindow = new BrowserWindow({
             width: 800,
             height: 600,
-            icon: iconPath,
+            icon: path.join(__dirname, 'build', 'icon.ico'),
             autoHideMenuBar: true, // Esconde a barra de menu
             webPreferences: {
                 nodeIntegration: true,
@@ -63,20 +52,7 @@ function createWindow() {
                 mainWindow.loadURL('data:text/html,<h1>Erro: Arquivo não encontrado</h1><p>config.html não foi encontrado.</p>');
             }
         } else {
-            Log.info('Arquivo HTML encontrado, carregando...');
-            try {
-                mainWindow.loadFile(htmlPath);
-                Log.info('Comando loadFile executado com sucesso');
-            } catch (loadError) {
-                Log.error('Erro ao carregar arquivo HTML', { error: loadError.message });
-                // Tentar carregar página de erro
-                try {
-                    mainWindow.loadFile(path.join(__dirname, 'Public', 'error.html'));
-                } catch (errorLoadError) {
-                    Log.error('Erro ao carregar página de erro', { error: errorLoadError.message });
-                    mainWindow.loadURL('data:text/html,<h1>Erro Crítico</h1><p>Não foi possível carregar nenhuma página.</p>');
-                }
-            }
+            mainWindow.loadFile(htmlPath);
         }
 
         // Interceptar o fechamento da janela para minimizar ao tray
@@ -104,7 +80,7 @@ function createWindow() {
 
         mainWindow.webContents.on('did-finish-load', () => {
             Log.info('Arquivo HTML carregado com sucesso');
-            if (config.server.autostart) {
+            if (config && config.server && config.server.autostart) {
                 Log.info('Iniciando servidor automaticamente...');
                 const { startServer } = require('./App/Libraries/Server');
                 startServer(config).then(server => {
@@ -188,62 +164,89 @@ function createTray() {
     try {
         Log.info('Criando tray...');
         
-        // Criar o ícone do tray - tentar diferentes caminhos
-        let iconPath = path.join(__dirname, 'build', 'icon.ico');
-        Log.info('Tentando caminho do ícone do tray:', iconPath);
+        // Criar o ícone do tray
+        const iconPath = path.join(__dirname, 'build', 'icon.ico');
+        Log.info('Caminho do ícone do tray:', iconPath);
         
-        // Se não existir, tentar caminhos alternativos
-        if (!fs.existsSync(iconPath)) {
-            Log.warning('Ícone não encontrado no caminho padrão, tentando alternativas...');
-            
-            // Tentar caminho relativo
-            iconPath = path.join(__dirname, '..', 'build', 'icon.ico');
-            if (!fs.existsSync(iconPath)) {
-                // Tentar caminho absoluto
-                iconPath = path.join(process.resourcesPath, 'build', 'icon.ico');
-                                 if (!fs.existsSync(iconPath)) {
-                     // Usar ícone padrão do sistema
-                     Log.warning('Nenhum ícone encontrado, usando ícone padrão');
-                     // Criar um ícone padrão simples
-                     const { nativeImage } = require('electron');
-                     const defaultIcon = nativeImage.createFromDataURL('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
-                     tray = new Tray(defaultIcon);
-                 } else {
-                    Log.info('Ícone encontrado em resources:', iconPath);
-                    tray = new Tray(iconPath);
-                }
-            } else {
-                Log.info('Ícone encontrado em caminho relativo:', iconPath);
-                tray = new Tray(iconPath);
-            }
-        } else {
-            Log.info('Ícone encontrado no caminho padrão:', iconPath);
-            tray = new Tray(iconPath);
-        }
+        tray = new Tray(iconPath);
+        tray.setToolTip('fwe - Framework');
         
-        if (tray) {
-            tray.setToolTip('fwe - Framework');
-            Log.info('Tray criado com sucesso');
-        } else {
-            Log.error('Falha ao criar tray - objeto tray é null');
-            return;
-        }
+        Log.info('Tray criado com sucesso');
     } catch (error) {
         Log.error('Erro ao criar tray', { error: error.message, stack: error.stack });
-        // Tentar criar tray sem ícone
-        try {
-            const { nativeImage } = require('electron');
-            const defaultIcon = nativeImage.createFromDataURL('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
-            tray = new Tray(defaultIcon);
-            tray.setToolTip('fwe - Framework');
-            Log.info('Tray criado sem ícone como fallback');
-        } catch (fallbackError) {
-            Log.error('Erro crítico ao criar tray', { error: fallbackError.message });
-            tray = null;
-        }
+        // Não lançar erro para não interromper a aplicação
     }
 
-    // Criar o menu do tray apenas se o tray foi criado com sucesso
+    // Criar o menu do tray
+    const contextMenu = Menu.buildFromTemplate([
+        {
+            label: 'Abrir Aplicação',
+            click: () => {
+                if (mainWindow) {
+                    mainWindow.show();
+                    mainWindow.focus();
+                }
+            }
+        },
+        {
+            label: 'Servidor',
+            submenu: [
+                {
+                    label: apiServer ? 'Parar Servidor' : 'Iniciar Servidor',
+                    click: async () => {
+                        if (apiServer) {
+                            await stopServer();
+                        } else {
+                            await startServer();
+                        }
+                        updateTrayMenu();
+                    }
+                }
+            ]
+        },
+        {
+            label: 'Backup do Banco',
+            click: async () => {
+                try {
+                    const result = await backupDatabase();
+                    if (result.status === 'success') {
+                        dialog.showMessageBox(mainWindow, {
+                            type: 'info',
+                            title: 'Backup Concluído',
+                            message: 'Backup do banco de dados criado com sucesso!',
+                            detail: `Arquivo: ${result.path}`
+                        });
+                    } else {
+                        dialog.showErrorBox('Erro no Backup', result.message);
+                    }
+                } catch (error) {
+                    dialog.showErrorBox('Erro no Backup', error.message);
+                }
+            }
+        },
+        { type: 'separator' },
+        {
+            label: 'Sair',
+            click: () => {
+                isQuitting = true;
+                app.quit();
+            }
+        }
+    ]);
+
+    tray.setContextMenu(contextMenu);
+
+    // Clique duplo no tray para abrir a aplicação
+    tray.on('double-click', () => {
+        if (mainWindow) {
+            mainWindow.show();
+            mainWindow.focus();
+        }
+    });
+}
+
+// Função para atualizar o menu do tray
+function updateTrayMenu() {
     if (tray) {
         const contextMenu = Menu.buildFromTemplate([
             {
@@ -302,88 +305,6 @@ function createTray() {
         ]);
 
         tray.setContextMenu(contextMenu);
-
-        // Clique duplo no tray para abrir a aplicação
-        tray.on('double-click', () => {
-            if (mainWindow) {
-                mainWindow.show();
-                mainWindow.focus();
-            }
-        });
-        
-        Log.info('Menu do tray configurado com sucesso');
-    } else {
-        Log.warning('Tray não disponível, pulando configuração do menu');
-    }
-}
-
-// Função para atualizar o menu do tray
-function updateTrayMenu() {
-    if (tray) {
-        try {
-            const contextMenu = Menu.buildFromTemplate([
-                {
-                    label: 'Abrir Aplicação',
-                    click: () => {
-                        if (mainWindow) {
-                            mainWindow.show();
-                            mainWindow.focus();
-                        }
-                    }
-                },
-                {
-                    label: 'Servidor',
-                    submenu: [
-                        {
-                            label: apiServer ? 'Parar Servidor' : 'Iniciar Servidor',
-                            click: async () => {
-                                if (apiServer) {
-                                    await stopServer();
-                                } else {
-                                    await startServer();
-                                }
-                                updateTrayMenu();
-                            }
-                        }
-                    ]
-                },
-                {
-                    label: 'Backup do Banco',
-                    click: async () => {
-                        try {
-                            const result = await backupDatabase();
-                            if (result.status === 'success') {
-                                dialog.showMessageBox(mainWindow, {
-                                    type: 'info',
-                                    title: 'Backup Concluído',
-                                    message: 'Backup do banco de dados criado com sucesso!',
-                                    detail: `Arquivo: ${result.path}`
-                                });
-                            } else {
-                                dialog.showErrorBox('Erro no Backup', result.message);
-                            }
-                        } catch (error) {
-                            dialog.showErrorBox('Erro no Backup', error.message);
-                        }
-                    }
-                },
-                { type: 'separator' },
-                {
-                    label: 'Sair',
-                    click: () => {
-                        isQuitting = true;
-                        app.quit();
-                    }
-                }
-            ]);
-
-            tray.setContextMenu(contextMenu);
-            Log.info('Menu do tray atualizado com sucesso');
-        } catch (error) {
-            Log.error('Erro ao atualizar menu do tray', { error: error.message });
-        }
-    } else {
-        Log.warning('Tray não disponível para atualização do menu');
     }
 }
 
@@ -419,41 +340,27 @@ async function initializeApp() {
     }
 }
 
-// Verificar se já existe uma instância rodando
-const gotTheLock = app.requestSingleInstanceLock();
+// VERSÃO SEM CONTROLE DE INSTÂNCIA ÚNICA PARA DEBUG
+Log.info('Iniciando aplicação em modo debug (sem controle de instância única)');
 
-if (!gotTheLock) {
-    Log.warning('Outra instância da aplicação já está rodando');
-    app.quit();
-} else {
-    app.on('second-instance', (event, commandLine, workingDirectory) => {
-        Log.info('Segunda instância detectada, focando janela principal');
-        if (mainWindow) {
-            if (mainWindow.isMinimized()) mainWindow.restore();
-            mainWindow.focus();
-            mainWindow.show();
-        }
-    });
-
-    // Eventos do Electron
-    app.whenReady().then(() => {
+// Eventos do Electron
+app.whenReady().then(() => {
+    try {
+        Log.info('Iniciando aplicação Electron...');
+        initializeApp();
+    } catch (err) {
+        Log.error('Erro ao inicializar a aplicação Electron', { error: err.message, stack: err.stack });
+        // Em caso de erro, tentar criar a janela mesmo assim
         try {
-            Log.info('Iniciando aplicação Electron...');
-            initializeApp();
-        } catch (err) {
-            Log.error('Erro ao inicializar a aplicação Electron', { error: err.message, stack: err.stack });
-            // Em caso de erro, tentar criar a janela mesmo assim
-            try {
-                createWindow();
-            } catch (windowErr) {
-                Log.error('Erro crítico ao criar janela', { error: windowErr.message });
-            }
+            createWindow();
+        } catch (windowErr) {
+            Log.error('Erro crítico ao criar janela', { error: windowErr.message });
         }
-        app.on('activate', function () {
-            if (BrowserWindow.getAllWindows().length === 0) createWindow();
-        });
+    }
+    app.on('activate', function () {
+        if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
-}
+});
 
 app.on('window-all-closed', function () {
     if (process.platform !== 'darwin') {
@@ -587,4 +494,4 @@ async function backupDatabase() {
         Log.error('Erro ao criar backup do banco de dados', { error: error.message });
         return { status: 'error', message: error.message };
     }
-} 
+}
