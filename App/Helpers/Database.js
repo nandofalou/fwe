@@ -19,8 +19,9 @@ const Database = {
     // --- FILAS SEPARADAS POR PRIORIDADE ---
     criticalQueue: Promise.resolve(), // Para operações críticas (acesso, edição)
     batchQueue: Promise.resolve(),    // Para operações em lote (importação, geração)
-    maxConcurrentBatch: 3,           // Máximo de operações em lote simultâneas
+    maxConcurrentBatch: 2,           // Reduzido para evitar conflitos
     activeBatchOperations: 0,
+    queueLock: false,                // Lock para evitar operações simultâneas
 
     async connect() {
         if (this.config.database.driver === 'mysql') {
@@ -81,7 +82,13 @@ const Database = {
      * Usado para: acesso, edição, operações que não podem esperar
      */
     enqueueCritical(operation) {
-        this.criticalQueue = this.criticalQueue.then(operation).catch(err => {
+        this.criticalQueue = this.criticalQueue.then(async () => {
+            // Aguarda se há operações em lote ativas
+            while (this.activeBatchOperations > 0) {
+                await new Promise(resolve => setTimeout(resolve, 5));
+            }
+            return await operation();
+        }).catch(err => {
             console.error("Erro na execução crítica do banco:", err);
             throw err;
         });

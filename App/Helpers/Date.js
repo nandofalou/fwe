@@ -132,6 +132,22 @@ function getAge(birthDate) {
     return age;
 }
 
+/**
+ * Converte uma data no formato YYYY-MM-DD para DD/MM/YYYY sem problemas de timezone
+ * @param {string} dateString Data no formato YYYY-MM-DD
+ * @returns {string} Data formatada no formato DD/MM/YYYY
+ */
+function formatDateFromString(dateString) {
+    if (!dateString || typeof dateString !== 'string') return '';
+    
+    // Verifica se está no formato YYYY-MM-DD
+    const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return dateString;
+    
+    const [, year, month, day] = match;
+    return `${day}/${month}/${year}`;
+}
+
 module.exports = {
     formatDate,
     formatDateTime,
@@ -143,5 +159,6 @@ module.exports = {
     firstDayOfMonth,
     lastDayOfMonth,
     isBetween,
-    getAge
+    getAge,
+    formatDateFromString
 }; 

@@ -7,6 +7,7 @@ const ejs = require('ejs');
 const { base_url } = require('../Helpers/Common');
 const SessionMiddleware = require('../Middlewares/SessionMiddleware');
 const { resolveAppPath } = require('../Helpers/Path');
+const ServiceManager = require('../Services/ServiceManager');
 
 class Server {
     constructor(config) {
@@ -19,11 +20,43 @@ class Server {
     }
 
     setupMiddleware() {
-        this.app.use(SessionMiddleware);
+        // SessionMiddleware removido daqui - será aplicado apenas nas rotas específicas
         this.app.use(cors());
-        this.app.use(express.json());
-        this.app.use(express.urlencoded({ extended: true }));
-        this.app.use(fileUpload());
+        
+        // Middleware de debug para requisições grandes (apenas para desenvolvimento)
+        if (process.env.NODE_ENV === 'development') {
+            this.app.use((req, res, next) => {
+                console.log('Content-Type:', req.headers['content-type']);
+                console.log('Content-Length:', req.headers['content-length']);
+                console.log('URL:', req.url);
+                next();
+            });
+        }
+        
+        this.app.use(express.json({ 
+            limit: '50mb',
+            verify: (req, res, buf) => {
+                if (process.env.NODE_ENV === 'development') {
+                    console.log('Buffer size:', buf.length);
+                }
+            }
+        }));
+        this.app.use(express.urlencoded({ 
+            extended: true, 
+            limit: '50mb',
+            verify: (req, res, buf) => {
+                if (process.env.NODE_ENV === 'development') {
+                    console.log('URL-encoded buffer size:', buf.length);
+                }
+            }
+        }));
+        
+        // Configurar fileUpload apenas para rotas que precisam de upload de arquivos
+        this.app.use('/api/upload', fileUpload({
+            limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+            useTempFiles: false,
+            debug: false
+        }));
         // Configura EJS como view engine (async: true para permitir await nas views)
         this.app.set('view engine', 'ejs');
         const isAsar = __dirname.includes('app.asar');
@@ -76,9 +109,22 @@ class Server {
             try {
                 // Inicializa a conexão com o banco de dados antes de iniciar o servidor
                 Database.connect().then(async () => {
+                    // Executar migrations
+                    await Database.runMigrations();
+                    
+                    // Inicializar gerenciador de serviços
+                    console.log('Inicializando gerenciador de serviços...');
+                    const serviceManager = ServiceManager.getInstance();
+                    await serviceManager.initialize();
+                    console.log('Gerenciador de serviços inicializado com sucesso!');
+                    
                     // Inicia o servidor Express após a conexão estar pronta
                     this.server = this.app.listen(this.config.server.port, () => {
                         console.log(`Servidor rodando na porta ${this.config.server.port}`);
+                        console.log('Limites configurados:');
+                        console.log('- JSON: 50MB');
+                        console.log('- URL-encoded: 50MB');
+                        console.log('- File upload: 50MB');
                         resolve(this.server);
                     });
                 }).catch(err => {

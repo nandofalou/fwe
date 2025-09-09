@@ -27,10 +27,6 @@ function registerApiRoutes(router) {
         protectedApiRouter.put('/users/password', UserController.updatePassword);
         protectedApiRouter.post('/users/avatar', UserController.uploadAvatar);
         protectedApiRouter.delete('/users/avatar', UserController.removeAvatar);
-        
-        // Rotas de eventos
-        // protectedApiRouter.resource('/events', EventController);
-        
     });
 }
 

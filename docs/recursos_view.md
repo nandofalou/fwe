@@ -41,7 +41,7 @@ No diretório `App/Views/produtos/`, crie o arquivo `index.ejs`:
 
 ## Passo 3: Adicionar a Rota
 
-No arquivo de rotas (ex: `App/Config/Routes/Routes.js`):
+No arquivo de rotas (ex: `App/Config/Routes/RoutesWeb.js`):
 
 ```js
 const ProdutoController = require('../../Controllers/ProdutoController');

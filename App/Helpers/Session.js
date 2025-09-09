@@ -132,6 +132,22 @@ class Session {
         this.event.emit('session:value_removed', id, key);
         return true;
     }
+
+    /**
+     * Atualiza o timestamp de último acesso da sessão
+     * @param {string} id ID da sessão
+     * @returns {boolean}
+     */
+    async updateLastAccess(id) {
+        const session = await this.get(id);
+        if (!session) return false;
+        
+        await SessionModel.update(id, {
+            updated_at: new Date()
+        });
+        this.event.emit('session:accessed', id);
+        return true;
+    }
 }
 
 module.exports = new Session(); 
