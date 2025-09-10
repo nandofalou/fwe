@@ -71,6 +71,7 @@ autostart = true
 - **console**: `true` ou `false` — Exibe logs no console
 - **file**: `true` ou `false` — Salva logs em arquivos
 - **path**: Caminho dos arquivos de log (padrão: ./logs)
+- **maxline**: Número máximo de linhas por arquivo de log (padrão: 1024)
 
 ### `[autostart]`
 - **enabled**: `true` ou `false` — Inicia o servidor automaticamente ao abrir o app
@@ -80,6 +81,10 @@ autostart = true
 - **port**: Porta do servidor (padrão: 9000)
 - **cors**: Habilita CORS
 - **autostart**: Inicia o servidor automaticamente
+
+### `[jwt]`
+- **secret**: Chave secreta para assinatura dos tokens JWT
+- **expiresIn**: Tempo de expiração dos tokens (ex: 24h, 7d, 30m)
 
 #### Exemplo:
 ```ini
@@ -137,6 +142,14 @@ charset = utf8mb4
 console = true
 file = true
 path = ./logs
+maxline = 1024
+```
+
+**Configuração de JWT:**
+```ini
+[jwt]
+secret = your-secret-key
+expiresIn = 24h
 ```
 
 **Configuração de servidor:**
