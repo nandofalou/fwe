@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FWE - Configuração</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            opacity: 0.8;
+            font-size: 1.1em;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            background: #f8f9fa;
+            border: none;
+            font-size: 16px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .tab.active {
+            background: white;
+            color: #2c3e50;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+            min-height: 500px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .status-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-left: 5px solid #28a745;
+        }
+
+        .status-card.stopped {
+            border-left-color: #dc3545;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-running {
+            background-color: #28a745;
+        }
+
+        .status-stopped {
+            background-color: #dc3545;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
+            color: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .info-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .info-card h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .info-card p {
+            color: #6c757d;
+            margin: 5px 0;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+            color: #0c5460;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 FWE Framework</h1>
+            <p>Configuração e Controle do Sistema</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('status')">
+                📊 Status do Servidor
+            </button>
+            <button class="tab" onclick="showTab('config')">
+                ⚙️ Configurações
+            </button>
+        </div>
+
+        <!-- Aba Status do Servidor -->
+        <div id="status-tab" class="tab-content active">
+            <div id="statusCard" class="status-card">
+                <div class="status-indicator">
+                    <span id="statusDot" class="status-dot status-stopped"></span>
+                    <span id="serverStatus">Servidor Parado</span>
+                </div>
+                <div class="btn-group">
+                    <button id="startServer" class="btn btn-success">
+                        ▶️ Iniciar Servidor
+                    </button>
+                    <button id="stopServer" class="btn btn-danger" disabled>
+                        ⏹️ Parar Servidor
+                    </button>
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-card">
+                    <h4>📊 Informações do Sistema</h4>
+                    <p><strong>Data/Hora:</strong> <span id="serverDateTime">-</span></p>
+                    <p><strong>Porta da API:</strong> <span id="apiPort">-</span></p>
+                    <p><strong>URL Base:</strong> <span id="baseUrl">-</span></p>
+                </div>
+
+                <div class="info-card">
+                    <h4>🗄️ Banco de Dados</h4>
+                    <p><strong>Driver:</strong> <span id="dbDriverDisplay">-</span></p>
+                    <p><strong>Local:</strong> <span id="dbLocation">-</span></p>
+                    <button id="backupDb" class="btn btn-primary" style="display: none;">
+                        💾 Fazer Backup
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aba Configurações -->
+        <div id="config-tab" class="tab-content">
+            <div id="configAlert" class="alert alert-info">
+                <strong>ℹ️ Informação:</strong> As alterações serão salvas no arquivo config.ini. Reinicie o sistema para aplicar as mudanças.
+            </div>
+
+            <form id="configForm">
+                <!-- Seção Servidor -->
+                <div class="form-section">
+                    <h3>🌐 Configurações do Servidor</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="serverPort">Porta do Servidor</label>
+                            <input type="number" id="serverPort" class="form-control" min="1000" max="65535">
+                        </div>
+                        <div class="form-group">
+                            <label for="baseUrl">URL Base</label>
+                            <input type="url" id="baseUrl" class="form-control" placeholder="http://localhost:9000">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="corsEnabled" class="form-control">
+                                <label for="corsEnabled">Habilitar CORS</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="autostartEnabled" class="form-control">
+                                <label for="autostartEnabled">Iniciar Automaticamente</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção Banco de Dados -->
+                <div class="form-section">
+                    <h3>🗄️ Configurações do Banco de Dados</h3>
+                    <div class="form-group">
+                        <label for="dbDriver">Tipo de Banco</label>
+                        <select id="dbDriver" class="form-control" onchange="toggleDatabaseFields()">
+                            <option value="sqlite">SQLite</option>
+                            <option value="mysql">MySQL</option>
+                        </select>
+                    </div>
+
+                    <!-- Campos SQLite -->
+                    <div id="sqliteFields">
+                        <div class="form-group">
+                            <label for="sqlitePath">Caminho do Arquivo</label>
+                            <input type="text" id="sqlitePath" class="form-control" placeholder="./database.sqlite">
+                        </div>
+                    </div>
+
+                    <!-- Campos MySQL -->
+                    <div id="mysqlFields" class="hidden">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="mysqlHost">Host</label>
+                                <input type="text" id="mysqlHost" class="form-control" placeholder="localhost">
+                            </div>
+                            <div class="form-group">
+                                <label for="mysqlPort">Porta</label>
+                                <input type="number" id="mysqlPort" class="form-control" placeholder="3306" min="1" max="65535">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="mysqlUser">Usuário</label>
+                                <input type="text" id="mysqlUser" class="form-control" placeholder="root">
+                            </div>
+                            <div class="form-group">
+                                <label for="mysqlPassword">Senha</label>
+                                <input type="password" id="mysqlPassword" class="form-control" placeholder="Sua senha">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="mysqlDatabase">Nome do Banco</label>
+                                <input type="text" id="mysqlDatabase" class="form-control" placeholder="meu_banco">
+                            </div>
+                            <div class="form-group">
+                                <label for="mysqlCharset">Charset</label>
+                                <input type="text" id="mysqlCharset" class="form-control" placeholder="utf8mb4">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção Logging -->
+                <div class="form-section">
+                    <h3>📝 Configurações de Log</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="logConsole" class="form-control">
+                                <label for="logConsole">Exibir Logs no Console</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="logFile" class="form-control">
+                                <label for="logFile">Salvar Logs em Arquivo</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="logPath">Caminho dos Logs</label>
+                            <input type="text" id="logPath" class="form-control" placeholder="./logs">
+                        </div>
+                        <div class="form-group">
+                            <label for="logMaxline">Máximo de Linhas</label>
+                            <input type="number" id="logMaxline" class="form-control" placeholder="1024" min="100" max="10000">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">
+                        💾 Atualizar Configurações
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="loadConfig()">
+                        🔄 Recarregar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        // Elementos do DOM
+        const statusIndicator = document.getElementById('statusDot');
+        const serverStatus = document.getElementById('serverStatus');
+        const statusCard = document.getElementById('statusCard');
+        const startServerBtn = document.getElementById('startServer');
+        const stopServerBtn = document.getElementById('stopServer');
+        const backupDbBtn = document.getElementById('backupDb');
+        const dbLocation = document.getElementById('dbLocation');
+        const serverDateTime = document.getElementById('serverDateTime');
+        const apiPort = document.getElementById('apiPort');
+        const baseUrl = document.getElementById('baseUrl');
+        const configForm = document.getElementById('configForm');
+        const configAlert = document.getElementById('configAlert');
+
+        // Função para alternar entre abas
+        function showTab(tabName) {
+            // Remover classe active de todas as abas e conteúdos
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Adicionar classe active na aba e conteúdo selecionados
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        // Função para alternar campos do banco de dados
+        function toggleDatabaseFields() {
+            const driverSelect = document.getElementById('dbDriver');
+            const driver = driverSelect ? driverSelect.value : 'sqlite';
+            const sqliteFields = document.getElementById('sqliteFields');
+            const mysqlFields = document.getElementById('mysqlFields');
+            const backupBtn = document.getElementById('backupDb');
+            
+            console.log('Driver selecionado:', driverSelect);
+            console.log('Alternando campos para driver:', driver);
+            console.log('Elementos encontrados:', { sqliteFields: !!sqliteFields, mysqlFields: !!mysqlFields });
+            
+            if (!sqliteFields || !mysqlFields) {
+                console.error('Elementos de campos não encontrados!');
+                return;
+            }
+            
+            if (driver === 'sqlite') {
+                sqliteFields.classList.remove('hidden');
+                mysqlFields.classList.add('hidden');
+                if (backupBtn) backupBtn.style.display = 'inline-block';
+                console.log('Mostrando campos SQLite, ocultando MySQL, mostrando backup');
+            } else if (driver === 'mysql') {
+                sqliteFields.classList.add('hidden');
+                mysqlFields.classList.remove('hidden');
+                if (backupBtn) backupBtn.style.display = 'none';
+                console.log('Mostrando campos MySQL, ocultando SQLite, ocultando backup');
+            } else {
+                console.warn('Driver não reconhecido:', driver);
+                // Por padrão, mostrar SQLite
+                sqliteFields.classList.remove('hidden');
+                mysqlFields.classList.add('hidden');
+                if (backupBtn) backupBtn.style.display = 'inline-block';
+            }
+        }
+
+        // Função para atualizar o status do servidor
+        function updateServerStatus(status) {
+            console.log('Atualizando status do servidor para:', status);
+            if (status === 'started') {
+                statusIndicator.classList.remove('status-stopped');
+                statusIndicator.classList.add('status-running');
+                serverStatus.textContent = 'Servidor Rodando';
+                statusCard.classList.remove('stopped');
+                startServerBtn.disabled = true;
+                stopServerBtn.disabled = false;
+            } else if (status === 'stopped') {
+                statusIndicator.classList.remove('status-running');
+                statusIndicator.classList.add('status-stopped');
+                serverStatus.textContent = 'Servidor Parado';
+                statusCard.classList.add('stopped');
+                startServerBtn.disabled = false;
+                stopServerBtn.disabled = true;
+            }
+        }
+
+        // Função para mostrar alerta
+        function showAlert(message, type = 'info') {
+            configAlert.className = `alert alert-${type}`;
+            configAlert.innerHTML = `<strong>ℹ️ ${type === 'success' ? 'Sucesso' : type === 'danger' ? 'Erro' : 'Informação'}:</strong> ${message}`;
+            configAlert.style.display = 'block';
+            
+            setTimeout(() => {
+                configAlert.style.display = 'none';
+            }, 5000);
+        }
+
+        // Carregar configurações
+        async function loadConfig() {
+            try {
+                const config = await ipcRenderer.invoke('get-config');
+                console.log('Configuração carregada:', config);
+                
+                // Atualizar informações do servidor
+                if (config.server) {
+                    document.getElementById('serverPort').value = config.server.port || 9000;
+                    document.getElementById('baseUrl').value = config.server.baseUrl || '';
+                    document.getElementById('corsEnabled').checked = config.server.cors || false;
+                    document.getElementById('autostartEnabled').checked = config.server.autostart || false;
+                }
+                
+                // Atualizar informações do banco
+                if (config.database) {
+                    const driverSelect = document.getElementById('dbDriver');
+                    driverSelect.value = config.database.driver || 'sqlite';
+                    
+                    // Chamar toggleDatabaseFields imediatamente após definir o valor
+                    toggleDatabaseFields();
+                    
+                    if (config.database.sqlite) {
+                        document.getElementById('sqlitePath').value = config.database.sqlite.path || './database.sqlite';
+                    }
+                    
+                    if (config.database.mysql) {
+                        document.getElementById('mysqlHost').value = config.database.mysql.host || 'localhost';
+                        document.getElementById('mysqlPort').value = config.database.mysql.port || 3306;
+                        document.getElementById('mysqlUser').value = config.database.mysql.user || '';
+                        document.getElementById('mysqlPassword').value = config.database.mysql.password || '';
+                        document.getElementById('mysqlDatabase').value = config.database.mysql.database || '';
+                        document.getElementById('mysqlCharset').value = config.database.mysql.charset || 'utf8mb4';
+                    }
+                }
+                
+                // Atualizar informações de log
+                if (config.logging) {
+                    document.getElementById('logConsole').checked = config.logging.console || false;
+                    document.getElementById('logFile').checked = config.logging.file || false;
+                    document.getElementById('logPath').value = config.logging.path || './logs';
+                    document.getElementById('logMaxline').value = config.logging.maxline || 1024;
+                }
+                
+                // Atualizar informações exibidas
+                const driver = config.database?.driver || 'sqlite';
+                document.getElementById('dbDriverDisplay').textContent = driver;
+                dbLocation.textContent = config.database?.sqlite?.path || config.database?.mysql?.host || '-';
+                apiPort.textContent = config.server?.port || '-';
+                baseUrl.textContent = config.server?.baseUrl || '-';
+                
+                // Mostrar/ocultar botão de backup baseado no driver
+                const backupBtn = document.getElementById('backupDb');
+                if (driver === 'sqlite') {
+                    backupBtn.style.display = 'inline-block';
+                } else {
+                    backupBtn.style.display = 'none';
+                }
+                
+                // Atualizar status inicial do servidor
+                if (config.server?.autostart) {
+                    console.log('Servidor configurado para iniciar automaticamente');
+                    updateServerStatus('started');
+                } else {
+                    console.log('Servidor não configurado para iniciar automaticamente');
+                    updateServerStatus('stopped');
+                }
+                
+            } catch (error) {
+                console.error('Erro ao carregar configurações:', error);
+                showAlert('Erro ao carregar configurações: ' + error.message, 'danger');
+            }
+        }
+
+        // Salvar configurações
+        async function saveConfig() {
+            try {
+                const config = {
+                    server: {
+                        port: parseInt(document.getElementById('serverPort').value) || 9000,
+                        baseUrl: document.getElementById('baseUrl').value || '',
+                        cors: document.getElementById('corsEnabled').checked,
+                        autostart: document.getElementById('autostartEnabled').checked
+                    },
+                    database: {
+                        driver: document.getElementById('dbDriver').value
+                    },
+                    logging: {
+                        console: document.getElementById('logConsole').checked,
+                        file: document.getElementById('logFile').checked,
+                        path: document.getElementById('logPath').value || './logs',
+                        maxline: parseInt(document.getElementById('logMaxline').value) || 1024
+                    }
+                };
+                
+                // Adicionar configurações específicas do banco
+                if (config.database.driver === 'sqlite') {
+                    config.database.sqlite = {
+                        path: document.getElementById('sqlitePath').value || './database.sqlite'
+                    };
+                } else {
+                    config.database.mysql = {
+                        host: document.getElementById('mysqlHost').value || 'localhost',
+                        port: parseInt(document.getElementById('mysqlPort').value) || 3306,
+                        user: document.getElementById('mysqlUser').value || '',
+                        password: document.getElementById('mysqlPassword').value || '',
+                        database: document.getElementById('mysqlDatabase').value || '',
+                        charset: document.getElementById('mysqlCharset').value || 'utf8mb4'
+                    };
+                }
+                
+                const result = await ipcRenderer.invoke('save-config', config);
+                if (result.success) {
+                    showAlert('Configurações salvas com sucesso!', 'success');
+                } else {
+                    showAlert('Erro ao salvar configurações: ' + result.message, 'danger');
+                }
+            } catch (error) {
+                console.error('Erro ao salvar configurações:', error);
+                showAlert('Erro ao salvar configurações: ' + error.message, 'danger');
+            }
+        }
+
+        // Atualizar data/hora
+        function updateDateTime() {
+            const now = new Date();
+            serverDateTime.textContent = now.toLocaleString('pt-BR');
+        }
+
+        // Escutar eventos de mudança de status do servidor
+        ipcRenderer.on('server-status-changed', (event, data) => {
+            console.log('Evento server-status-changed recebido:', data);
+            updateServerStatus(data.status);
+        });
+
+        // Event Listeners
+        startServerBtn.addEventListener('click', async () => {
+            console.log('Botão iniciar servidor clicado');
+            startServerBtn.innerHTML = '<span class="spinner"></span> Iniciando...';
+            startServerBtn.disabled = true;
+            
+            const result = await ipcRenderer.invoke('start-server');
+            console.log('Resultado do start-server:', result);
+            
+            startServerBtn.innerHTML = '▶️ Iniciar Servidor';
+            if (result.status === 'started') {
+                updateServerStatus('started');
+            } else {
+                startServerBtn.disabled = false;
+                showAlert('Erro ao iniciar servidor: ' + result.message, 'danger');
+            }
+        });
+
+        stopServerBtn.addEventListener('click', async () => {
+            console.log('Botão parar servidor clicado');
+            stopServerBtn.innerHTML = '<span class="spinner"></span> Parando...';
+            stopServerBtn.disabled = true;
+            
+            const result = await ipcRenderer.invoke('stop-server');
+            console.log('Resultado do stop-server:', result);
+            
+            stopServerBtn.innerHTML = '⏹️ Parar Servidor';
+            if (result.status === 'stopped') {
+                updateServerStatus('stopped');
+            } else {
+                stopServerBtn.disabled = false;
+                showAlert('Erro ao parar servidor: ' + result.message, 'danger');
+            }
+        });
+
+        backupDbBtn.addEventListener('click', async () => {
+            backupDbBtn.innerHTML = '<span class="spinner"></span> Fazendo Backup...';
+            backupDbBtn.disabled = true;
+            
+            const result = await ipcRenderer.invoke('backup-database');
+            
+            backupDbBtn.innerHTML = '💾 Fazer Backup';
+            backupDbBtn.disabled = false;
+            
+            if (result.status === 'success') {
+                showAlert(`Backup realizado com sucesso!<br>Local: ${result.path}`, 'success');
+            } else {
+                showAlert('Erro ao realizar backup: ' + result.message, 'danger');
+            }
+        });
+
+        configForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveConfig();
+        });
+
+        // Event listener para mudança do driver do banco
+        document.getElementById('dbDriver').addEventListener('change', toggleDatabaseFields);
+
+        // Inicialização
+        loadConfig();
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+        
+        // Garantir que os campos sejam configurados corretamente após o carregamento
+        setTimeout(() => {
+            toggleDatabaseFields();
+        }, 500);
+    </script>
+</body>
+</html>

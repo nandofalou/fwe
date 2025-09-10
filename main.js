@@ -7,10 +7,22 @@ const Log = require('./App/Helpers/Log');
 
 // Configurações globais
 let mainWindow;
+let configWindow = null;
 let apiServer = null;
 let config = null;
 let tray = null;
 let isQuitting = false;
+
+// Configurações de segurança
+const SECURITY_CONFIG = {
+    allowNewWindows: false, // Bloquear abertura de novas janelas
+    allowedDomains: [
+        'http://localhost:9000',
+        'http://127.0.0.1:9000',
+        'data:',
+        'file://'
+    ]
+};
 
 // Função para criar a janela principal
 function createWindow() {
@@ -29,8 +41,8 @@ function createWindow() {
         }
         
         mainWindow = new BrowserWindow({
-            width: 800,
-            height: 600,
+            width: 1200,
+            height: 800,
             icon: iconPath,
             autoHideMenuBar: true, // Esconde a barra de menu
             webPreferences: {
@@ -47,37 +59,8 @@ function createWindow() {
         // Criar o tray
         createTray();
 
-        const htmlPath = path.join(__dirname, 'Public', 'config.html');
-        Log.info('Carregando arquivo HTML:', htmlPath);
-        
-        // Verificar se o arquivo existe
-        if (!fs.existsSync(htmlPath)) {
-            Log.error('Arquivo HTML não encontrado:', htmlPath);
-            const errorPath = path.join(__dirname, 'Public', 'error.html');
-            if (fs.existsSync(errorPath)) {
-                Log.info('Carregando página de erro');
-                mainWindow.loadFile(errorPath);
-            } else {
-                Log.error('Página de erro também não encontrada');
-                // Criar uma página de erro básica
-                mainWindow.loadURL('data:text/html,<h1>Erro: Arquivo não encontrado</h1><p>config.html não foi encontrado.</p>');
-            }
-        } else {
-            Log.info('Arquivo HTML encontrado, carregando...');
-            try {
-                mainWindow.loadFile(htmlPath);
-                Log.info('Comando loadFile executado com sucesso');
-            } catch (loadError) {
-                Log.error('Erro ao carregar arquivo HTML', { error: loadError.message });
-                // Tentar carregar página de erro
-                try {
-                    mainWindow.loadFile(path.join(__dirname, 'Public', 'error.html'));
-                } catch (errorLoadError) {
-                    Log.error('Erro ao carregar página de erro', { error: errorLoadError.message });
-                    mainWindow.loadURL('data:text/html,<h1>Erro Crítico</h1><p>Não foi possível carregar nenhuma página.</p>');
-                }
-            }
-        }
+        // Carregar página inicial informativa na janela principal
+        loadInitialPage();
 
         // Interceptar o fechamento da janela para minimizar ao tray
         mainWindow.on('close', (event) => {
@@ -94,30 +77,51 @@ function createWindow() {
 
         mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
             Log.error('Falha ao carregar a janela principal', { errorCode, errorDescription });
-            // Tentar carregar página de erro
-            try {
-                mainWindow.loadFile(path.join(__dirname, 'Public', 'error.html'));
-            } catch (loadError) {
-                Log.error('Erro ao carregar página de erro', { error: loadError.message });
+            // Carregar página de erro do sistema
+            loadSystemHTML(mainWindow, 'error.html');
+        });
+
+        // Interceptar abertura de novas janelas
+        mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+            if (SECURITY_CONFIG.allowNewWindows) {
+                Log.info('Abertura de nova janela permitida:', url);
+                return { action: 'allow' };
+            } else {
+                Log.info('Tentativa de abrir nova janela bloqueada:', url);
+                return { action: 'deny' };
+            }
+        });
+
+        // Interceptar cliques em links que tentam abrir em nova aba/janela
+        mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
+            const isAllowed = SECURITY_CONFIG.allowedDomains.some(domain => navigationUrl.startsWith(domain));
+            
+            if (!isAllowed) {
+                Log.info('Navegação bloqueada para URL externa:', navigationUrl);
+                event.preventDefault();
+                
+                // Se o servidor não está rodando, voltar para a página inicial
+                if (!apiServer) {
+                    Log.info('Servidor não está rodando, voltando para página inicial');
+                    loadInitialPage();
+                }
             }
         });
 
         mainWindow.webContents.on('did-finish-load', () => {
             Log.info('Arquivo HTML carregado com sucesso');
+            // Verificar se o servidor deve iniciar automaticamente
             if (config.server.autostart) {
-                Log.info('Iniciando servidor automaticamente...');
-                const { startServer } = require('./App/Libraries/Server');
-                startServer(config).then(server => {
-                    apiServer = server;
-                    Log.info('Servidor iniciado automaticamente');
-                    // Notificar a interface que o servidor foi iniciado
-                    Log.info('Enviando evento server-status-changed para a interface');
-                    mainWindow.webContents.send('server-status-changed', { status: 'started' });
-                }).catch(error => {
-                    Log.error('Erro ao iniciar servidor automaticamente', { error: error.message });
-                });
-            } else {
-                Log.info('Servidor não configurado para iniciar automaticamente');
+                Log.info('Servidor configurado para iniciar automaticamente');
+                setTimeout(async () => {
+                    try {
+                        await startServer();
+                        updateTrayMenu();
+                        updateMainWindow();
+                    } catch (error) {
+                        Log.error('Erro ao iniciar servidor automaticamente', { error: error.message });
+                    }
+                }, 2000); // Aguardar 2 segundos para a página carregar
             }
         });
         
@@ -181,6 +185,253 @@ function initializeConfig() {
     Log.info('Configurações carregadas', { configPath });
 
     return config;
+}
+
+// Função helper para carregar arquivos HTML do sistema
+function loadSystemHTML(window, filename, fallbackHTML = null) {
+    const htmlPath = path.join(__dirname, 'App', 'Views', 'fwesystem', filename);
+    
+    if (fs.existsSync(htmlPath)) {
+        try {
+            window.loadFile(htmlPath);
+            Log.info(`Arquivo HTML carregado: ${filename}`);
+            return true;
+        } catch (error) {
+            Log.error(`Erro ao carregar arquivo HTML ${filename}:`, error.message);
+        }
+    } else {
+        Log.warning(`Arquivo HTML não encontrado: ${filename}`);
+    }
+    
+    // Fallback para HTML inline se fornecido
+    if (fallbackHTML) {
+        window.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(fallbackHTML));
+        Log.info(`Fallback HTML carregado para ${filename}`);
+        return true;
+    }
+    
+    return false;
+}
+
+// Função para carregar a página inicial
+function loadInitialPage() {
+    if (!mainWindow) return;
+    
+    const fallbackHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>FWE - Framework</title>
+        <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+            .container { max-width: 600px; margin: 0 auto; }
+            .status { padding: 20px; margin: 20px 0; border-radius: 5px; }
+            .info { background-color: #e3f2fd; border: 1px solid #2196f3; }
+            .warning { background-color: #fff3e0; border: 1px solid #ff9800; }
+            .success { background-color: #e8f5e8; border: 1px solid #4caf50; }
+            .loading { background-color: #f3e5f5; border: 1px solid #9c27b0; }
+            button { padding: 10px 20px; margin: 10px; font-size: 16px; cursor: pointer; }
+            .btn-primary { background-color: #2196f3; color: white; border: none; border-radius: 3px; }
+            .btn-success { background-color: #4caf50; color: white; border: none; border-radius: 3px; }
+            .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite; margin: 20px auto; }
+            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🚀 FWE - Framework</h1>
+            <div id="statusContainer" class="status loading">
+                <div class="spinner"></div>
+                <h3>Verificando status do servidor...</h3>
+                <p id="statusMessage">Aguarde enquanto verificamos se o servidor está ativo.</p>
+            </div>
+            <div id="instructions" class="status warning" style="display: none;">
+                <h4>📋 Como usar:</h4>
+                <ol style="text-align: left;">
+                    <li>Clique no ícone do FWE na bandeja do sistema (tray)</li>
+                    <li>Selecione "Configuração"</li>
+                    <li>Clique em "Iniciar Servidor"</li>
+                    <li>Esta página será atualizada automaticamente</li>
+                </ol>
+            </div>
+            <div id="buttons" style="display: none;">
+                <button class="btn-primary" onclick="checkServerStatus()">🔄 Verificar Status</button>
+                <button class="btn-success" onclick="window.open('http://localhost:9000', '_blank')">🌐 Abrir Projeto</button>
+            </div>
+        </div>
+        
+        <script>
+            const { ipcRenderer } = require('electron');
+            
+            function updateStatus(message, type, showInstructions = false, showButtons = false) {
+                const statusContainer = document.getElementById('statusContainer');
+                const statusMessage = document.getElementById('statusMessage');
+                const instructions = document.getElementById('instructions');
+                const buttons = document.getElementById('buttons');
+                
+                statusContainer.className = 'status ' + type;
+                statusMessage.textContent = message;
+                instructions.style.display = showInstructions ? 'block' : 'none';
+                buttons.style.display = showButtons ? 'block' : 'none';
+                
+                // Remover spinner se não for loading
+                if (type !== 'loading') {
+                    const spinner = statusContainer.querySelector('.spinner');
+                    if (spinner) spinner.remove();
+                }
+            }
+            
+            function checkServerStatus() {
+                updateStatus('Verificando status do servidor...', 'loading', false, false);
+                ipcRenderer.invoke('check-server-status').then(result => {
+                    if (result.status === 'running') {
+                        updateStatus('Servidor ativo! Carregando projeto...', 'success', false, false);
+                        // Carregar o projeto
+                        setTimeout(() => {
+                            window.location.href = 'http://localhost:9000';
+                        }, 1000);
+                    } else {
+                        updateStatus('Servidor não está ativo. Inicie o servidor através do menu do tray.', 'warning', true, true);
+                    }
+                }).catch(error => {
+                    updateStatus('Erro ao verificar status do servidor: ' + error.message, 'warning', true, true);
+                });
+            }
+            
+            // Verificar status automaticamente a cada 2 segundos
+            checkServerStatus();
+            setInterval(checkServerStatus, 2000);
+            
+            // Escutar eventos de mudança de status do servidor
+            ipcRenderer.on('server-status-changed', (event, data) => {
+                if (data.status === 'started') {
+                    updateStatus('Servidor iniciado! Carregando projeto...', 'success', false, false);
+                    setTimeout(() => {
+                        window.location.href = 'http://localhost:9000';
+                    }, 1000);
+                } else if (data.status === 'stopped') {
+                    updateStatus('Servidor parado. Inicie o servidor através do menu do tray.', 'warning', true, true);
+                }
+            });
+        </script>
+    </body>
+    </html>`;
+    
+    loadSystemHTML(mainWindow, 'initial.html', fallbackHTML);
+    Log.info('Página inicial carregada');
+}
+
+// Função para atualizar a janela principal com o projeto
+function updateMainWindow() {
+    if (mainWindow && apiServer) {
+        // Enviar evento para a página inicial atualizar automaticamente
+        Log.info('Enviando evento server-status-changed para a janela principal');
+        mainWindow.webContents.send('server-status-changed', { status: 'started' });
+    }
+}
+
+// Função para criar a janela de configuração
+function createConfigWindow() {
+    if (configWindow) {
+        configWindow.show();
+        configWindow.focus();
+        return;
+    }
+
+    try {
+        Log.info('Criando janela de configuração...');
+        
+        // Verificar se o ícone existe
+        let iconPath = path.join(__dirname, 'build', 'icon.ico');
+        if (!fs.existsSync(iconPath)) {
+            Log.warning('Ícone da janela não encontrado, tentando alternativas...');
+            iconPath = path.join(process.resourcesPath, 'build', 'icon.ico');
+            if (!fs.existsSync(iconPath)) {
+                Log.warning('Ícone não encontrado, usando ícone padrão');
+                iconPath = null;
+            }
+        }
+        
+        configWindow = new BrowserWindow({
+            width: 800,
+            height: 600,
+            icon: iconPath,
+            autoHideMenuBar: true,
+            webPreferences: {
+                nodeIntegration: true,
+                contextIsolation: false
+            }
+        });
+
+        Log.info('Janela de configuração criada com sucesso');
+
+        // Desabilitar o menu completamente
+        configWindow.setMenu(null);
+
+        // Carregar arquivo de configuração
+        const fallbackHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Erro - FWE Framework</title>
+            <style>
+                body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+                .container { max-width: 600px; margin: 0 auto; }
+                .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 20px; border-radius: 5px; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>Erro: Arquivo não encontrado</h1>
+                <div class="error">
+                    <p>config.html não foi encontrado.</p>
+                </div>
+            </div>
+        </body>
+        </html>`;
+        
+        loadSystemHTML(configWindow, 'config.html', fallbackHTML);
+
+        // Interceptar o fechamento da janela para fechar completamente
+        configWindow.on('close', (event) => {
+            configWindow = null;
+        });
+        
+        // Em desenvolvimento, abrir DevTools
+        if (process.argv.includes('--dev')) {
+            configWindow.webContents.openDevTools();
+        }
+
+        configWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+            Log.error('Falha ao carregar a janela de configuração', { errorCode, errorDescription });
+            // Carregar página de erro do sistema
+            loadSystemHTML(configWindow, 'config-error.html');
+        });
+
+        // Interceptar abertura de novas janelas na janela de configuração
+        configWindow.webContents.setWindowOpenHandler(({ url }) => {
+            if (SECURITY_CONFIG.allowNewWindows) {
+                Log.info('Abertura de nova janela permitida na configuração:', url);
+                return { action: 'allow' };
+            } else {
+                Log.info('Tentativa de abrir nova janela bloqueada na configuração:', url);
+                return { action: 'deny' };
+            }
+        });
+
+        // Interceptar navegação na janela de configuração
+        configWindow.webContents.on('will-navigate', (event, navigationUrl) => {
+            const isAllowed = SECURITY_CONFIG.allowedDomains.some(domain => navigationUrl.startsWith(domain));
+            
+            if (!isAllowed) {
+                Log.info('Navegação bloqueada na configuração para URL externa:', navigationUrl);
+                event.preventDefault();
+            }
+        });
+
+    } catch (error) {
+        Log.error('Erro ao criar janela de configuração', { error: error.message, stack: error.stack });
+    }
 }
 
 // Função para criar o tray
@@ -256,19 +507,31 @@ function createTray() {
                 }
             },
             {
+                label: 'Configuração',
+                click: () => {
+                    createConfigWindow();
+                }
+            },
+            {
                 label: 'Servidor',
                 submenu: [
-                    {
-                        label: apiServer ? 'Parar Servidor' : 'Iniciar Servidor',
-                        click: async () => {
-                            if (apiServer) {
-                                await stopServer();
-                            } else {
-                                await startServer();
+                        {
+                            label: apiServer ? 'Parar Servidor' : 'Iniciar Servidor',
+                            click: async () => {
+                                if (apiServer) {
+                                    await stopServer();
+                                    // Se a janela principal estiver mostrando o projeto, voltar para a página inicial
+                                    if (mainWindow && mainWindow.webContents.getURL().includes('localhost:9000')) {
+                                        Log.info('Servidor parado via tray, voltando para página inicial');
+                                        loadInitialPage();
+                                    }
+                                } else {
+                                    await startServer();
+                                    updateMainWindow();
+                                }
+                                updateTrayMenu();
                             }
-                            updateTrayMenu();
                         }
-                    }
                 ]
             },
             {
@@ -332,6 +595,12 @@ function updateTrayMenu() {
                     }
                 },
                 {
+                    label: 'Configuração',
+                    click: () => {
+                        createConfigWindow();
+                    }
+                },
+                {
                     label: 'Servidor',
                     submenu: [
                         {
@@ -339,8 +608,14 @@ function updateTrayMenu() {
                             click: async () => {
                                 if (apiServer) {
                                     await stopServer();
+                                    // Se a janela principal estiver mostrando o projeto, voltar para a página inicial
+                                    if (mainWindow && mainWindow.webContents.getURL().includes('localhost:9000')) {
+                                        Log.info('Servidor parado via tray, voltando para página inicial');
+                                        loadInitialPage();
+                                    }
                                 } else {
                                     await startServer();
+                                    updateMainWindow();
                                 }
                                 updateTrayMenu();
                             }
@@ -471,7 +746,186 @@ app.on('before-quit', () => {
 
 // IPC Handlers
 ipcMain.handle('get-config', () => {
-    return config;
+    // Carregar configurações do arquivo do usuário (onde o sistema realmente lê)
+    try {
+        const userHome = os.homedir();
+        const configDir = path.join(userHome, 'fwe');
+        const configPath = path.join(configDir, 'config.ini');
+        
+        if (fs.existsSync(configPath)) {
+            const iniConfig = ini.parse(fs.readFileSync(configPath, 'utf-8'));
+            return parseFlatConfig(iniConfig);
+        } else {
+            // Se não existir, retornar configurações padrão
+            return {
+                database: {
+                    driver: 'sqlite',
+                    sqlite: {
+                        path: path.join(configDir, 'database.sqlite')
+                    },
+                    mysql: {
+                        host: 'localhost',
+                        user: 'root',
+                        password: '',
+                        database: 'fwe',
+                        port: 3306,
+                        charset: 'utf8mb4'
+                    }
+                },
+                server: {
+                    port: 9000,
+                    cors: true,
+                    autostart: false,
+                    baseUrl: 'http://localhost:9000'
+                },
+                logging: {
+                    console: false,
+                    file: true,
+                    path: path.join(configDir, 'logs')
+                }
+            };
+        }
+    } catch (error) {
+        Log.error('Erro ao carregar configurações do usuário:', error.message);
+        return config; // Fallback para config local
+    }
+});
+
+// Função para converter configuração aninhada em formato INI
+function parseFlatConfig(flat) {
+    const result = {};
+    for (const key in flat) {
+        const value = flat[key];
+        const keys = key.split('.');
+        let current = result;
+        for (let i = 0; i < keys.length; i++) {
+            const k = keys[i];
+            if (i === keys.length - 1) {
+                current[k] = value;
+            } else {
+                if (!current[k]) current[k] = {};
+                current = current[k];
+            }
+        }
+    }
+    return result;
+}
+
+// Handler para salvar configurações
+ipcMain.handle('save-config', (event, newConfig) => {
+    try {
+        // Salvar no arquivo do usuário (onde o sistema realmente lê)
+        const userHome = os.homedir();
+        const configDir = path.join(userHome, 'fwe');
+        const configPath = path.join(configDir, 'config.ini');
+        
+        // Criar diretório se não existir
+        if (!fs.existsSync(configDir)) {
+            fs.mkdirSync(configDir, { recursive: true });
+        }
+        
+        // Criar objeto de configuração no formato de seções INI
+        const configObject = {
+            database: {
+                driver: newConfig.database?.driver || 'sqlite'
+            },
+            server: {
+                port: newConfig.server?.port || 9000,
+                cors: newConfig.server?.cors ? 'true' : 'false',
+                autostart: newConfig.server?.autostart ? 'true' : 'false',
+                baseUrl: newConfig.server?.baseUrl || 'http://localhost:9000'
+            },
+            logging: {
+                console: newConfig.logging?.console ? 'true' : 'false',
+                file: newConfig.logging?.file ? 'true' : 'false',
+                path: newConfig.logging?.path || path.join(configDir, 'logs'),
+                maxline: '1024'
+            },
+            jwt: {
+                secret: 'your-secret-key',
+                expiresIn: '24h'
+            }
+        };
+        
+        // Adicionar configurações específicas do banco
+        if (newConfig.database?.driver === 'sqlite' && newConfig.database?.sqlite) {
+            configObject['database.sqlite'] = {
+                path: newConfig.database.sqlite.path,
+                charset: 'utf8'
+            };
+        } else if (newConfig.database?.driver === 'mysql' && newConfig.database?.mysql) {
+            configObject['database.mysql'] = {
+                host: newConfig.database.mysql.host || 'localhost',
+                user: newConfig.database.mysql.user || 'root',
+                password: newConfig.database.mysql.password || '',
+                database: newConfig.database.mysql.database || 'fwe',
+                port: newConfig.database.mysql.port || 3306,
+                charset: newConfig.database.mysql.charset || 'utf8mb4'
+            };
+        }
+        
+        // Escrever arquivo manualmente para evitar escape de pontos
+        let iniContent = '';
+        
+        // Seção [database]
+        if (configObject.database) {
+            iniContent += '[database]\n';
+            iniContent += `driver=${configObject.database.driver}\n\n`;
+        }
+        
+        // Seção [database.sqlite]
+        if (configObject['database.sqlite']) {
+            iniContent += '[database.sqlite]\n';
+            iniContent += `path=${configObject['database.sqlite'].path}\n`;
+            iniContent += `charset=${configObject['database.sqlite'].charset}\n\n`;
+        }
+        
+        // Seção [database.mysql]
+        if (configObject['database.mysql']) {
+            iniContent += '[database.mysql]\n';
+            iniContent += `host=${configObject['database.mysql'].host}\n`;
+            iniContent += `user=${configObject['database.mysql'].user}\n`;
+            iniContent += `password=${configObject['database.mysql'].password}\n`;
+            iniContent += `database=${configObject['database.mysql'].database}\n`;
+            iniContent += `port=${configObject['database.mysql'].port}\n`;
+            iniContent += `charset=${configObject['database.mysql'].charset}\n\n`;
+        }
+        
+        // Seção [server]
+        if (configObject.server) {
+            iniContent += '[server]\n';
+            iniContent += `port=${configObject.server.port}\n`;
+            iniContent += `cors=${configObject.server.cors}\n`;
+            iniContent += `autostart=${configObject.server.autostart}\n`;
+            iniContent += `baseUrl=${configObject.server.baseUrl}\n\n`;
+        }
+        
+        // Seção [logging]
+        if (configObject.logging) {
+            iniContent += '[logging]\n';
+            iniContent += `console=${configObject.logging.console}\n`;
+            iniContent += `file=${configObject.logging.file}\n`;
+            iniContent += `path=${configObject.logging.path}\n`;
+            iniContent += `maxline=${configObject.logging.maxline}\n\n`;
+        }
+        
+        // Seção [jwt]
+        if (configObject.jwt) {
+            iniContent += '[jwt]\n';
+            iniContent += `secret=${configObject.jwt.secret}\n`;
+            iniContent += `expiresIn=${configObject.jwt.expiresIn}\n\n`;
+        }
+        
+        // Escrever arquivo
+        fs.writeFileSync(configPath, iniContent, 'utf8');
+        
+        Log.info('Configurações salvas com sucesso no config.ini');
+        return { success: true, message: 'Configurações salvas com sucesso' };
+        
+    } catch (error) {
+        Log.error('Erro ao salvar configurações:', error.message);
+        return { success: false, message: error.message };
+    }
 });
 
 // Função auxiliar para iniciar servidor
@@ -524,12 +978,20 @@ async function stopServer() {
 ipcMain.handle('start-server', async () => {
     const result = await startServer();
     updateTrayMenu();
+    updateMainWindow();
     return result;
 });
 
 ipcMain.handle('stop-server', async () => {
     const result = await stopServer();
     updateTrayMenu();
+    
+    // Se a janela principal estiver mostrando o projeto, voltar para a página inicial
+    if (mainWindow && mainWindow.webContents.getURL().includes('localhost:9000')) {
+        Log.info('Servidor parado, voltando para página inicial');
+        loadInitialPage();
+    }
+    
     return result;
 });
 
@@ -538,6 +1000,29 @@ ipcMain.handle('minimize-to-tray', () => {
         mainWindow.hide();
     }
     return { status: 'minimized' };
+});
+
+ipcMain.handle('check-server-status', () => {
+    if (apiServer) {
+        return { status: 'running', port: config.server.port };
+    } else {
+        return { status: 'stopped' };
+    }
+});
+
+ipcMain.handle('get-security-config', () => {
+    return SECURITY_CONFIG;
+});
+
+ipcMain.handle('set-security-config', (event, newConfig) => {
+    if (newConfig.allowNewWindows !== undefined) {
+        SECURITY_CONFIG.allowNewWindows = newConfig.allowNewWindows;
+    }
+    if (newConfig.allowedDomains) {
+        SECURITY_CONFIG.allowedDomains = newConfig.allowedDomains;
+    }
+    Log.info('Configuração de segurança atualizada:', SECURITY_CONFIG);
+    return SECURITY_CONFIG;
 });
 
 ipcMain.handle('backup-database', async () => {

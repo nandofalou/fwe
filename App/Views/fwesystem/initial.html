@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FWE - Framework</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .status { padding: 20px; margin: 20px 0; border-radius: 5px; }
+        .info { background-color: #e3f2fd; border: 1px solid #2196f3; }
+        .warning { background-color: #fff3e0; border: 1px solid #ff9800; }
+        .success { background-color: #e8f5e8; border: 1px solid #4caf50; }
+        .loading { background-color: #f3e5f5; border: 1px solid #9c27b0; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; cursor: pointer; }
+        .btn-primary { background-color: #2196f3; color: white; border: none; border-radius: 3px; }
+        .btn-success { background-color: #4caf50; color: white; border: none; border-radius: 3px; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 FWE - Framework</h1>
+        <div id="statusContainer" class="status loading">
+            <div class="spinner"></div>
+            <h3>Verificando status do servidor...</h3>
+            <p id="statusMessage">Aguarde enquanto verificamos se o servidor está ativo.</p>
+        </div>
+        <div id="instructions" class="status warning" style="display: none;">
+            <h4>📋 Como usar:</h4>
+            <ol style="text-align: left;">
+                <li>Clique no ícone do FWE na bandeja do sistema (tray)</li>
+                <li>Selecione "Configuração"</li>
+                <li>Clique em "Iniciar Servidor"</li>
+                <li>Esta página será atualizada automaticamente</li>
+            </ol>
+        </div>
+        <div id="buttons" style="display: none;">
+            <button class="btn-primary" onclick="checkServerStatus()">🔄 Verificar Status</button>
+            <button class="btn-success" onclick="window.open('http://localhost:9000', '_blank')">🌐 Abrir Projeto</button>
+        </div>
+    </div>
+    
+    <script>
+        const { ipcRenderer } = require('electron');
+        
+        function updateStatus(message, type, showInstructions = false, showButtons = false) {
+            const statusContainer = document.getElementById('statusContainer');
+            const statusMessage = document.getElementById('statusMessage');
+            const instructions = document.getElementById('instructions');
+            const buttons = document.getElementById('buttons');
+            
+            statusContainer.className = 'status ' + type;
+            statusMessage.textContent = message;
+            instructions.style.display = showInstructions ? 'block' : 'none';
+            buttons.style.display = showButtons ? 'block' : 'none';
+            
+            // Remover spinner se não for loading
+            if (type !== 'loading') {
+                const spinner = statusContainer.querySelector('.spinner');
+                if (spinner) spinner.remove();
+            }
+        }
+        
+        function checkServerStatus() {
+            updateStatus('Verificando status do servidor...', 'loading', false, false);
+            ipcRenderer.invoke('check-server-status').then(result => {
+                if (result.status === 'running') {
+                    updateStatus('Servidor ativo! Carregando projeto...', 'success', false, false);
+                    // Carregar o projeto
+                    setTimeout(() => {
+                        window.location.href = 'http://localhost:9000';
+                    }, 1000);
+                } else {
+                    updateStatus('Servidor não está ativo. Inicie o servidor através do menu do tray.', 'warning', true, true);
+                }
+            }).catch(error => {
+                updateStatus('Erro ao verificar status do servidor: ' + error.message, 'warning', true, true);
+            });
+        }
+        
+        // Verificar status automaticamente a cada 2 segundos
+        checkServerStatus();
+        setInterval(checkServerStatus, 2000);
+        
+        // Escutar eventos de mudança de status do servidor
+        ipcRenderer.on('server-status-changed', (event, data) => {
+            if (data.status === 'started') {
+                updateStatus('Servidor iniciado! Carregando projeto...', 'success', false, false);
+                setTimeout(() => {
+                    window.location.href = 'http://localhost:9000';
+                }, 1000);
+            } else if (data.status === 'stopped') {
+                updateStatus('Servidor parado. Inicie o servidor através do menu do tray.', 'warning', true, true);
+            }
+        });
+    </script>
+</body>
+</html>
